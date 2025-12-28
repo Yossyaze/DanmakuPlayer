@@ -1,0 +1,10 @@
+00:00:01: 動画プレビューテスト開始
+00:00:05: YouTube Video: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+00:00:10: YouTube Short: https://www.youtube.com/shorts/p3G5IXn0K7A
+00:00:15: YouTube Short URL: https://youtu.be/jNQXAC9IVRw
+00:00:20: ニコニコ動画: https://www.nicovideo.jp/watch/sm9
+00:00:25: ニコニコ動画(短縮): https://nico.ms/sm9
+00:00:30: Twitter Video: https://twitter.com/Twitter/status/1585675628863651841
+00:00:35: X Video: https://x.com/Twitter/status/1585675628863651841
+00:00:40: 複数URLテスト: https://youtu.be/dQw4w9WgXcQ https://nico.ms/sm9
+00:00:45: テキスト混在: すごい動画見つけた https://www.youtube.com/watch?v=dQw4w9WgXcQ これ面白い

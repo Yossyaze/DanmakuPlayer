@@ -1,0 +1,29 @@
+{
+    "manifest_version": 3,
+    "name": "DanmakuPlayer Helper",
+    "version": "1.0",
+    "description": "Open current page or link in DanmakuPlayer",
+    "permissions": [
+        "activeTab",
+        "contextMenus"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_title": "Open in DanmakuPlayer"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "http://localhost:5174/*"
+            ],
+            "js": [
+                "content_script.js"
+            ]
+        }
+    ],
+    "host_permissions": [
+        "http://localhost:5174/*"
+    ]
+}

@@ -1,0 +1,269 @@
+import { useCallback, useRef } from 'react';
+
+/**
+ * useAppHandlers - App.jsx から分離したハンドラーを管理するカスタムフック
+ * 
+ * @param {Object} params - ハンドラーが依存するオブジェクト
+ * @returns {Object} - ハンドラー関数群
+ */
+export function useAppHandlers({
+    player,
+    cmSystem,
+    logSystem,
+    resetPlayerState,
+    togglePlay,
+    handleSeek,
+    handleCommentClick,
+    requestPlay,
+    resetDanmaku,
+    skipSeconds,
+    currentTime,
+    logOnlyMode,
+    setLogOnlyMode,
+    setShowDanmaku,
+    setShowSidebar,
+    videoStartTimeStr,
+    setVideoStartTimeStr,
+    dmSettings,
+    aaOverrideMap,
+    setAaOverrideMap,
+    showExportModal,
+    setShowExportModal,
+    setShowUrlModal,
+    setRequestedVideoName,
+    setShowVideoRequestModal,
+    projectFileHandle,
+    setProjectFileHandle,
+    projectName,
+    setProjectName,
+}) {
+    const autoPlayRequestedRef = useRef(false);
+
+    // --- Video URL Submit ---
+    const handleVideoUrlSubmit = useCallback((e, videoUrlInput) => {
+        e.preventDefault();
+        if (videoUrlInput) {
+            console.log("handleVideoUrlSubmit: Setting video src to", videoUrlInput);
+            player.setVideoSrc(videoUrlInput);
+            resetPlayerState();
+            console.log("handleVideoUrlSubmit: Requesting deferred AutoPlay");
+            autoPlayRequestedRef.current = true;
+            setShowUrlModal(false);
+        }
+    }, [player, resetPlayerState, setShowUrlModal]);
+
+    // --- Seek and Play (for context menu "Move to this time") ---
+    const handleSeekAndPlay = useCallback((time) => {
+        setLogOnlyMode(false);
+        resetDanmaku(time);
+        handleCommentClick(time);
+        requestPlay();
+    }, [handleCommentClick, requestPlay, resetDanmaku, setLogOnlyMode]);
+
+    // --- Keyboard Shortcuts ---
+    const createKeyDownHandler = useCallback((handleSaveProject) => {
+        return (e) => {
+            // Ctrl+S / Cmd+S for Save
+            if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
+                e.preventDefault();
+                handleSaveProject();
+                return;
+            }
+
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+
+            switch (e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    handleSeek({ target: { value: Math.min(cmSystem.getTotalDuration, (currentTime - cmSystem.timeOffset) + (Number(skipSeconds) || 5)) } });
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    handleSeek({ target: { value: Math.max(0, (currentTime - cmSystem.timeOffset) - (Number(skipSeconds) || 5)) } });
+                    break;
+                case 'KeyD':
+                    e.preventDefault();
+                    if (!logOnlyMode) setShowDanmaku(prev => !prev);
+                    break;
+                case 'KeyS':
+                    e.preventDefault();
+                    if (!logOnlyMode) setShowSidebar(prev => !prev);
+                    break;
+                case 'KeyL':
+                    e.preventDefault();
+                    setLogOnlyMode(prev => !prev);
+                    break;
+                default:
+                    break;
+            }
+        };
+    }, [togglePlay, handleSeek, currentTime, skipSeconds, cmSystem, logOnlyMode, setShowDanmaku, setShowSidebar, setLogOnlyMode]);
+
+    // --- Project Data Helper ---
+    const getProjectData = useCallback(() => ({
+        version: "3.3.0",
+        timestamp: Date.now(),
+        videoStartTimeStr: videoStartTimeStr,
+        startTimeStr: logSystem.startTimeStr,
+        cmRanges: cmSystem.cmRanges,
+        dmSettings: dmSettings,
+        loadedFiles: logSystem.loadedFiles,
+        videoFileName: player.videoFileName,
+        ngSettings: logSystem.ngSettings,
+        aaOverrideMap: aaOverrideMap
+    }), [videoStartTimeStr, logSystem.startTimeStr, cmSystem.cmRanges, dmSettings, logSystem.loadedFiles, player.videoFileName, logSystem.ngSettings, aaOverrideMap]);
+
+    // --- Save Project (Overwrite) ---
+    const handleSaveProject = useCallback(async () => {
+        if (!projectFileHandle) {
+            setShowExportModal(true);
+            return;
+        }
+
+        try {
+            const data = getProjectData();
+            const jsonString = JSON.stringify(data, null, 2);
+
+            const writable = await projectFileHandle.createWritable();
+            await writable.write(jsonString);
+            await writable.close();
+
+            console.log("Project saved:", projectName);
+        } catch (err) {
+            console.error("Save failed:", err);
+            if (err.name === 'NotAllowedError') {
+                setProjectFileHandle(null);
+                setProjectName(null);
+                alert("ファイルへのアクセス権限が失われました。新規保存してください。");
+            } else {
+                alert("保存に失敗しました: " + err.message);
+            }
+        }
+    }, [projectFileHandle, projectName, getProjectData, setShowExportModal, setProjectFileHandle, setProjectName]);
+
+    // --- Import Project ---
+    const processImportFile = useCallback(async (file, fileHandle = null) => {
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+
+            if (data.cmRanges) cmSystem.setCmRanges(data.cmRanges);
+            if (data.videoStartTimeStr) setVideoStartTimeStr(data.videoStartTimeStr);
+            if (data.startTimeStr) logSystem.setStartTimeStr(data.startTimeStr);
+            if (data.ngSettings) logSystem.setNgSettings(data.ngSettings);
+            if (data.loadedFiles) logSystem.loadProject(data.loadedFiles);
+            if (data.aaOverrideMap) setAaOverrideMap(data.aaOverrideMap);
+
+            if (fileHandle) {
+                setProjectFileHandle(fileHandle);
+                setProjectName(file.name.replace('.json', ''));
+            } else {
+                setProjectName(file.name.replace('.json', ''));
+            }
+
+            if (data.videoFileName) {
+                setRequestedVideoName(data.videoFileName);
+                setShowVideoRequestModal(true);
+            }
+        } catch (err) {
+            console.error("Failed to import project:", err);
+            alert("プロジェクトファイルの読み込みに失敗しました。");
+        }
+    }, [cmSystem, logSystem, setVideoStartTimeStr, setAaOverrideMap, setProjectFileHandle, setProjectName, setRequestedVideoName, setShowVideoRequestModal]);
+
+    const handleImport = useCallback(async (fileOrEvent) => {
+        let file = fileOrEvent;
+        let fileHandle = null;
+
+        if (fileOrEvent && fileOrEvent.target && fileOrEvent.target.files) {
+            file = fileOrEvent.target.files[0];
+        }
+
+        if (!file || !(file instanceof File)) {
+            if ('showOpenFilePicker' in window) {
+                try {
+                    const [handle] = await window.showOpenFilePicker({
+                        types: [{
+                            description: 'Danmaku Project JSON',
+                            accept: { 'application/json': ['.json'] },
+                        }],
+                    });
+                    fileHandle = handle;
+                    file = await handle.getFile();
+                    processImportFile(file, fileHandle);
+                    return;
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                    console.warn("File System Access API failed, falling back...", err);
+                }
+            }
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = async (e) => {
+                const f = e.target.files[0];
+                if (f) processImportFile(f);
+            };
+            input.click();
+            return;
+        }
+
+        processImportFile(file);
+    }, [processImportFile]);
+
+    // --- CM/NG Handlers ---
+    const handleSetCmStart = useCallback((time) => {
+        const startSec = logSystem.startTimeStr ? logSystem.startTimeStr.split(':').reduce((acc, v) => acc * 60 + Number(v), 0) : 0;
+        const targetSec = startSec + time;
+        const h = Math.floor(targetSec / 3600);
+        const m = Math.floor((targetSec % 3600) / 60);
+        const s = Math.floor(targetSec % 60);
+        const timeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        cmSystem.setCmStartInput(timeStr);
+        console.log("Set CM Start:", timeStr);
+    }, [cmSystem, logSystem.startTimeStr]);
+
+    const handleSetCmEnd = useCallback((time) => {
+        const startSec = logSystem.startTimeStr ? logSystem.startTimeStr.split(':').reduce((acc, v) => acc * 60 + Number(v), 0) : 0;
+        const targetSec = startSec + time;
+        const h = Math.floor(targetSec / 3600);
+        const m = Math.floor((targetSec % 3600) / 60);
+        const s = Math.floor(targetSec % 60);
+        const timeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        cmSystem.setCmEndInput(timeStr);
+        console.log("Set CM End:", timeStr);
+    }, [cmSystem, logSystem.startTimeStr]);
+
+    const handleSetLogStart = useCallback((comment) => {
+        console.log("Set Log Start request for comment:", comment.id);
+    }, []);
+
+    const handleAddNgId = useCallback((userId) => {
+        logSystem.addNgId(userId);
+    }, [logSystem]);
+
+    const handleAddNgComment = useCallback((text) => {
+        logSystem.addNgComment(text);
+    }, [logSystem]);
+
+    return {
+        autoPlayRequestedRef,
+        handleVideoUrlSubmit,
+        handleSeekAndPlay,
+        createKeyDownHandler,
+        getProjectData,
+        handleSaveProject,
+        processImportFile,
+        handleImport,
+        handleSetCmStart,
+        handleSetCmEnd,
+        handleSetLogStart,
+        handleAddNgId,
+        handleAddNgComment,
+    };
+}
