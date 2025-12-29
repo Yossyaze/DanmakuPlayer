@@ -106,11 +106,13 @@ const DesktopApp = () => {
   const [exportFileName, setExportFileName] = useState("");
   const [showVideoRequestModal, setShowVideoRequestModal] = useState(false);
   const [requestedVideoName, setRequestedVideoName] = useState("");
+  const [requestedVideoPath, setRequestedVideoPath] = useState("");
   const [isResizing, setIsResizing] = useState(false);
   
   // Project file state for overwrite save
   const [projectFileHandle, setProjectFileHandle] = useState(null);
   const [projectName, setProjectName] = useState(null);
+  const [projectDirPath, setProjectDirPath] = useState(null);
 
   // View Mode State (replacing old 4-mode system)
   const [showDanmaku, setShowDanmaku] = useState(true);
@@ -188,6 +190,8 @@ const DesktopApp = () => {
     setProjectFileHandle,
     projectName,
     setProjectName,
+    setProjectDirPath,
+    setRequestedVideoPath,
   });
 
   // Wrapper for handleVideoUrlSubmit to pass videoUrlInput
@@ -364,23 +368,27 @@ const DesktopApp = () => {
 
   return (
     <div
-      className="flex h-screen text-white bg-black overflow-hidden select-none"
+      className="flex flex-col h-screen text-white bg-black overflow-hidden select-none"
     >
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-          <Header
-            showDanmaku={showDanmaku}
-            setShowDanmaku={setShowDanmaku}
-            showSidebar={showSidebar}
-            setShowSidebar={setShowSidebar}
-            logOnlyMode={logOnlyMode}
-            setLogOnlyMode={setLogOnlyMode}
-            handleFileChange={player.handleFileChange}
-            onSave={handleSaveProject}
-            onSaveAs={() => setShowExportModal(true)}
-            onImport={handleImport}
-            projectName={projectName}
-            onOpenUrlModal={() => setShowUrlModal(true)}
-          />
+      {/* Header - Full Width */}
+      <Header
+        showDanmaku={showDanmaku}
+        setShowDanmaku={setShowDanmaku}
+        showSidebar={showSidebar}
+        setShowSidebar={setShowSidebar}
+        logOnlyMode={logOnlyMode}
+        setLogOnlyMode={setLogOnlyMode}
+        handleFileChange={player.handleFileChange}
+        onSave={handleSaveProject}
+        onSaveAs={() => setShowExportModal(true)}
+        onImport={handleImport}
+        projectName={projectName}
+        onOpenUrlModal={() => setShowUrlModal(true)}
+      />
+      
+      {/* Content Area - Video/LogViewer + Sidebar */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <div className="flex-1 flex overflow-hidden">
         {/* --- Main Content (Video) --- */}
         <div 
@@ -744,7 +752,7 @@ const DesktopApp = () => {
           />
         )}
           </div>
-    </div>
+        </div>
 
         {/* --- Resizer --- */}
         {showSidebar && !logOnlyMode && (
@@ -896,7 +904,10 @@ const DesktopApp = () => {
           isOpen={showVideoRequestModal}
           onClose={() => setShowVideoRequestModal(false)}
           requestedVideoName={requestedVideoName}
+          requestedVideoPath={requestedVideoPath}
           onFileChange={player.handleFileChange}
+          onLoadVideoFromFile={player.loadVideoFromFile}
+          projectDirPath={projectDirPath}
         />
 
         {/* --- Sidebar --- */}
@@ -981,7 +992,8 @@ const DesktopApp = () => {
           setVideoUrlInput={setVideoUrlInput}
           onSubmit={handleVideoUrlSubmit}
         />
-    </div >
+      </div>
+    </div>
   );
 };
 

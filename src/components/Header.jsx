@@ -25,44 +25,20 @@ const Header = ({
                     <span className="text-xs text-gray-500 mt-1 font-mono">v4.0.0</span>
                 </h1>
                 {projectName && (
-                    <span className="text-xs text-gray-400 bg-gray-700 px-2 py-0.5 rounded" title="現在のプロジェクト">
+                    <span className="text-xs text-gray-400 bg-gray-700 px-2 py-0.5 rounded max-w-[400px] truncate" title={projectName}>
                         {projectName}
                     </span>
                 )}
             </div>
 
+            {/* Spacer - pushes buttons to the right */}
+            <div className="flex-1" />
+
             {/* View Mode Toggles */}
             <div className="flex bg-gray-900 rounded p-1 gap-1 shrink-0">
-                {/* View Mode Switch (Video / Log) */}
-                <div className="flex bg-black/20 rounded-md p-0.5 border border-gray-700/50">
-                    <button
-                        onClick={() => setLogOnlyMode(false)}
-                        className={`flex items-center justify-center w-8 h-8 rounded transition-all ${
-                            !logOnlyMode 
-                                ? 'bg-blue-600 text-white shadow-sm' 
-                                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
-                        }`}
-                        title="動画モード (V)"
-                    >
-                        <Tv size={16} />
-                    </button>
-                    <button
-                        onClick={() => setLogOnlyMode(true)}
-                        className={`flex items-center justify-center w-8 h-8 rounded transition-all ${
-                            logOnlyMode 
-                                ? 'bg-purple-600 text-white shadow-sm' 
-                                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
-                        }`}
-                        title="ログ読みモード (L)"
-                    >
-                        <BookOpen size={16} />
-                    </button>
-                </div>
-
+                {/* Danmaku & Sidebar Toggles - shown only in video mode */}
                 {!logOnlyMode && (
                     <>
-                        <div className="w-px bg-gray-700 mx-1 self-center h-6"></div>
-
                         {/* Toggles */}
                         <button
                             onClick={() => setShowDanmaku(!showDanmaku)}
@@ -86,8 +62,36 @@ const Header = ({
                         >
                             <PanelRight size={18} />
                         </button>
+
+                        <div className="w-px bg-gray-700 mx-1 self-center h-6"></div>
                     </>
                 )}
+
+                {/* View Mode Switch (Video / Log) - Click anywhere to toggle */}
+                <div 
+                    className="flex bg-black/20 rounded-md p-0.5 border border-gray-700/50 cursor-pointer"
+                    onClick={() => setLogOnlyMode(!logOnlyMode)}
+                    title={logOnlyMode ? "動画モードに切り替え (V)" : "ログ読みモードに切り替え (L)"}
+                >
+                    <div
+                        className={`flex items-center justify-center w-8 h-8 rounded transition-all ${
+                            !logOnlyMode 
+                                ? 'bg-blue-600 text-white shadow-sm' 
+                                : 'text-gray-400'
+                        }`}
+                    >
+                        <Tv size={16} />
+                    </div>
+                    <div
+                        className={`flex items-center justify-center w-8 h-8 rounded transition-all ${
+                            logOnlyMode 
+                                ? 'bg-purple-600 text-white shadow-sm' 
+                                : 'text-gray-400'
+                        }`}
+                    >
+                        <BookOpen size={16} />
+                    </div>
+                </div>
             </div>
 
             {/* Actions */}
