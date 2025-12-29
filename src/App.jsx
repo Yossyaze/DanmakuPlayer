@@ -122,6 +122,9 @@ const DesktopApp = () => {
   
   // Scroll position storage for LogViewer (keyed by fileId: 'all' | file.id)
   const logScrollPositionsRef = useRef({});
+  
+  // Log viewer sidebar visibility state
+  const [logSidebarOpen, setLogSidebarOpen] = useState(true);
 
     // Handler for truncation indicator click - jump to log mode and scroll to comment
     const handleTruncationIndicatorClick = useCallback((rootId) => {
@@ -748,7 +751,8 @@ const DesktopApp = () => {
             formatTime={formatTime}
             totalDuration={cmSystem.getTotalDuration}
             scrollPositionsRef={logScrollPositionsRef}
-            // Add other necessary props if LogViewer needs them
+            sidebarOpen={logSidebarOpen}
+            onToggleSidebar={() => setLogSidebarOpen(!logSidebarOpen)}
           />
         )}
           </div>

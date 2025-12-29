@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CommentList from './CommentList';
 import LogCommentItem from './ui/LogCommentItem';
-import { Hash, Settings, Ban } from 'lucide-react';
+import { Hash, Settings, Ban, Menu } from 'lucide-react';
 import LogViewerSearch from './logviewer/LogViewerSearch';
 import LogViewerFileList from './logviewer/LogViewerFileList';
 import LogViewerSearchResults from './logviewer/LogViewerSearchResults';
@@ -76,7 +76,8 @@ const LogViewer = ({
     scrollToCommentId, // New prop for external scroll trigger
     onScrollComplete,   // Callback after scroll completes
     scrollPositionsRef,  // Ref for storing scroll positions per file
-    sidebarOpen = true  // Control sidebar visibility from outside
+    sidebarOpen = true,  // Control sidebar visibility from outside
+    onToggleSidebar      // Callback to toggle sidebar
 }) => {
     // --- Refs ---
     const internalActiveCommentRef = React.useRef(null);
@@ -366,7 +367,7 @@ const LogViewer = ({
     return (
         <div className="flex-1 min-h-0 bg-gray-900 overflow-hidden relative flex flex-row">
             {/* Left Sidebar: File List - Width collapses when closed */}
-            <div className={`transition-all duration-200 ${sidebarOpen ? 'w-64' : 'w-0 overflow-hidden'}`}>
+            <div className={`h-full transition-all duration-200 ${sidebarOpen ? 'w-64' : 'w-0 overflow-hidden'}`}>
                 <LogViewerFileList
                     files={files}
                     selectedFileId={selectedFileId}
@@ -378,11 +379,25 @@ const LogViewer = ({
             {/* Control moved to Header */}
 
             {/* Main Content Area (Center) */}
-            <div ref={containerRef} className="flex-1 flex flex-col min-w-0 bg-gray-900 border-x border-gray-800 shadow-xl relative">
+            <div ref={containerRef} className="flex-1 flex flex-col min-w-0 min-h-0 bg-gray-900 border-x border-gray-800 shadow-xl relative">
                  
                  {/* Thread Title Header */}
                 <div className="shrink-0 bg-gray-800/80 backdrop-blur border-b border-gray-700 py-1.5 px-2 shadow-sm z-10 sticky top-0 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
+                        {/* Hamburger Menu Button */}
+                        {onToggleSidebar && (
+                            <button
+                                onClick={onToggleSidebar}
+                                className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+                                    sidebarOpen
+                                        ? 'bg-blue-600/20 text-blue-400'
+                                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                                }`}
+                                title={sidebarOpen ? 'ファイルリストを隠す' : 'ファイルリストを表示'}
+                            >
+                                <Menu size={18} />
+                            </button>
+                        )}
                         {localActiveThreadTitle && (
                             <>
                                 <Hash size={18} className="text-blue-400 shrink-0" />

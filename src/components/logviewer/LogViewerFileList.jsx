@@ -11,7 +11,7 @@ const LogViewerFileList = ({
     if (files.length === 0) return null;
 
     return (
-        <div className="w-64 shrink-0 bg-gray-950 border-r border-gray-800 flex flex-col transition-all duration-300">
+        <div className="w-64 h-full shrink-0 bg-gray-950 border-r border-gray-800 flex flex-col min-h-0 transition-all duration-300">
             <div className="p-3 border-b border-gray-800 bg-gray-900/50 flex justify-between items-center">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Loaded Logs</h3>
             </div>
