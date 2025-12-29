@@ -687,30 +687,30 @@ const Sidebar = ({
     return (
         <div className="flex flex-col bg-gray-900 border-l border-gray-700 h-full" style={{ width: sidebarWidth }}>
 
-            {/* Tab Bar */}
-            <div className="flex bg-gray-900 border-b border-gray-700 shrink-0">
+            {/* Tab Bar - Compact with Text */}
+            <div className="flex bg-gray-800 border-b border-gray-700 shrink-0">
                 {/* Settings Tab */}
                 <button
                     onClick={toggleSettings}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-bold transition-colors ${showSettingsPanel
-                        ? 'bg-gray-800 text-blue-400 border-b-2 border-blue-500'
-                        : 'bg-gray-900 text-gray-500 hover:bg-gray-800 hover:text-gray-300'
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 text-xs font-medium transition-colors ${showSettingsPanel
+                        ? 'bg-gray-700 text-blue-400 border-b-2 border-blue-500'
+                        : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'
                         }`}
                 >
-                    <Settings size={16} />
-                    <span>設定・ログ</span>
+                    <Settings size={14} />
+                    <span>設定</span>
                 </button>
 
                 {/* NG Tab */}
                 <button
                     onClick={toggleNgPanel}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-bold transition-colors ${showNgPanel
-                        ? 'bg-gray-800 text-red-400 border-b-2 border-red-500'
-                        : 'bg-gray-900 text-gray-500 hover:bg-gray-800 hover:text-gray-300'
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 text-xs font-medium transition-colors ${showNgPanel
+                        ? 'bg-gray-700 text-red-400 border-b-2 border-red-500'
+                        : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'
                         }`}
                 >
-                    <Ban size={16} />
-                    <span>NG管理</span>
+                    <Ban size={14} />
+                    <span>NG</span>
                 </button>
             </div>
 
