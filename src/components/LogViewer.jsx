@@ -381,12 +381,12 @@ const LogViewer = ({
             <div ref={containerRef} className="flex-1 flex flex-col min-w-0 bg-gray-900 border-x border-gray-800 shadow-xl relative">
                  
                  {/* Thread Title Header */}
-                <div className="shrink-0 bg-gray-800/80 backdrop-blur border-b border-gray-700 p-4 shadow-sm z-10 sticky top-0 flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
+                <div className="shrink-0 bg-gray-800/80 backdrop-blur border-b border-gray-700 p-3 shadow-sm z-10 sticky top-0 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                         {localActiveThreadTitle && (
                             <>
-                                <Hash size={20} className="text-blue-400 mt-1 shrink-0" />
-                                <h2 className="text-gray-100 font-bold text-lg leading-snug wrap-break-word">
+                                <Hash size={18} className="text-blue-400 shrink-0" />
+                                <h2 className="text-gray-100 font-bold text-sm leading-tight line-clamp-1 overflow-hidden" title={localActiveThreadTitle}>
                                     {localActiveThreadTitle}
                                 </h2>
                             </>

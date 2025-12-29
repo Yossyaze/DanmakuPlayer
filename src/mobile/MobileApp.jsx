@@ -487,15 +487,8 @@ const MobileApp = () => {
             }
           }}
         >
-          {/* Top Controls - Visible in overlay mode */}
-          {/* Top Controls - fade animation */}
+          {/* Top Controls - Left side (弾幕, ミュート, 設定) */}
           <div className={`absolute top-2 left-2 z-30 flex gap-1 transition-opacity ${showControlsOverlay || !player.videoSrc ? 'opacity-100 duration-150' : 'opacity-0 pointer-events-none duration-500'}`}>
-              <button
-                onClick={(e) => { e.stopPropagation(); setLogOnlyMode(true); setActiveTab(null); }}
-                className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300"
-              >
-                <BookOpen size={18} />
-              </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setShowDanmaku(!showDanmaku); }}
                 className={`p-2 rounded-lg backdrop-blur-sm transition-all ${
@@ -530,6 +523,17 @@ const MobileApp = () => {
                 }`}
               >
                 <Settings size={18} />
+              </button>
+            </div>
+
+          {/* Top Controls - Right side (モード切替) */}
+          <div className={`absolute top-2 right-2 z-30 transition-opacity ${showControlsOverlay || !player.videoSrc ? 'opacity-100 duration-150' : 'opacity-0 pointer-events-none duration-500'}`}>
+              <button
+                onClick={(e) => { e.stopPropagation(); setLogOnlyMode(true); setActiveTab(null); }}
+                className="p-2 rounded-lg backdrop-blur-sm bg-purple-600/50 text-white"
+                title="ログ読みモード"
+              >
+                <BookOpen size={18} />
               </button>
             </div>
 
@@ -635,8 +639,8 @@ const MobileApp = () => {
               </div>
             </div>
           )}
-          {/* Project Controls - fade animation (top right) */}
-          <div className={`absolute top-2 right-2 z-30 flex gap-1 transition-opacity ${showControlsOverlay || !player.videoSrc ? 'opacity-100 duration-150' : 'opacity-0 pointer-events-none duration-500'}`}>
+          {/* Project Controls - fade animation (top center-right, avoiding mode toggle) */}
+          <div className={`absolute top-12 right-2 z-30 flex gap-1 transition-opacity ${showControlsOverlay || !player.videoSrc ? 'opacity-100 duration-150' : 'opacity-0 pointer-events-none duration-500'}`}>
               <button
                 onClick={(e) => { e.stopPropagation(); handleSaveProject(); }}
                 className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300"
@@ -917,7 +921,8 @@ const MobileApp = () => {
           <span className="text-sm text-purple-400 font-bold flex-1">ログ読みモード</span>
           <button
             onClick={() => setLogOnlyMode(false)}
-            className="p-2 bg-gray-800 rounded-lg text-gray-300"
+            className="p-2 rounded-lg bg-purple-600/50 text-white"
+            title="動画モード"
           >
             <Tv size={18} />
           </button>

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Search, X, Filter, Image, Flame, Hash, Type, Video } from 'lucide-react';
 
 const FILTER_OPTIONS = [
@@ -32,6 +32,9 @@ const LogViewerSearch = ({
     handleSearchKeyDown,
 }) => {
     const filterMenuRef = useRef(null);
+    const searchContainerRef = useRef(null);
+    const searchInputRef = useRef(null);
+    const [showSearchInput, setShowSearchInput] = useState(false);
 
     // フィルターメニューの外側クリックで閉じる
     useEffect(() => {
@@ -45,6 +48,28 @@ const LogViewerSearch = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showFilterMenu, setShowFilterMenu]);
 
+    // 検索入力欄の外側クリックで閉じる
+    useEffect(() => {
+        if (!showSearchInput) return;
+        const handleClickOutside = (event) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+                // 検索クエリが空なら閉じる
+                if (!searchQuery.trim()) {
+                    setShowSearchInput(false);
+                }
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showSearchInput, searchQuery]);
+
+    // 検索入力欄を開いたらフォーカス
+    useEffect(() => {
+        if (showSearchInput && searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    }, [showSearchInput]);
+
     const handleSearchClick = () => {
         if (searchQuery.trim()) {
             addToHistory(searchQuery.trim());
@@ -54,12 +79,6 @@ const LogViewerSearch = ({
             setShowSearchDropdown(false);
             setSearchHistoryIndex(-1);
         }
-    };
-
-    const handleClearSearch = () => {
-        setSearchQuery('');
-        setActiveSearchQuery('');
-        if (activeFilter === 'none') setShowResultsPopup(false);
     };
 
     const handleHistorySelect = (query) => {
@@ -80,43 +99,67 @@ const LogViewerSearch = ({
         setShowFilterMenu(false);
     };
 
+    const handleCloseSearch = () => {
+        setSearchQuery('');
+        setActiveSearchQuery('');
+        setShowSearchInput(false);
+        setShowSearchDropdown(false);
+    };
+
     return (
         <>
-            {/* Search Input */}
-            <div className="relative">
-                <div className="relative flex items-center">
-                    <div 
-                        className="absolute inset-y-0 left-0 pl-2 flex items-center cursor-pointer text-gray-400 hover:text-white transition-colors z-10"
-                        onClick={handleSearchClick}
+            {/* Search Toggle Button / Input */}
+            <div ref={searchContainerRef} className="relative">
+                {!showSearchInput ? (
+                    // 虫眼鏡アイコンボタン
+                    <button
+                        onClick={() => setShowSearchInput(true)}
+                        className="p-2 rounded-lg transition-colors text-gray-400 hover:text-white hover:bg-gray-700"
+                        title="検索"
                     >
-                        <Search size={14} />
-                    </div>
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setSearchHistoryIndex(-1);
-                        }}
-                        onKeyDown={handleSearchKeyDown}
-                        onFocus={() => setShowSearchDropdown(true)}
-                        onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
-                        placeholder="本文を検索... (Enter)"
-                        className="w-48 bg-gray-900 border border-gray-700 focus:border-blue-500 rounded-lg py-1.5 pl-8 pr-8 text-sm text-white placeholder-gray-500 outline-none transition-colors"
-                    />
-                    {searchQuery && (
+                        <Search size={20} />
+                    </button>
+                ) : (
+                    // 展開された検索入力欄
+                    <div className="relative flex items-center">
+                        <div 
+                            className="absolute inset-y-0 left-0 pl-2 flex items-center cursor-pointer text-gray-400 hover:text-white transition-colors z-10"
+                            onClick={handleSearchClick}
+                        >
+                            <Search size={14} />
+                        </div>
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setSearchHistoryIndex(-1);
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                    handleCloseSearch();
+                                    return;
+                                }
+                                handleSearchKeyDown(e);
+                            }}
+                            onFocus={() => setShowSearchDropdown(true)}
+                            onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
+                            placeholder="検索... (Enter)"
+                            className="w-40 bg-gray-900 border border-gray-700 focus:border-blue-500 rounded-lg py-1.5 pl-8 pr-8 text-sm text-white placeholder-gray-500 outline-none transition-colors"
+                        />
                         <button
-                            onClick={handleClearSearch}
+                            onClick={handleCloseSearch}
                             className="absolute right-2 text-gray-500 hover:text-gray-300"
                         >
                             <X size={14} />
                         </button>
-                    )}
-                </div>
+                    </div>
+                )}
 
                 {/* Search History Dropdown */}
-                {showSearchDropdown && searchHistory.length > 0 && (
-                    <div className="absolute top-full left-0 mt-1 w-48 bg-gray-900 border border-gray-700 rounded-lg shadow-xl overflow-hidden z-50">
+                {showSearchInput && showSearchDropdown && searchHistory.length > 0 && (
+                    <div className="absolute top-full left-0 mt-1 w-40 bg-gray-900 border border-gray-700 rounded-lg shadow-xl overflow-hidden z-50">
                         <div className="px-2 py-1.5 text-xs text-gray-500 border-b border-gray-800">検索履歴</div>
                         {searchHistory.map((query, idx) => (
                             <button
@@ -183,3 +226,4 @@ const LogViewerSearch = ({
 };
 
 export default LogViewerSearch;
+
