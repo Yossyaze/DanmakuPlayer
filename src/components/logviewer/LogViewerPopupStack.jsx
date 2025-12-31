@@ -13,7 +13,7 @@ const LogViewerPopupStack = ({
     logSettings,
     aaOverrideMap,
     containerWidth,
-    sidebarWidth = 0,
+    containerLeft = 0,
     filteredCommentsCount,
     onClosePopup,
     onPopupRowClick,
@@ -43,9 +43,9 @@ const LogViewerPopupStack = ({
                         onReplyCountClick={(e, c) => onReplyCountClick(e, c, true)}
                         onIdClick={onIdClick}
                         totalComments={filteredCommentsCount}
-                        customWidth={containerWidth * 0.75}
+                        customWidth={containerWidth - 10 * (index + 1)}
                         style={{ zIndex: 60 + index * 10 }}
-                        minX={sidebarWidth}
+                        minX={containerLeft + 10 * (index + 1)}
                         aaOverrideMap={aaOverrideMap}
                         RowComponent={LogCommentItem}
                     />
@@ -65,9 +65,9 @@ const LogViewerPopupStack = ({
                         onReplyCountClick={(e, c) => onReplyCountClick(e, c, true)}
                         onIdClick={onIdClick}
                         totalComments={filteredCommentsCount}
-                        customWidth={containerWidth * 0.75}
+                        customWidth={containerWidth - 10 * (index + 1)}
                         style={{ zIndex: 60 + index * 10 }}
-                        minX={sidebarWidth}
+                        minX={containerLeft + 10 * (index + 1)}
                         aaOverrideMap={aaOverrideMap}
                         RowComponent={LogCommentItem}
                     />

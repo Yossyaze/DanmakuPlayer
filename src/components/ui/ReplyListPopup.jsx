@@ -48,8 +48,14 @@ const ReplyListPopup = ({
                     y = Math.max(10, window.innerHeight - rect.height - 10);
                 }
                 
-                // For X, center relative to parent or just stay in viewport
-                x = Math.max(10, Math.min(position.x, window.innerWidth - rect.width - 20));
+                // X position: use fixed left align if prop is set, otherwise viewport-relative
+                if (customWidth) {
+                    // When customWidth is provided (from LogViewer), align to minX
+                    x = minX;
+                } else {
+                    // Fallback to viewport-relative positioning (for Sidebar)
+                    x = Math.max(10, Math.min(position.x, window.innerWidth - rect.width - 20));
+                }
             } else {
                 // Legacy fallback for simple anchor clicks
                 if (y + rect.height + 10 > window.innerHeight) {
@@ -72,7 +78,7 @@ const ReplyListPopup = ({
             popupRef.current.style.top = `${y}px`;
             popupRef.current.style.left = `${x}px`;
         }
-    }, [position, parentRect, comments.length, minX]); // Re-adjust if comments change (though improbable here)
+    }, [position, parentRect, comments.length, minX, customWidth]); // Re-adjust if comments change (though improbable here)
 
     return (
         <>
@@ -91,7 +97,7 @@ const ReplyListPopup = ({
             />
             <div 
                 ref={popupRef}
-                className={`fixed max-w-[90vw] bg-gray-900 border border-gray-600 rounded shadow-2xl animate-fade-in pointer-events-auto flex flex-col max-h-[60vh] ${!customWidth && !popupClassName ? 'w-96' : ''} ${popupClassName}`}
+                className={`fixed bg-gray-900 border border-gray-600 rounded shadow-2xl animate-fade-in pointer-events-auto flex flex-col max-h-[60vh] ${!customWidth && !popupClassName ? 'w-96' : ''} ${popupClassName}`}
                 style={{ 
                     top: position.y, 
                     left: position.x,

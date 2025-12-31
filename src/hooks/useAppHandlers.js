@@ -27,15 +27,16 @@ export function useAppHandlers({
     dmSettings,
     aaOverrideMap,
     setAaOverrideMap,
-    showExportModal,
     setShowExportModal,
     setShowUrlModal,
     setRequestedVideoName,
+    setRequestedVideoPath,
     setShowVideoRequestModal,
     projectFileHandle,
     setProjectFileHandle,
     projectName,
     setProjectName,
+    setProjectDirPath,
 }) {
     const autoPlayRequestedRef = useRef(false);
 
@@ -67,6 +68,14 @@ export function useAppHandlers({
             if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
                 e.preventDefault();
                 handleSaveProject();
+                return;
+            }
+
+            // Ctrl+R / Cmd+R for Reload
+            if ((e.ctrlKey || e.metaKey) && e.code === 'KeyR') {
+                // In some Tauri environments, standard reload is blocked.
+                // We'll allow it if possible, or force it if it's the expected behavior.
+                window.location.reload();
                 return;
             }
 
@@ -105,7 +114,7 @@ export function useAppHandlers({
 
     // --- Project Data Helper ---
     const getProjectData = useCallback(() => ({
-        version: "3.3.0",
+        version: "3.4.0",
         timestamp: Date.now(),
         videoStartTimeStr: videoStartTimeStr,
         startTimeStr: logSystem.startTimeStr,
@@ -113,9 +122,10 @@ export function useAppHandlers({
         dmSettings: dmSettings,
         loadedFiles: logSystem.loadedFiles,
         videoFileName: player.videoFileName,
+        videoFilePath: player.videoFilePath, // Full absolute path for auto-loading
         ngSettings: logSystem.ngSettings,
         aaOverrideMap: aaOverrideMap
-    }), [videoStartTimeStr, logSystem.startTimeStr, cmSystem.cmRanges, dmSettings, logSystem.loadedFiles, player.videoFileName, logSystem.ngSettings, aaOverrideMap]);
+    }), [videoStartTimeStr, logSystem.startTimeStr, cmSystem.cmRanges, dmSettings, logSystem.loadedFiles, player.videoFileName, player.videoFilePath, logSystem.ngSettings, aaOverrideMap]);
 
     // --- Save Project (Overwrite) ---
     const handleSaveProject = useCallback(async () => {
@@ -146,7 +156,7 @@ export function useAppHandlers({
     }, [projectFileHandle, projectName, getProjectData, setShowExportModal, setProjectFileHandle, setProjectName]);
 
     // --- Import Project ---
-    const processImportFile = useCallback(async (file, fileHandle = null) => {
+    const processImportFile = useCallback(async (file, fileHandle = null, filePath = null) => {
         try {
             const text = await file.text();
             const data = JSON.parse(text);
@@ -165,15 +175,32 @@ export function useAppHandlers({
                 setProjectName(file.name.replace('.json', ''));
             }
 
+            // Extract directory path from project file path for video lookup
+            let projectDirPath = null;
+            if (filePath) {
+                // Get directory path from full file path
+                const lastSlash = filePath.lastIndexOf('/');
+                const lastBackslash = filePath.lastIndexOf('\\');
+                const lastIdx = Math.max(lastSlash, lastBackslash);
+                if (lastIdx !== -1) {
+                    projectDirPath = filePath.substring(0, lastIdx);
+                }
+            }
+            console.log("[AppHandlers] Extracted projectDirPath:", projectDirPath);
+            setProjectDirPath(projectDirPath);
+
             if (data.videoFileName) {
                 setRequestedVideoName(data.videoFileName);
+                if (data.videoFilePath) {
+                    setRequestedVideoPath(data.videoFilePath);
+                }
                 setShowVideoRequestModal(true);
             }
         } catch (err) {
             console.error("Failed to import project:", err);
             alert("プロジェクトファイルの読み込みに失敗しました。");
         }
-    }, [cmSystem, logSystem, setVideoStartTimeStr, setAaOverrideMap, setProjectFileHandle, setProjectName, setRequestedVideoName, setShowVideoRequestModal]);
+    }, [cmSystem, logSystem, setVideoStartTimeStr, setAaOverrideMap, setProjectFileHandle, setProjectName, setRequestedVideoName, setRequestedVideoPath, setShowVideoRequestModal, setProjectDirPath]);
 
     const handleImport = useCallback(async (fileOrEvent) => {
         let file = fileOrEvent;
@@ -184,6 +211,7 @@ export function useAppHandlers({
         }
 
         if (!file || !(file instanceof File)) {
+            // Use Web File System Access API if available
             if ('showOpenFilePicker' in window) {
                 try {
                     const [handle] = await window.showOpenFilePicker({
@@ -202,6 +230,7 @@ export function useAppHandlers({
                 }
             }
 
+            // Fallback to input element
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.json';

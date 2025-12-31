@@ -150,21 +150,40 @@ const LogViewer = ({
         }
     }, [selectedFileId, scrollPositionsRef]);
     
-    // Container width measurement for popups
+    // Container width and left position measurement for popups
     const containerRef = React.useRef(null);
     const [containerWidth, setContainerWidth] = React.useState(0);
+    const [containerLeft, setContainerLeft] = React.useState(0);
 
-    React.useLayoutEffect(() => {
+    React.useEffect(() => {
         if (!containerRef.current) return;
-        const updateWidth = () => {
+        
+        const updateDimensions = () => {
             if (containerRef.current) {
-                setContainerWidth(containerRef.current.offsetWidth);
+                const rect = containerRef.current.getBoundingClientRect();
+                setContainerWidth(rect.width);
+                setContainerLeft(rect.left);
             }
         };
-        updateWidth();
-        window.addEventListener('resize', updateWidth);
-        return () => window.removeEventListener('resize', updateWidth);
-    }, []);
+        
+        // Use ResizeObserver for reliable size change detection
+        const resizeObserver = new ResizeObserver(() => {
+            updateDimensions();
+            console.log('[LogViewer] ResizeObserver triggered, containerWidth:', containerRef.current?.getBoundingClientRect().width);
+        });
+        resizeObserver.observe(containerRef.current);
+        
+        // Initial measurement
+        updateDimensions();
+        
+        // Also listen for window resize
+        window.addEventListener('resize', updateDimensions);
+        
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener('resize', updateDimensions);
+        };
+    }, []); // Run once, ResizeObserver handles all size changes
     // AA Override State (Managed by App via props)
     // const [aaOverrideMap, setAaOverrideMap] = useState({}); // Moved to App
     // const handleToggleAA = ... // Moved to App
@@ -567,7 +586,7 @@ const LogViewer = ({
                 logSettings={logSettings}
                 aaOverrideMap={aaOverrideMap}
                 containerWidth={containerWidth}
-                sidebarWidth={files.length > 0 ? 256 : 0}
+                containerLeft={containerLeft}
                 filteredCommentsCount={filteredComments.length}
                 onClosePopup={handleClosePopup}
                 onPopupRowClick={handlePopupRowClick}

@@ -8,6 +8,7 @@ export const usePlayer = () => {
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
     const [videoFileName, setVideoFileName] = useState("");
+    const [videoFilePath, setVideoFilePath] = useState(""); // Full absolute path (for compatibility with Desktop version)
     const [isReady, setIsReady] = useState(false); // New: Track player readiness
 
     const setPlayingState = useCallback((playing) => {
@@ -80,6 +81,19 @@ export const usePlayer = () => {
         }
     }, []);
 
+    // Load video from File object directly (for compatibility with Desktop version)
+    // path is optional - if provided, stores the absolute file path for project saving
+    const loadVideoFromFile = useCallback((file, path = null) => {
+        if (file) {
+            const url = URL.createObjectURL(file);
+            setVideoSrc(url);
+            setVideoFileName(file.name);
+            setVideoFilePath(path || "");
+            setIsReady(false);
+            setIsPlaying(false);
+        }
+    }, []);
+
     const setVideoSrcWrapper = useCallback((src) => {
         setVideoSrc(src);
         setIsReady(false); // Reset ready on URL change
@@ -93,6 +107,8 @@ export const usePlayer = () => {
         setVideoSrc: setVideoSrcWrapper, // Use wrapper
         videoFileName,
         setVideoFileName,
+        videoFilePath,
+        setVideoFilePath,
         isPlaying,
         setIsPlaying,
         setPlayingState,
@@ -104,6 +120,7 @@ export const usePlayer = () => {
         toggleMute,
         safePlay,
         handleFileChange,
+        loadVideoFromFile,
         seekTo,
         getCurrentTime,
         isReady,
