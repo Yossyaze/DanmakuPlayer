@@ -16,6 +16,8 @@ import LogViewer from "./components/LogViewer";
 import ExportModal from "./components/modals/ExportModal";
 import VideoRequestModal from "./components/modals/VideoRequestModal";
 import UrlInputModal from "./components/modals/UrlInputModal";
+import HLSVideo from "./components/HLSVideo";
+import { isHlsUrl } from "./utils/hlsUtils";
 import MobileApp from "./mobile/MobileApp";
 
 // Initialize debug logger (Ctrl+Shift+D to download logs)
@@ -227,13 +229,37 @@ const DesktopApp = () => {
 
   // Handle Extension Import (URL Params & Messages)
   useEffect(() => {
+    // Helper to check if URL is a video/HLS stream
+    const isVideoUrl = (url) => {
+      if (!url) return false;
+      const lowerUrl = url.toLowerCase();
+      return (
+        lowerUrl.includes(".m3u8") ||
+        lowerUrl.includes(".mp4") ||
+        lowerUrl.includes(".webm") ||
+        lowerUrl.includes("youtube.com") ||
+        lowerUrl.includes("youtu.be")
+      );
+    };
+
+    // Handle import URL (video or log)
+    const handleImportUrl = (url) => {
+      if (isVideoUrl(url)) {
+        console.log("Importing as video URL:", url);
+        player.setVideoSrc(url);
+      } else {
+        console.log("Importing as log URL:", url);
+        logSystem
+          .handleUrlLoad(url)
+          .catch((err) => console.error("Auto-import failed:", err));
+      }
+    };
+
     // 1. Initial Load via URL Params
     const params = new URLSearchParams(window.location.search);
     const importUrl = params.get("import");
     if (importUrl) {
-      logSystem
-        .handleUrlLoad(importUrl)
-        .catch((err) => console.error("Auto-import failed:", err));
+      handleImportUrl(importUrl);
       window.history.replaceState({}, "", window.location.pathname);
     }
 
@@ -246,15 +272,13 @@ const DesktopApp = () => {
         event.data.url
       ) {
         console.log("Received import message:", event.data.url);
-        logSystem
-          .handleUrlLoad(event.data.url)
-          .catch((err) => alert("Import failed: " + err.message));
+        handleImportUrl(event.data.url);
       }
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [logSystem]);
+  }, [logSystem, player]);
 
   // --- Resize Logic ---
   const startResizing = useCallback((e) => {
@@ -596,6 +620,41 @@ const DesktopApp = () => {
                       </div>
                     </div>
                   </div>
+                ) : isHlsUrl(player.videoSrc) ? (
+                  /* HLS Video Player */
+                  <HLSVideo
+                    ref={player.playerRef}
+                    src={player.videoSrc}
+                    className="w-full h-full object-contain"
+                    onClick={togglePlay}
+                    volume={player.volume}
+                    muted={player.isMuted}
+                    onDuration={(d) => player.handleDuration(d)}
+                    onReady={() => {
+                      console.log("HLSVideo: Ready");
+                      player.setIsReady(true);
+                      if (autoPlayRequestedRef.current) {
+                        console.log("HLSVideo: Handling deferred AutoPlay");
+                        autoPlayRequestedRef.current = false;
+                        requestPlay();
+                      }
+                    }}
+                    onCanPlay={() => {
+                      console.log("HLSVideo: onCanPlay");
+                      if (!player.isReady) player.setIsReady(true);
+                    }}
+                    onEnded={() => player.setPlayingState(false)}
+                    onPause={() => {
+                      console.log("HLSVideo: onPause triggered");
+                      const isWaiting = cmSystem.cmStateRef.current.isWaiting;
+                      if (!isWaiting) player.setPlayingState(false);
+                    }}
+                    onPlay={() => player.setPlayingState(true)}
+                    onError={(e) => {
+                      console.error("HLSVideo: onError", e);
+                      alert("HLS再生エラー: ストリームを読み込めませんでした");
+                    }}
+                  />
                 ) : player.videoSrc.startsWith("blob:") ? (
                   /* Native Video for Local Files */
                   <video

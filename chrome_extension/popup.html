@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DanmakuPlayer Helper</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup-container">
+      <header class="header">
+        <img src="icons/icon48.png" alt="icon" class="logo" />
+        <div class="title-area">
+          <h1>DanmakuPlayer Helper</h1>
+          <span class="version">v1.2.0</span>
+        </div>
+      </header>
+
+      <section class="section">
+        <h2>📺 このページを開く</h2>
+        <button id="open-page" class="btn btn-primary">
+          現在のページをDanmakuPlayerで開く
+        </button>
+      </section>
+
+      <section class="section" id="hls-section">
+        <h2>🎬 検出されたHLSストリーム</h2>
+        <div id="hls-list" class="hls-list">
+          <p class="empty-message">検出中...</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>⚙️ 設定</h2>
+        <div class="setting-row">
+          <label for="prefer-production">本番環境を優先</label>
+          <input type="checkbox" id="prefer-production" />
+        </div>
+      </section>
+
+      <footer class="footer">
+        <a href="https://yossyaze.github.io/DanmakuPlayer/" target="_blank"
+          >DanmakuPlayerを開く</a
+        >
+      </footer>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
