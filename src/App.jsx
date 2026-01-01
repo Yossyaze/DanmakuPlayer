@@ -19,6 +19,7 @@ import UrlInputModal from "./components/modals/UrlInputModal";
 import HLSVideo from "./components/HLSVideo";
 import { isHlsUrl } from "./utils/hlsUtils";
 import MobileApp from "./mobile/MobileApp";
+import AbeModeUnlockCelebration from "./components/ui/AbeModeUnlockCelebration";
 
 // Initialize debug logger (Ctrl+Shift+D to download logs)
 initDebugLogger();
@@ -114,6 +115,8 @@ const DesktopApp = () => {
     danmakuComments,
     abeModeUnlocked,
     unlockAbeMode,
+    showAbeUnlockCelebration,
+    closeAbeUnlockCelebration,
   } = useDanmakuPlayer(enableTreeView);
 
   const {
@@ -1206,6 +1209,12 @@ const DesktopApp = () => {
           videoUrlInput={videoUrlInput}
           setVideoUrlInput={setVideoUrlInput}
           onSubmit={handleVideoUrlSubmit}
+        />
+
+        {/* --- Abe Mode Unlock Celebration --- */}
+        <AbeModeUnlockCelebration
+          isVisible={showAbeUnlockCelebration}
+          onClose={closeAbeUnlockCelebration}
         />
       </div>
     </div>

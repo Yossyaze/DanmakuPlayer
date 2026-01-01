@@ -31,6 +31,7 @@ import CmWaitOverlay from "../components/CmWaitOverlay";
 import LogViewer from "../components/LogViewer";
 import NgList from "../components/ui/NgList";
 import VideoRequestModal from "../components/modals/VideoRequestModal";
+import AbeModeUnlockCelebration from "../components/ui/AbeModeUnlockCelebration";
 import {
   DndContext,
   closestCenter,
@@ -167,6 +168,8 @@ const MobileApp = () => {
     resetPlayerState,
     abeModeUnlocked,
     unlockAbeMode,
+    showAbeUnlockCelebration,
+    closeAbeUnlockCelebration,
   } = useDanmakuPlayer(enableTreeView);
 
   const {
@@ -1699,6 +1702,12 @@ const MobileApp = () => {
         onClose={() => setShowVideoRequestModal(false)}
         requestedVideoName={requestedVideoName}
         onFileChange={player.handleFileChange}
+      />
+
+      {/* --- Abe Mode Unlock Celebration --- */}
+      <AbeModeUnlockCelebration
+        isVisible={showAbeUnlockCelebration}
+        onClose={closeAbeUnlockCelebration}
       />
     </div>
   );

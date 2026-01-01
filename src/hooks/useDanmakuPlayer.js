@@ -25,13 +25,23 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     }
   });
 
-  // Unlock Abe Mode (called from search)
+  // Celebration modal visibility
+  const [showAbeUnlockCelebration, setShowAbeUnlockCelebration] =
+    useState(false);
+
+  // Unlock Abe Mode and show celebration (called from search)
   const unlockAbeMode = useCallback(() => {
     if (!abeModeUnlocked) {
       setAbeModeUnlocked(true);
       localStorage.setItem("abe_mode_unlocked", "true");
+      setShowAbeUnlockCelebration(true);
     }
   }, [abeModeUnlocked]);
+
+  // Close celebration modal
+  const closeAbeUnlockCelebration = useCallback(() => {
+    setShowAbeUnlockCelebration(false);
+  }, []);
   const [dmSettings, setDmSettings] = useState(() => {
     try {
       const saved = localStorage.getItem("danmaku_settings");
@@ -770,6 +780,8 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     setDmSettings,
     abeModeUnlocked,
     unlockAbeMode,
+    showAbeUnlockCelebration,
+    closeAbeUnlockCelebration,
     isAutoScroll,
     setIsAutoScroll,
     skipSeconds,
