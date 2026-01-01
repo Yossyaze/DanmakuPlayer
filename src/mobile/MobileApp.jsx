@@ -1,18 +1,50 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Play, Pause, Volume2, VolumeX, MessageSquare, Tv, BookOpen, Save, FilePen, FileInput, FileVideo, Plus, X, Edit2, Settings, ArrowDown, GripVertical, Maximize, Minimize, Menu } from 'lucide-react';
-import YouTube from 'react-youtube';
-import { useDanmakuPlayer } from '../hooks/useDanmakuPlayer';
-import { useAppHandlers } from '../hooks/useAppHandlers';
-import { formatTime } from '../utils/danmakuUtils';
-import DanmakuLayer from '../components/DanmakuLayer';
-import CommentList from '../components/CommentList';
-import CmWaitOverlay from '../components/CmWaitOverlay';
-import LogViewer from '../components/LogViewer';
-import NgList from '../components/ui/NgList';
-import VideoRequestModal from '../components/modals/VideoRequestModal';
-import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  MessageSquare,
+  Tv,
+  BookOpen,
+  Save,
+  FilePen,
+  FileInput,
+  FileVideo,
+  Plus,
+  X,
+  Edit2,
+  Settings,
+  ArrowDown,
+  GripVertical,
+  Maximize,
+  Minimize,
+  Menu,
+} from "lucide-react";
+import YouTube from "react-youtube";
+import { useDanmakuPlayer } from "../hooks/useDanmakuPlayer";
+import { useAppHandlers } from "../hooks/useAppHandlers";
+import { formatTime } from "../utils/danmakuUtils";
+import DanmakuLayer from "../components/DanmakuLayer";
+import CommentList from "../components/CommentList";
+import CmWaitOverlay from "../components/CmWaitOverlay";
+import LogViewer from "../components/LogViewer";
+import NgList from "../components/ui/NgList";
+import VideoRequestModal from "../components/modals/VideoRequestModal";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 /**
  * Sortable file row component for drag-and-drop reordering
@@ -24,15 +56,15 @@ const MobileSortableFileRow = ({ file, onRemove }) => {
     setNodeRef,
     transform,
     transition,
-    isDragging
+    isDragging,
   } = useSortable({ id: file.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 50 : 'auto',
-    position: 'relative'
+    zIndex: isDragging ? 50 : "auto",
+    position: "relative",
   };
 
   return (
@@ -73,7 +105,7 @@ const MobileApp = () => {
   // --- Use existing hooks for shared logic ---
   const [uiSettings] = useState(() => {
     try {
-      const saved = localStorage.getItem('danmaku_ui_settings');
+      const saved = localStorage.getItem("danmaku_ui_settings");
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error("Failed to load UI settings", e);
@@ -82,21 +114,27 @@ const MobileApp = () => {
       showThreadTitle: true,
       enableTreeView: false,
       showImages: true,
-      imageLayout: 'inline',
-      aaMode: 'auto'
+      imageLayout: "inline",
+      aaMode: "auto",
     };
   });
 
-  const [enableTreeView, setEnableTreeView] = useState(uiSettings.enableTreeView);
+  const [enableTreeView, setEnableTreeView] = useState(
+    uiSettings.enableTreeView
+  );
   const [showImages, setShowImages] = useState(uiSettings.showImages);
-  const [showThreadTitle, setShowThreadTitle] = useState(uiSettings.showThreadTitle ?? true);
-  const [imageLayout, setImageLayout] = useState(uiSettings.imageLayout || 'inline');
-  const [aaMode, setAaMode] = useState(uiSettings.aaMode || 'auto');
+  const [showThreadTitle, setShowThreadTitle] = useState(
+    uiSettings.showThreadTitle ?? true
+  );
+  const [imageLayout, setImageLayout] = useState(
+    uiSettings.imageLayout || "inline"
+  );
+  const [aaMode, setAaMode] = useState(uiSettings.aaMode || "auto");
   const [aaOverrideMap, setAaOverrideMap] = useState({});
   const [expandedDanmakuImage, setExpandedDanmakuImage] = useState(null);
 
   const handleToggleAA = useCallback((comment, isCurrentlyAA) => {
-    setAaOverrideMap(prev => {
+    setAaOverrideMap((prev) => {
       const next = !isCurrentlyAA;
       return { ...prev, [comment.id]: next };
     });
@@ -109,10 +147,13 @@ const MobileApp = () => {
     logSystem,
     danmaku,
     currentTime,
-    dmSettings, setDmSettings,
-    isAutoScroll, setIsAutoScroll,
+    dmSettings,
+    setDmSettings,
+    isAutoScroll,
+    setIsAutoScroll,
     skipSeconds,
-    videoStartTimeStr, setVideoStartTimeStr,
+    videoStartTimeStr,
+    setVideoStartTimeStr,
     activeCommentId,
     togglePlay,
     requestPlay,
@@ -123,10 +164,15 @@ const MobileApp = () => {
     handleCommentClick,
     handleLogFileChange,
     handleSyncButton,
-    resetPlayerState
+    resetPlayerState,
   } = useDanmakuPlayer(enableTreeView);
 
-  const { activeDanmaku, danmakuContainerRef, handleAnimationEnd, resetDanmaku } = danmaku;
+  const {
+    activeDanmaku,
+    danmakuContainerRef,
+    handleAnimationEnd,
+    resetDanmaku,
+  } = danmaku;
 
   // --- Mobile-specific state ---
   const [showDanmaku, setShowDanmaku] = useState(true);
@@ -175,10 +221,10 @@ const MobileApp = () => {
   );
 
   // CM Settings state
-  const [cmStartInput, setCmStartInput] = useState('');
-  const [cmEndInput, setCmEndInput] = useState('');
-  const [cmStartMode, setCmStartMode] = useState('log'); // 'log' | 'video'
-  const [cmEndMode, setCmEndMode] = useState('log'); // 'log' | 'duration'
+  const [cmStartInput, setCmStartInput] = useState("");
+  const [cmEndInput, setCmEndInput] = useState("");
+  const [cmStartMode, setCmStartMode] = useState("log"); // 'log' | 'video'
+  const [cmEndMode, setCmEndMode] = useState("log"); // 'log' | 'duration'
   const [editingCmIndex, setEditingCmIndex] = useState(null);
 
   // --- Use App Handlers Hook ---
@@ -230,22 +276,22 @@ const MobileApp = () => {
 
     const shouldPlay = player.isPlaying && !cmSystem.isWaitingCm;
 
-    if (player.videoSrc && player.videoSrc.startsWith('blob:')) {
-      if (p.tagName === 'VIDEO') {
+    if (player.videoSrc && player.videoSrc.startsWith("blob:")) {
+      if (p.tagName === "VIDEO") {
         if (shouldPlay) {
-          p.play().catch(e => console.error("Native play error:", e));
+          p.play().catch((e) => console.error("Native play error:", e));
         } else {
           p.pause();
         }
       }
-    } else if (typeof p.playVideo === 'function') {
+    } else if (typeof p.playVideo === "function") {
       if (shouldPlay) {
         p.playVideo();
       } else {
         p.pauseVideo();
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player.isPlaying, player.videoSrc, cmSystem.isWaitingCm]);
 
   // Sync Volume/Mute
@@ -253,10 +299,14 @@ const MobileApp = () => {
     const p = player.playerRef.current;
     if (!p) return;
 
-    if (player.videoSrc && player.videoSrc.startsWith('blob:') && p.tagName === 'VIDEO') {
+    if (
+      player.videoSrc &&
+      player.videoSrc.startsWith("blob:") &&
+      p.tagName === "VIDEO"
+    ) {
       p.volume = player.volume;
       p.muted = player.isMuted;
-    } else if (typeof p.setVolume === 'function') {
+    } else if (typeof p.setVolume === "function") {
       p.setVolume(player.volume * 100);
       if (player.isMuted) {
         p.mute();
@@ -264,97 +314,118 @@ const MobileApp = () => {
         p.unMute();
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player.volume, player.isMuted, player.videoSrc, player.isReady]);
 
   // Calculate progress percentage
   const totalDuration = cmSystem.getTotalDuration || 0;
-  const progressPercent = totalDuration > 0 ? ((currentTime - cmSystem.timeOffset) / totalDuration) * 100 : 0;
+  const progressPercent =
+    totalDuration > 0
+      ? ((currentTime - cmSystem.timeOffset) / totalDuration) * 100
+      : 0;
 
   // Ref to track last seek time for throttling
   const lastSeekTimeRef = useRef(0);
 
   // Seekbar touch handler - matching desktop VideoControls pattern
-  const handleSeekTouchStart = useCallback((e) => {
-    if (!seekContainerRef.current || totalDuration <= 0) return;
+  const handleSeekTouchStart = useCallback(
+    (e) => {
+      if (!seekContainerRef.current || totalDuration <= 0) return;
 
-    setIsSeeking(true);
-    handleSeekStart();
+      setIsSeeking(true);
+      handleSeekStart();
 
-    const touch = e.touches[0];
-    const rect = seekContainerRef.current.getBoundingClientRect();
-    const startX = touch.clientX - rect.left;
-    const startPct = Math.max(0, Math.min(1, startX / rect.width));
-    const newTime = startPct * totalDuration;
+      const touch = e.touches[0];
+      const rect = seekContainerRef.current.getBoundingClientRect();
+      const startX = touch.clientX - rect.left;
+      const startPct = Math.max(0, Math.min(1, startX / rect.width));
+      const newTime = startPct * totalDuration;
 
-    // Clamp thumbnail position (w-32 = 128px, half = 64px)
-    const halfThumbWidth = 64;
-    const clampedPos = Math.max(halfThumbWidth, Math.min(rect.width - halfThumbWidth, startX));
-
-    // Show preview
-    setSeekPreviewTime(newTime);
-    setSeekPreviewPos(clampedPos);
-
-    // Immediate seek
-    handleSeek({ target: { value: newTime } });
-    lastSeekTimeRef.current = performance.now();
-
-    // Update preview video
-    if (previewVideoRef.current && player.videoSrc) {
-      const logTime = newTime + cmSystem.timeOffset;
-      const videoTime = cmSystem.logTimeToVideoTime ? 
-        cmSystem.logTimeToVideoTime(logTime).videoTime : newTime;
-      previewVideoRef.current.currentTime = videoTime;
-    }
-
-    const onTouchMove = (moveEvent) => {
-      moveEvent.preventDefault();
-      if (!seekContainerRef.current) return;
-
-      const t = moveEvent.touches[0];
-      const currentRect = seekContainerRef.current.getBoundingClientRect();
-      const x = t.clientX - currentRect.left;
-      const percentage = Math.max(0, Math.min(1, x / currentRect.width));
-      const time = percentage * totalDuration;
-
-      // Clamp thumbnail position so it stays within container
-      // Thumbnail width: w-32 = 128px, half = 64px
+      // Clamp thumbnail position (w-32 = 128px, half = 64px)
       const halfThumbWidth = 64;
-      const clampedPos = Math.max(halfThumbWidth, Math.min(currentRect.width - halfThumbWidth, x));
+      const clampedPos = Math.max(
+        halfThumbWidth,
+        Math.min(rect.width - halfThumbWidth, startX)
+      );
 
-      // Update preview
-      setSeekPreviewTime(time);
+      // Show preview
+      setSeekPreviewTime(newTime);
       setSeekPreviewPos(clampedPos);
+
+      // Immediate seek
+      handleSeek({ target: { value: newTime } });
+      lastSeekTimeRef.current = performance.now();
 
       // Update preview video
       if (previewVideoRef.current && player.videoSrc) {
-        const logTime = time + cmSystem.timeOffset;
-        const videoTime = cmSystem.logTimeToVideoTime ? 
-          cmSystem.logTimeToVideoTime(logTime).videoTime : time;
-        if (Math.abs(previewVideoRef.current.currentTime - videoTime) > 0.5) {
-          previewVideoRef.current.currentTime = videoTime;
+        const logTime = newTime + cmSystem.timeOffset;
+        const videoTime = cmSystem.logTimeToVideoTime
+          ? cmSystem.logTimeToVideoTime(logTime).videoTime
+          : newTime;
+        previewVideoRef.current.currentTime = videoTime;
+      }
+
+      const onTouchMove = (moveEvent) => {
+        moveEvent.preventDefault();
+        if (!seekContainerRef.current) return;
+
+        const t = moveEvent.touches[0];
+        const currentRect = seekContainerRef.current.getBoundingClientRect();
+        const x = t.clientX - currentRect.left;
+        const percentage = Math.max(0, Math.min(1, x / currentRect.width));
+        const time = percentage * totalDuration;
+
+        // Clamp thumbnail position so it stays within container
+        // Thumbnail width: w-32 = 128px, half = 64px
+        const halfThumbWidth = 64;
+        const clampedPos = Math.max(
+          halfThumbWidth,
+          Math.min(currentRect.width - halfThumbWidth, x)
+        );
+
+        // Update preview
+        setSeekPreviewTime(time);
+        setSeekPreviewPos(clampedPos);
+
+        // Update preview video
+        if (previewVideoRef.current && player.videoSrc) {
+          const logTime = time + cmSystem.timeOffset;
+          const videoTime = cmSystem.logTimeToVideoTime
+            ? cmSystem.logTimeToVideoTime(logTime).videoTime
+            : time;
+          if (Math.abs(previewVideoRef.current.currentTime - videoTime) > 0.5) {
+            previewVideoRef.current.currentTime = videoTime;
+          }
         }
-      }
 
-      // Throttle seek updates (30ms)
-      const now = performance.now();
-      if (now - lastSeekTimeRef.current > 30) {
-        handleSeek({ target: { value: time } });
-        lastSeekTimeRef.current = now;
-      }
-    };
+        // Throttle seek updates (30ms)
+        const now = performance.now();
+        if (now - lastSeekTimeRef.current > 30) {
+          handleSeek({ target: { value: time } });
+          lastSeekTimeRef.current = now;
+        }
+      };
 
-    const onTouchEnd = () => {
-      setIsSeeking(false);
-      setSeekPreviewTime(null);
-      handleSeekEnd();
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
-    };
+      const onTouchEnd = () => {
+        setIsSeeking(false);
+        setSeekPreviewTime(null);
+        handleSeekEnd();
+        window.removeEventListener("touchmove", onTouchMove);
+        window.removeEventListener("touchend", onTouchEnd);
+      };
 
-    window.addEventListener('touchmove', onTouchMove, { passive: false });
-    window.addEventListener('touchend', onTouchEnd);
-  }, [totalDuration, handleSeekStart, handleSeekEnd, handleSeek, cmSystem, player.videoSrc]);
+      window.addEventListener("touchmove", onTouchMove, { passive: false });
+      window.addEventListener("touchend", onTouchEnd);
+    },
+    [
+      totalDuration,
+      handleSeekStart,
+      handleSeekEnd,
+      handleSeek,
+      cmSystem,
+      player.videoSrc,
+    ]
+  );
 
   // Toggle controls overlay
   const toggleControlsOverlay = useCallback(() => {
@@ -363,7 +434,7 @@ const MobileApp = () => {
       clearTimeout(overlayTimeoutRef.current);
       overlayTimeoutRef.current = null;
     }
-    setShowControlsOverlay(prev => !prev);
+    setShowControlsOverlay((prev) => !prev);
   }, []);
 
   // Reset overlay timeout on interaction
@@ -418,18 +489,19 @@ const MobileApp = () => {
     const handleFullscreenChange = async () => {
       const isNowFullscreen = !!document.fullscreenElement;
       setIsFullscreen(isNowFullscreen);
-      
+
       // When exiting fullscreen, lock back to portrait
       if (!isNowFullscreen && screen.orientation?.lock) {
         try {
-          await screen.orientation.lock('portrait');
+          await screen.orientation.lock("portrait");
         } catch (e) {
-          console.log('Portrait lock not supported:', e);
+          console.log("Portrait lock not supported:", e);
         }
       }
     };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
   // Lock to portrait on initial load
@@ -437,9 +509,9 @@ const MobileApp = () => {
     const lockPortrait = async () => {
       if (screen.orientation?.lock) {
         try {
-          await screen.orientation.lock('portrait');
+          await screen.orientation.lock("portrait");
         } catch (e) {
-          console.log('Portrait lock not supported:', e);
+          console.log("Portrait lock not supported:", e);
         }
       }
     };
@@ -449,20 +521,20 @@ const MobileApp = () => {
   // Toggle fullscreen with landscape lock
   const toggleFullscreen = useCallback(async () => {
     if (!containerRef.current) return;
-    
+
     if (!document.fullscreenElement) {
       try {
         await containerRef.current.requestFullscreen();
         // Try to lock orientation to landscape (skip if not supported)
         if (screen.orientation?.lock) {
           try {
-            await screen.orientation.lock('landscape');
+            await screen.orientation.lock("landscape");
           } catch (e) {
-            console.log('Orientation lock not supported:', e);
+            console.log("Orientation lock not supported:", e);
           }
         }
       } catch (err) {
-        console.error('Fullscreen error:', err);
+        console.error("Fullscreen error:", err);
       }
     } else {
       document.exitFullscreen();
@@ -473,14 +545,21 @@ const MobileApp = () => {
     <div className="flex flex-col h-screen bg-black text-white overflow-hidden select-none">
       {/* Video Area */}
       {!logOnlyMode && (
-        <div 
+        <div
           ref={containerRef}
-          className={`relative shrink-0 bg-black ${isFullscreen ? 'h-screen' : ''}`}
-          style={isFullscreen ? {} : { height: '45vh' }}
+          className={`relative shrink-0 bg-black ${
+            isFullscreen ? "h-screen" : ""
+          }`}
+          style={isFullscreen ? {} : { height: "45vh" }}
           onClick={(e) => {
             // Toggle overlay on video area tap (except when clicking buttons/inputs)
             const tag = e.target.tagName;
-            if (tag !== 'BUTTON' && tag !== 'INPUT' && tag !== 'LABEL' && !e.target.closest('button')) {
+            if (
+              tag !== "BUTTON" &&
+              tag !== "INPUT" &&
+              tag !== "LABEL" &&
+              !e.target.closest("button")
+            ) {
               toggleControlsOverlay();
               // Also close settings if open
               if (showDanmakuSettings) setShowDanmakuSettings(false);
@@ -488,58 +567,80 @@ const MobileApp = () => {
           }}
         >
           {/* Top Controls - Left side (弾幕, ミュート, 設定) */}
-          <div className={`absolute top-2 left-2 z-30 flex gap-1 transition-opacity ${showControlsOverlay || !player.videoSrc ? 'opacity-100 duration-150' : 'opacity-0 pointer-events-none duration-500'}`}>
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowDanmaku(!showDanmaku); }}
-                className={`p-2 rounded-lg backdrop-blur-sm transition-all ${
-                  showDanmaku 
-                    ? 'bg-blue-600/50 text-white' 
-                    : 'bg-black/40 text-gray-400'
-                }`}
-              >
-                <MessageSquare size={18} />
-              </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); player.toggleMute(); }}
-                className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300"
-              >
-                {player.isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-              </button>
-              <button 
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  const opening = !showDanmakuSettings;
-                  setShowDanmakuSettings(opening);
-                  // Clear timeout when opening settings panel
-                  if (opening && overlayTimeoutRef.current) {
-                    clearTimeout(overlayTimeoutRef.current);
-                    overlayTimeoutRef.current = null;
-                  }
-                }}
-                className={`p-2 rounded-lg backdrop-blur-sm transition-all ${
-                  showDanmakuSettings 
-                    ? 'bg-blue-600/50 text-white' 
-                    : 'bg-black/40 text-gray-300'
-                }`}
-              >
-                <Settings size={18} />
-              </button>
-            </div>
+          <div
+            className={`absolute top-2 left-2 z-30 flex gap-1 transition-opacity ${
+              showControlsOverlay || !player.videoSrc
+                ? "opacity-100 duration-150"
+                : "opacity-0 pointer-events-none duration-500"
+            }`}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDanmaku(!showDanmaku);
+              }}
+              className={`p-2 rounded-lg backdrop-blur-sm transition-all ${
+                showDanmaku
+                  ? "bg-blue-600/50 text-white"
+                  : "bg-black/40 text-gray-400"
+              }`}
+            >
+              <MessageSquare size={18} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                player.toggleMute();
+              }}
+              className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300"
+            >
+              {player.isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const opening = !showDanmakuSettings;
+                setShowDanmakuSettings(opening);
+                // Clear timeout when opening settings panel
+                if (opening && overlayTimeoutRef.current) {
+                  clearTimeout(overlayTimeoutRef.current);
+                  overlayTimeoutRef.current = null;
+                }
+              }}
+              className={`p-2 rounded-lg backdrop-blur-sm transition-all ${
+                showDanmakuSettings
+                  ? "bg-blue-600/50 text-white"
+                  : "bg-black/40 text-gray-300"
+              }`}
+            >
+              <Settings size={18} />
+            </button>
+          </div>
 
           {/* Top Controls - Right side (モード切替) */}
-          <div className={`absolute top-2 right-2 z-30 transition-opacity ${showControlsOverlay || !player.videoSrc ? 'opacity-100 duration-150' : 'opacity-0 pointer-events-none duration-500'}`}>
-              <button
-                onClick={(e) => { e.stopPropagation(); setLogOnlyMode(true); setActiveTab(null); }}
-                className="p-2 rounded-lg backdrop-blur-sm bg-purple-600/50 text-white"
-                title="ログ読みモード"
-              >
-                <BookOpen size={18} />
-              </button>
-            </div>
+          <div
+            className={`absolute top-2 right-2 z-30 transition-opacity ${
+              showControlsOverlay || !player.videoSrc
+                ? "opacity-100 duration-150"
+                : "opacity-0 pointer-events-none duration-500"
+            }`}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setLogOnlyMode(true);
+                setActiveTab(null);
+              }}
+              className="p-2 rounded-lg backdrop-blur-sm bg-purple-600/50 text-white"
+              title="ログ読みモード"
+            >
+              <BookOpen size={18} />
+            </button>
+          </div>
 
           {/* Danmaku Settings Popover - Visible when settings button is clicked */}
           {showControlsOverlay && showDanmakuSettings && (
-            <div 
+            <div
               className="absolute top-14 left-2 z-40 w-64 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl p-3 text-white"
               onClick={(e) => e.stopPropagation()}
             >
@@ -547,23 +648,35 @@ const MobileApp = () => {
                 <span className="text-xs font-bold flex items-center gap-2">
                   <Settings size={12} /> 弾幕設定
                 </span>
-                <button onClick={() => setShowDanmakuSettings(false)} className="text-gray-400 hover:text-white">
+                <button
+                  onClick={() => setShowDanmakuSettings(false)}
+                  className="text-gray-400 hover:text-white"
+                >
                   <X size={14} />
                 </button>
               </div>
-              
+
               <div className="space-y-3">
                 {/* Duration */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] text-gray-400">
                     <span>表示時間</span>
-                    <span className="font-mono text-white">{dmSettings?.duration ?? 5}秒</span>
+                    <span className="font-mono text-white">
+                      {dmSettings?.duration ?? 5}秒
+                    </span>
                   </div>
                   <input
                     type="range"
-                    min="2" max="15" step="0.5"
+                    min="2"
+                    max="15"
+                    step="0.5"
                     value={dmSettings?.duration ?? 5}
-                    onChange={e => setDmSettings(prev => ({ ...prev, duration: parseFloat(e.target.value) }))}
+                    onChange={(e) =>
+                      setDmSettings((prev) => ({
+                        ...prev,
+                        duration: parseFloat(e.target.value),
+                      }))
+                    }
                     className="w-full h-1 bg-gray-600 rounded accent-blue-500"
                   />
                 </div>
@@ -572,13 +685,22 @@ const MobileApp = () => {
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] text-gray-400">
                     <span>文字サイズ</span>
-                    <span className="font-mono text-white">{dmSettings?.fontSize ?? 20}px</span>
+                    <span className="font-mono text-white">
+                      {dmSettings?.fontSize ?? 20}px
+                    </span>
                   </div>
                   <input
                     type="range"
-                    min="10" max="60" step="1"
+                    min="10"
+                    max="60"
+                    step="1"
                     value={dmSettings?.fontSize ?? 20}
-                    onChange={e => setDmSettings(prev => ({ ...prev, fontSize: parseInt(e.target.value) }))}
+                    onChange={(e) =>
+                      setDmSettings((prev) => ({
+                        ...prev,
+                        fontSize: parseInt(e.target.value),
+                      }))
+                    }
                     className="w-full h-1 bg-gray-600 rounded accent-blue-500"
                   />
                 </div>
@@ -587,13 +709,22 @@ const MobileApp = () => {
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] text-gray-400">
                     <span>不透明度</span>
-                    <span className="font-mono text-white">{Math.round((dmSettings?.opacity ?? 0.7) * 100)}%</span>
+                    <span className="font-mono text-white">
+                      {Math.round((dmSettings?.opacity ?? 0.7) * 100)}%
+                    </span>
                   </div>
                   <input
                     type="range"
-                    min="0.1" max="1.0" step="0.05"
+                    min="0.1"
+                    max="1.0"
+                    step="0.05"
                     value={dmSettings?.opacity ?? 0.7}
-                    onChange={e => setDmSettings(prev => ({ ...prev, opacity: parseFloat(e.target.value) }))}
+                    onChange={(e) =>
+                      setDmSettings((prev) => ({
+                        ...prev,
+                        opacity: parseFloat(e.target.value),
+                      }))
+                    }
                     className="w-full h-1 bg-gray-600 rounded accent-blue-500"
                   />
                 </div>
@@ -602,13 +733,22 @@ const MobileApp = () => {
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] text-gray-400">
                     <span>表示範囲</span>
-                    <span className="font-mono text-white">{dmSettings?.area ?? 100}%</span>
+                    <span className="font-mono text-white">
+                      {dmSettings?.area ?? 100}%
+                    </span>
                   </div>
                   <input
                     type="range"
-                    min="10" max="100" step="10"
+                    min="10"
+                    max="100"
+                    step="10"
                     value={dmSettings?.area ?? 100}
-                    onChange={e => setDmSettings(prev => ({ ...prev, area: parseInt(e.target.value) }))}
+                    onChange={(e) =>
+                      setDmSettings((prev) => ({
+                        ...prev,
+                        area: parseInt(e.target.value),
+                      }))
+                    }
                     className="w-full h-1 bg-gray-600 rounded accent-blue-500"
                   />
                 </div>
@@ -618,17 +758,22 @@ const MobileApp = () => {
                   <span className="text-[10px] text-gray-400">画像表示</span>
                   <div className="grid grid-cols-3 gap-1 bg-gray-950 p-1 rounded border border-gray-700">
                     {[
-                      { id: 'none', label: 'なし' },
-                      { id: 'image', label: '画像' },
-                      { id: 'placeholder', label: 'マーカー' },
-                    ].map(opt => (
+                      { id: "none", label: "なし" },
+                      { id: "image", label: "画像" },
+                      { id: "placeholder", label: "マーカー" },
+                    ].map((opt) => (
                       <button
                         key={opt.id}
-                        onClick={() => setDmSettings(prev => ({ ...prev, imageMode: opt.id }))}
+                        onClick={() =>
+                          setDmSettings((prev) => ({
+                            ...prev,
+                            imageMode: opt.id,
+                          }))
+                        }
                         className={`py-1 text-[10px] font-medium rounded transition-all ${
-                          (dmSettings?.imageMode ?? 'none') === opt.id
-                            ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                            : 'text-gray-400 hover:bg-gray-800'
+                          (dmSettings?.imageMode ?? "none") === opt.id
+                            ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
+                            : "text-gray-400 hover:bg-gray-800"
                         }`}
                       >
                         {opt.label}
@@ -640,53 +785,78 @@ const MobileApp = () => {
             </div>
           )}
           {/* Project Controls - fade animation (top center-right, avoiding mode toggle) */}
-          <div className={`absolute top-12 right-2 z-30 flex gap-1 transition-opacity ${showControlsOverlay || !player.videoSrc ? 'opacity-100 duration-150' : 'opacity-0 pointer-events-none duration-500'}`}>
-              <button
-                onClick={(e) => { e.stopPropagation(); handleSaveProject(); }}
-                className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300"
-                title="保存"
-              >
-                <Save size={18} />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowExportModal(true); }}
-                className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300"
-                title="名前を付けて保存"
-              >
-                <FilePen size={18} />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); handleImport(); }}
-                className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300"
-                title="プロジェクト読込"
-              >
-                <FileInput size={18} />
-              </button>
-              <label 
-                className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300 cursor-pointer"
-                title="動画読込"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <FileVideo size={18} />
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={player.handleFileChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
+          <div
+            className={`absolute top-12 right-2 z-30 flex gap-1 transition-opacity ${
+              showControlsOverlay || !player.videoSrc
+                ? "opacity-100 duration-150"
+                : "opacity-0 pointer-events-none duration-500"
+            }`}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSaveProject();
+              }}
+              className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300"
+              title="保存"
+            >
+              <Save size={18} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowExportModal(true);
+              }}
+              className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300"
+              title="名前を付けて保存"
+            >
+              <FilePen size={18} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleImport();
+              }}
+              className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300"
+              title="プロジェクト読込"
+            >
+              <FileInput size={18} />
+            </button>
+            <label
+              className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300 cursor-pointer"
+              title="動画読込"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FileVideo size={18} />
+              <input
+                type="file"
+                accept="video/*"
+                onChange={player.handleFileChange}
+                className="hidden"
+              />
+            </label>
+          </div>
 
           {/* Time Display and Fullscreen Button - fade animation */}
           {player.videoSrc && (
-            <div className={`absolute bottom-8 left-2 right-2 z-30 flex items-center justify-between transition-opacity ${showControlsOverlay ? 'opacity-100 duration-150' : 'opacity-0 pointer-events-none duration-500'}`}>
+            <div
+              className={`absolute bottom-8 left-2 right-2 z-30 flex items-center justify-between transition-opacity ${
+                showControlsOverlay
+                  ? "opacity-100 duration-150"
+                  : "opacity-0 pointer-events-none duration-500"
+              }`}
+            >
               <span className="text-xs text-white bg-black/50 px-2 py-1 rounded backdrop-blur-sm">
-                {formatTime(currentTime - cmSystem.timeOffset)} / {formatTime(totalDuration)}
+                {formatTime(currentTime - cmSystem.timeOffset)} /{" "}
+                {formatTime(totalDuration)}
               </span>
               <button
-                onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFullscreen();
+                }}
                 className="p-2 rounded-lg backdrop-blur-sm bg-black/40 text-gray-300"
-                title={isFullscreen ? '縮小' : '全画面'}
+                title={isFullscreen ? "縮小" : "全画面"}
               >
                 {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
               </button>
@@ -695,14 +865,26 @@ const MobileApp = () => {
 
           {/* Center Play/Pause - fade animation */}
           {player.videoSrc && (
-            <div 
-              className={`absolute inset-0 flex items-center justify-center z-20 transition-opacity ${showControlsOverlay ? 'opacity-100 duration-150' : 'opacity-0 pointer-events-none duration-500'}`}
+            <div
+              className={`absolute inset-0 flex items-center justify-center z-20 transition-opacity ${
+                showControlsOverlay
+                  ? "opacity-100 duration-150"
+                  : "opacity-0 pointer-events-none duration-500"
+              }`}
             >
-              <button 
+              <button
                 className="p-4 bg-black/50 rounded-full"
-                onClick={(e) => { e.stopPropagation(); togglePlay(); resetOverlayTimeout(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePlay();
+                  resetOverlayTimeout();
+                }}
               >
-                {player.isPlaying ? <Pause size={48} className="text-white" /> : <Play size={48} className="text-white" />}
+                {player.isPlaying ? (
+                  <Pause size={48} className="text-white" />
+                ) : (
+                  <Play size={48} className="text-white" />
+                )}
               </button>
             </div>
           )}
@@ -712,7 +894,9 @@ const MobileApp = () => {
             {!player.videoSrc ? (
               <div className="text-gray-300 flex flex-col items-center gap-4 p-4">
                 <Tv size={48} className="text-blue-500" />
-                <p className="text-sm text-center text-gray-400">動画を読み込んでください</p>
+                <p className="text-sm text-center text-gray-400">
+                  動画を読み込んでください
+                </p>
                 <button
                   onClick={handleImport}
                   className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm flex items-center gap-2"
@@ -731,7 +915,7 @@ const MobileApp = () => {
                   />
                 </label>
               </div>
-            ) : player.videoSrc.startsWith('blob:') ? (
+            ) : player.videoSrc.startsWith("blob:") ? (
               <video
                 ref={player.playerRef}
                 src={player.videoSrc}
@@ -758,10 +942,14 @@ const MobileApp = () => {
               />
             ) : (
               <YouTube
-                videoId={player.videoSrc.includes('v=') ? player.videoSrc.split('v=')[1].split('&')[0] : player.videoSrc}
+                videoId={
+                  player.videoSrc.includes("v=")
+                    ? player.videoSrc.split("v=")[1].split("&")[0]
+                    : player.videoSrc
+                }
                 opts={{
-                  height: '100%',
-                  width: '100%',
+                  height: "100%",
+                  width: "100%",
                   playerVars: {
                     autoplay: 0,
                     controls: 0,
@@ -781,12 +969,13 @@ const MobileApp = () => {
                   }
                 }}
                 onStateChange={(event) => {
-                  if (event.data === 1 && !player.isPlaying) player.setPlayingState(true);
+                  if (event.data === 1 && !player.isPlaying)
+                    player.setPlayingState(true);
                   else if (event.data === 2) {
                     const isWaiting = cmSystem.cmStateRef.current.isWaiting;
-                    if (player.isPlaying && !isWaiting) player.setPlayingState(false);
-                  }
-                  else if (event.data === 0) player.setPlayingState(false);
+                    if (player.isPlaying && !isWaiting)
+                      player.setPlayingState(false);
+                  } else if (event.data === 0) player.setPlayingState(false);
                 }}
               />
             )}
@@ -805,13 +994,14 @@ const MobileApp = () => {
                 onImageClick={(url) => setExpandedDanmakuImage(url)}
                 isEnabled={dmSettings.enabled && showDanmaku}
                 isPlaying={player.isPlaying}
+                abeMode={dmSettings.abeMode}
               />
             </div>
           )}
 
           {/* Bottom Seekbar - Always at bottom edge */}
           {player.videoSrc && (
-            <div 
+            <div
               ref={seekContainerRef}
               className="absolute bottom-0 left-0 right-0 h-6 touch-none flex items-end z-20"
               onTouchStart={(e) => {
@@ -822,7 +1012,7 @@ const MobileApp = () => {
             >
               {/* Thumbnail Preview */}
               {isSeeking && seekPreviewTime !== null && (
-                <div 
+                <div
                   className="absolute bottom-8 transform -translate-x-1/2 pointer-events-none z-50 flex flex-col items-center"
                   style={{ left: `${seekPreviewPos}px` }}
                 >
@@ -840,57 +1030,81 @@ const MobileApp = () => {
               )}
 
               {/* Track - Expands in overlay mode */}
-              <div className={`w-full ${showControlsOverlay || isSeeking ? 'h-2' : 'h-1'} bg-gray-700/50 relative overflow-hidden transition-all duration-200`}>
+              <div
+                className={`w-full ${
+                  showControlsOverlay || isSeeking ? "h-2" : "h-1"
+                } bg-gray-700/50 relative overflow-hidden transition-all duration-200`}
+              >
                 {/* CM Ranges - Unplayed (Yellow) */}
-                {cmSystem.cmRanges && cmSystem.cmRanges.map((range, i) => {
-                  const start = range.logStart - cmSystem.timeOffset;
-                  const end = range.logEnd - cmSystem.timeOffset;
-                  const duration = end - start;
-                  const leftPct = totalDuration > 0 ? (start / totalDuration) * 100 : 0;
-                  const widthPct = totalDuration > 0 ? (duration / totalDuration) * 100 : 0;
-                  return (
-                    <div
-                      key={`cm-bg-${i}`}
-                      className="absolute top-0 h-full bg-yellow-500/70"
-                      style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-                    />
-                  );
-                })}
+                {cmSystem.cmRanges &&
+                  cmSystem.cmRanges.map((range, i) => {
+                    const start = range.logStart - cmSystem.timeOffset;
+                    const end = range.logEnd - cmSystem.timeOffset;
+                    const duration = end - start;
+                    const leftPct =
+                      totalDuration > 0 ? (start / totalDuration) * 100 : 0;
+                    const widthPct =
+                      totalDuration > 0 ? (duration / totalDuration) * 100 : 0;
+                    return (
+                      <div
+                        key={`cm-bg-${i}`}
+                        className="absolute top-0 h-full bg-yellow-500/70"
+                        style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                      />
+                    );
+                  })}
 
                 {/* Progress Bar (Blue) */}
-                <div 
+                <div
                   className="absolute top-0 left-0 h-full bg-blue-500"
-                  style={{ width: `${isSeeking && seekPreviewTime !== null ? (seekPreviewTime / totalDuration) * 100 : Math.min(progressPercent, 100)}%` }}
+                  style={{
+                    width: `${
+                      isSeeking && seekPreviewTime !== null
+                        ? (seekPreviewTime / totalDuration) * 100
+                        : Math.min(progressPercent, 100)
+                    }%`,
+                  }}
                 />
 
                 {/* CM Ranges - Played (Green) */}
-                {cmSystem.cmRanges && cmSystem.cmRanges.map((range, i) => {
-                  const start = range.logStart - cmSystem.timeOffset;
-                  const end = range.logEnd - cmSystem.timeOffset;
-                  const logicalCurrent = currentTime - cmSystem.timeOffset;
-                  const overlapEnd = Math.min(logicalCurrent, end);
-                  const overlapStart = Math.max(0, start);
-                  const overlapDur = Math.max(0, overlapEnd - overlapStart);
+                {cmSystem.cmRanges &&
+                  cmSystem.cmRanges.map((range, i) => {
+                    const start = range.logStart - cmSystem.timeOffset;
+                    const end = range.logEnd - cmSystem.timeOffset;
+                    const logicalCurrent = currentTime - cmSystem.timeOffset;
+                    const overlapEnd = Math.min(logicalCurrent, end);
+                    const overlapStart = Math.max(0, start);
+                    const overlapDur = Math.max(0, overlapEnd - overlapStart);
 
-                  if (overlapDur <= 0) return null;
+                    if (overlapDur <= 0) return null;
 
-                  const leftPct = totalDuration > 0 ? (start / totalDuration) * 100 : 0;
-                  const widthPct = totalDuration > 0 ? (overlapDur / totalDuration) * 100 : 0;
+                    const leftPct =
+                      totalDuration > 0 ? (start / totalDuration) * 100 : 0;
+                    const widthPct =
+                      totalDuration > 0
+                        ? (overlapDur / totalDuration) * 100
+                        : 0;
 
-                  return (
-                    <div
-                      key={`cm-played-${i}`}
-                      className="absolute top-0 h-full bg-green-500"
-                      style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-                    />
-                  );
-                })}
+                    return (
+                      <div
+                        key={`cm-played-${i}`}
+                        className="absolute top-0 h-full bg-green-500"
+                        style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                      />
+                    );
+                  })}
 
                 {/* Thumb - Visible only in overlay mode or while seeking */}
                 {(showControlsOverlay || isSeeking) && (
-                  <div 
+                  <div
                     className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md transform -translate-x-1/2"
-                    style={{ left: `${isSeeking && seekPreviewTime !== null ? (seekPreviewTime / totalDuration) * 100 : progressPercent}%` }}
+                    style={{
+                      left: `${
+                        isSeeking && seekPreviewTime !== null
+                          ? (seekPreviewTime / totalDuration) * 100
+                          : progressPercent
+                      }%`,
+                    }}
                   />
                 )}
               </div>
@@ -918,7 +1132,9 @@ const MobileApp = () => {
           >
             <Menu size={18} />
           </button>
-          <span className="text-sm text-purple-400 font-bold flex-1">ログ読みモード</span>
+          <span className="text-sm text-purple-400 font-bold flex-1">
+            ログ読みモード
+          </span>
           <button
             onClick={() => setLogOnlyMode(false)}
             className="p-2 rounded-lg bg-purple-600/50 text-white"
@@ -935,22 +1151,24 @@ const MobileApp = () => {
         {!logOnlyMode && (
           <div className="shrink-0 flex border-b border-gray-700">
             <button
-              onClick={() => setActiveTab(activeTab === 'settings' ? null : 'settings')}
+              onClick={() =>
+                setActiveTab(activeTab === "settings" ? null : "settings")
+              }
               className={`flex-1 py-3 text-sm font-bold transition-colors ${
-                activeTab === 'settings'
-                  ? 'text-blue-400 border-b-2 border-blue-500 bg-gray-800'
-                  : 'text-gray-500 hover:text-gray-300'
+                activeTab === "settings"
+                  ? "text-blue-400 border-b-2 border-blue-500 bg-gray-800"
+                  : "text-gray-500 hover:text-gray-300"
               }`}
             >
               設定
             </button>
             <div className="w-px self-stretch bg-gray-700" />
             <button
-              onClick={() => setActiveTab(activeTab === 'ng' ? null : 'ng')}
+              onClick={() => setActiveTab(activeTab === "ng" ? null : "ng")}
               className={`flex-1 py-3 text-sm font-bold transition-colors ${
-                activeTab === 'ng'
-                  ? 'text-blue-400 border-b-2 border-blue-500 bg-gray-800'
-                  : 'text-gray-500 hover:text-gray-300'
+                activeTab === "ng"
+                  ? "text-blue-400 border-b-2 border-blue-500 bg-gray-800"
+                  : "text-gray-500 hover:text-gray-300"
               }`}
             >
               NG管理
@@ -1023,11 +1241,13 @@ const MobileApp = () => {
                 )}
               </div>
             )
-          ) : activeTab === 'settings' ? (
+          ) : activeTab === "settings" ? (
             <div className="p-4 space-y-4 overflow-y-auto h-full">
               {/* Log File Input */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-gray-400 uppercase">ログ読み込み</h4>
+                <h4 className="text-xs font-bold text-gray-400 uppercase">
+                  ログ読み込み
+                </h4>
                 <label className="flex items-center justify-center gap-2 p-3 bg-gray-800 rounded-lg cursor-pointer">
                   <FileVideo size={16} className="text-blue-400" />
                   <span className="text-sm">ログファイルを選択</span>
@@ -1045,9 +1265,11 @@ const MobileApp = () => {
               {logSystem.loadedFiles.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-gray-400 uppercase">読み込み済みログ</h4>
+                    <h4 className="text-xs font-bold text-gray-400 uppercase">
+                      読み込み済みログ
+                    </h4>
                     {logSystem.loadedFiles.length > 1 && (
-                      <button 
+                      <button
                         onClick={() => setShowFileReorderModal(true)}
                         className="text-xs text-blue-400 font-bold flex items-center gap-1 bg-blue-400/10 px-2 py-1 rounded"
                       >
@@ -1058,10 +1280,17 @@ const MobileApp = () => {
                   </div>
                   <div className="space-y-1 max-h-48 overflow-y-auto">
                     {logSystem.loadedFiles.map((file) => (
-                      <div key={file.id} className="text-xs text-gray-400 bg-gray-800 p-2 rounded flex justify-between items-center">
-                        <span className="break-all flex-1 pr-2">{file.title || file.name}</span>
+                      <div
+                        key={file.id}
+                        className="text-xs text-gray-400 bg-gray-800 p-2 rounded flex justify-between items-center"
+                      >
+                        <span className="break-all flex-1 pr-2">
+                          {file.title || file.name}
+                        </span>
                         <div className="flex items-center gap-3">
-                          <span className="text-gray-500">{file.rawComments.length}件</span>
+                          <span className="text-gray-500">
+                            {file.rawComments.length}件
+                          </span>
                           <button
                             onClick={() => logSystem.handleRemoveFile(file.id)}
                             className="text-gray-500 hover:text-red-400 p-1"
@@ -1080,14 +1309,22 @@ const MobileApp = () => {
                 <span className="text-gray-400 text-xs">AAモード</span>
                 <div className="flex bg-gray-700 rounded p-0.5">
                   <button
-                    onClick={() => setAaMode('auto')}
-                    className={`px-3 py-1 rounded text-xs transition-colors ${aaMode === 'auto' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
+                    onClick={() => setAaMode("auto")}
+                    className={`px-3 py-1 rounded text-xs transition-colors ${
+                      aaMode === "auto"
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "text-gray-400 hover:text-gray-200"
+                    }`}
                   >
                     Auto
                   </button>
                   <button
-                    onClick={() => setAaMode('off')}
-                    className={`px-3 py-1 rounded text-xs transition-colors ${aaMode === 'off' ? 'bg-gray-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
+                    onClick={() => setAaMode("off")}
+                    className={`px-3 py-1 rounded text-xs transition-colors ${
+                      aaMode === "off"
+                        ? "bg-gray-600 text-white shadow-sm"
+                        : "text-gray-400 hover:text-gray-200"
+                    }`}
                   >
                     OFF
                   </button>
@@ -1098,8 +1335,10 @@ const MobileApp = () => {
 
               {/* Sync Settings */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-gray-400 uppercase">同期設定</h4>
-                
+                <h4 className="text-xs font-bold text-gray-400 uppercase">
+                  同期設定
+                </h4>
+
                 {/* Time Settings */}
                 <div className="bg-gray-800 p-3 rounded border border-gray-700 space-y-2">
                   <div className="flex items-center justify-between">
@@ -1107,7 +1346,9 @@ const MobileApp = () => {
                     <input
                       type="text"
                       value={logSystem.startTimeStr}
-                      onChange={(e) => logSystem.setStartTimeStr(e.target.value)}
+                      onChange={(e) =>
+                        logSystem.setStartTimeStr(e.target.value)
+                      }
                       placeholder="00:00:00"
                       className="w-24 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white text-center"
                     />
@@ -1127,43 +1368,55 @@ const MobileApp = () => {
                 {/* Display Options */}
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={showThreadTitle} 
-                      onChange={e => setShowThreadTitle(e.target.checked)} 
-                      className="rounded bg-gray-700 border-gray-600" 
+                    <input
+                      type="checkbox"
+                      checked={showThreadTitle}
+                      onChange={(e) => setShowThreadTitle(e.target.checked)}
+                      className="rounded bg-gray-700 border-gray-600"
                     />
                     スレッドタイトルを表示
                   </label>
                   <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={enableTreeView} 
-                      onChange={e => setEnableTreeView(e.target.checked)} 
-                      className="rounded bg-gray-700 border-gray-600" 
+                    <input
+                      type="checkbox"
+                      checked={enableTreeView}
+                      onChange={(e) => setEnableTreeView(e.target.checked)}
+                      className="rounded bg-gray-700 border-gray-600"
                     />
                     アンカーをツリー表示
                   </label>
                   <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={showImages} 
-                      onChange={e => setShowImages(e.target.checked)} 
-                      className="rounded bg-gray-700 border-gray-600" 
+                    <input
+                      type="checkbox"
+                      checked={showImages}
+                      onChange={(e) => setShowImages(e.target.checked)}
+                      className="rounded bg-gray-700 border-gray-600"
                     />
                     画像URLをインライン表示
                   </label>
                   {showImages && (
                     <div className="flex items-center gap-2 text-sm text-gray-400 ml-5">
                       <span>レイアウト:</span>
-                      <button 
-                        onClick={() => setImageLayout('inline')} 
-                        className={`px-2 py-0.5 rounded text-xs ${imageLayout === 'inline' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
-                      >インライン</button>
-                      <button 
-                        onClick={() => setImageLayout('grouped')} 
-                        className={`px-2 py-0.5 rounded text-xs ${imageLayout === 'grouped' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
-                      >まとめて</button>
+                      <button
+                        onClick={() => setImageLayout("inline")}
+                        className={`px-2 py-0.5 rounded text-xs ${
+                          imageLayout === "inline"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-700 text-gray-300"
+                        }`}
+                      >
+                        インライン
+                      </button>
+                      <button
+                        onClick={() => setImageLayout("grouped")}
+                        className={`px-2 py-0.5 rounded text-xs ${
+                          imageLayout === "grouped"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-700 text-gray-300"
+                        }`}
+                      >
+                        まとめて
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1173,16 +1426,20 @@ const MobileApp = () => {
 
               {/* CM Settings */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-gray-400 uppercase">CM区間設定</h4>
-                
+                <h4 className="text-xs font-bold text-gray-400 uppercase">
+                  CM区間設定
+                </h4>
+
                 {/* CM Input Form */}
                 <div className="bg-gray-800 p-3 rounded border border-gray-700 space-y-2">
                   {/* Start Time */}
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400 w-8 shrink-0">開始</span>
+                    <span className="text-xs text-gray-400 w-8 shrink-0">
+                      開始
+                    </span>
                     <select
                       value={cmStartMode}
-                      onChange={e => setCmStartMode(e.target.value)}
+                      onChange={(e) => setCmStartMode(e.target.value)}
                       className="bg-gray-700 text-white text-xs p-1 rounded border border-gray-600"
                     >
                       <option value="log">ログ時間</option>
@@ -1191,18 +1448,20 @@ const MobileApp = () => {
                     <input
                       type="text"
                       value={cmStartInput}
-                      onChange={e => setCmStartInput(e.target.value)}
-                      placeholder={cmStartMode === 'log' ? "00:00:00" : "00:00"}
+                      onChange={(e) => setCmStartInput(e.target.value)}
+                      placeholder={cmStartMode === "log" ? "00:00:00" : "00:00"}
                       className="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white text-center"
                     />
                   </div>
 
                   {/* End Time */}
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400 w-8 shrink-0">終了</span>
+                    <span className="text-xs text-gray-400 w-8 shrink-0">
+                      終了
+                    </span>
                     <select
                       value={cmEndMode}
-                      onChange={e => setCmEndMode(e.target.value)}
+                      onChange={(e) => setCmEndMode(e.target.value)}
                       className="bg-gray-700 text-white text-xs p-1 rounded border border-gray-600"
                     >
                       <option value="log">ログ時間</option>
@@ -1211,8 +1470,8 @@ const MobileApp = () => {
                     <input
                       type="text"
                       value={cmEndInput}
-                      onChange={e => setCmEndInput(e.target.value)}
-                      placeholder={cmEndMode === 'log' ? "00:00:00" : "00:00"}
+                      onChange={(e) => setCmEndInput(e.target.value)}
+                      placeholder={cmEndMode === "log" ? "00:00:00" : "00:00"}
                       className="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white text-center"
                     />
                   </div>
@@ -1222,10 +1481,17 @@ const MobileApp = () => {
                     <div className="flex gap-2 mt-1">
                       <button
                         onClick={() => {
-                          cmSystem.updateCmRange(editingCmIndex, cmStartMode, cmStartInput, cmEndMode, cmEndInput, logSystem.startTimeStr);
+                          cmSystem.updateCmRange(
+                            editingCmIndex,
+                            cmStartMode,
+                            cmStartInput,
+                            cmEndMode,
+                            cmEndInput,
+                            logSystem.startTimeStr
+                          );
                           setEditingCmIndex(null);
-                          setCmStartInput('');
-                          setCmEndInput('');
+                          setCmStartInput("");
+                          setCmEndInput("");
                         }}
                         className="flex-1 bg-green-600 hover:bg-green-500 text-white p-2 rounded text-xs flex items-center justify-center gap-1"
                       >
@@ -1234,8 +1500,8 @@ const MobileApp = () => {
                       <button
                         onClick={() => {
                           setEditingCmIndex(null);
-                          setCmStartInput('');
-                          setCmEndInput('');
+                          setCmStartInput("");
+                          setCmEndInput("");
                         }}
                         className="bg-gray-600 hover:bg-gray-500 text-white p-2 rounded text-xs"
                       >
@@ -1245,9 +1511,15 @@ const MobileApp = () => {
                   ) : (
                     <button
                       onClick={() => {
-                        cmSystem.addCmRangeSmart(cmStartMode, cmStartInput, cmEndMode, cmEndInput, logSystem.startTimeStr);
-                        setCmStartInput('');
-                        setCmEndInput('');
+                        cmSystem.addCmRangeSmart(
+                          cmStartMode,
+                          cmStartInput,
+                          cmEndMode,
+                          cmEndInput,
+                          logSystem.startTimeStr
+                        );
+                        setCmStartInput("");
+                        setCmEndInput("");
                       }}
                       className="w-full bg-blue-600 hover:bg-blue-500 text-white p-2 rounded text-xs flex items-center justify-center gap-1"
                     >
@@ -1260,16 +1532,28 @@ const MobileApp = () => {
                 {cmSystem.cmRanges && cmSystem.cmRanges.length > 0 && (
                   <div className="space-y-1">
                     {cmSystem.cmRanges.map((range, i) => {
-                      const accumulatedCmTime = cmSystem.cmRanges.slice(0, i).reduce((acc, r) => {
-                        return acc + (r.logEnd - r.logStart);
-                      }, 0);
-                      const vStart = typeof range.videoStart === 'number' ? range.videoStart : 0;
+                      const accumulatedCmTime = cmSystem.cmRanges
+                        .slice(0, i)
+                        .reduce((acc, r) => {
+                          return acc + (r.logEnd - r.logStart);
+                        }, 0);
+                      const vStart =
+                        typeof range.videoStart === "number"
+                          ? range.videoStart
+                          : 0;
                       const cmDuration = range.logEnd - range.logStart;
                       const logicalStart = vStart + accumulatedCmTime;
                       const logicalEnd = logicalStart + cmDuration;
 
                       return (
-                        <div key={i} className={`flex flex-col bg-gray-800 p-2 rounded text-xs gap-1 ${editingCmIndex === i ? 'border border-blue-500' : 'border border-gray-700'}`}>
+                        <div
+                          key={i}
+                          className={`flex flex-col bg-gray-800 p-2 rounded text-xs gap-1 ${
+                            editingCmIndex === i
+                              ? "border border-blue-500"
+                              : "border border-gray-700"
+                          }`}
+                        >
                           <div className="flex items-center justify-between">
                             <span className="text-gray-400">
                               ログ: {range.labelStart} ~ {range.labelEnd}
@@ -1278,17 +1562,17 @@ const MobileApp = () => {
                               <button
                                 onClick={() => {
                                   setEditingCmIndex(i);
-                                  setCmStartMode('log');
-                                  setCmEndMode('log');
-                                  setCmStartInput(range.labelStart || '');
-                                  setCmEndInput(range.labelEnd || '');
+                                  setCmStartMode("log");
+                                  setCmEndMode("log");
+                                  setCmStartInput(range.labelStart || "");
+                                  setCmEndInput(range.labelEnd || "");
                                 }}
                                 className="text-gray-400 hover:text-blue-400"
                               >
                                 <Edit2 size={14} />
                               </button>
-                              <button 
-                                onClick={() => cmSystem.removeCmRange(i)} 
+                              <button
+                                onClick={() => cmSystem.removeCmRange(i)}
                                 className="text-gray-400 hover:text-red-400"
                               >
                                 <X size={14} />
@@ -1296,7 +1580,8 @@ const MobileApp = () => {
                             </div>
                           </div>
                           <span className="font-mono text-blue-400 text-xs">
-                            動画: {formatTime(logicalStart)} ~ {formatTime(logicalEnd)}
+                            動画: {formatTime(logicalStart)} ~{" "}
+                            {formatTime(logicalEnd)}
                           </span>
                         </div>
                       );
@@ -1304,13 +1589,14 @@ const MobileApp = () => {
                   </div>
                 )}
               </div>
-
             </div>
           ) : (
             /* NG Management Tab */
             <div className="p-4 space-y-4 overflow-y-auto h-full">
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-gray-400 uppercase">NG管理</h4>
+                <h4 className="text-xs font-bold text-gray-400 uppercase">
+                  NG管理
+                </h4>
                 <p className="text-xs text-gray-500">
                   NGに設定したIDやコメントは弾幕とコメント欄に表示されなくなります。
                 </p>
@@ -1334,14 +1620,14 @@ const MobileApp = () => {
               <GripVertical size={20} className="text-blue-400" />
               順序を変更
             </h3>
-            <button 
+            <button
               onClick={() => setShowFileReorderModal(false)}
               className="p-2 bg-gray-800 rounded-full text-gray-400"
             >
               <X size={20} />
             </button>
           </div>
-          
+
           <p className="text-sm text-gray-400 mb-4">
             ログの重なり順序を変更します。上が背面、下が前面に表示されます。
           </p>
@@ -1352,8 +1638,12 @@ const MobileApp = () => {
             onDragEnd={(event) => {
               const { active, over } = event;
               if (active.id !== over?.id) {
-                const oldIndex = logSystem.loadedFiles.findIndex((f) => f.id === active.id);
-                const newIndex = logSystem.loadedFiles.findIndex((f) => f.id === over.id);
+                const oldIndex = logSystem.loadedFiles.findIndex(
+                  (f) => f.id === active.id
+                );
+                const newIndex = logSystem.loadedFiles.findIndex(
+                  (f) => f.id === over.id
+                );
                 if (oldIndex !== -1 && newIndex !== -1) {
                   logSystem.handleReorderFiles(oldIndex, newIndex);
                 }
@@ -1361,7 +1651,7 @@ const MobileApp = () => {
             }}
           >
             <SortableContext
-              items={logSystem.loadedFiles.map(f => f.id)}
+              items={logSystem.loadedFiles.map((f) => f.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-2 flex-1 overflow-y-auto pr-2 pb-24">
@@ -1377,7 +1667,7 @@ const MobileApp = () => {
           </DndContext>
 
           <div className="fixed bottom-6 left-4 right-4">
-            <button 
+            <button
               onClick={() => setShowFileReorderModal(false)}
               className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-all"
             >
@@ -1389,18 +1679,18 @@ const MobileApp = () => {
 
       {/* Expanded Image Modal */}
       {expandedDanmakuImage && (
-        <div 
+        <div
           className="fixed inset-0 z-9999 bg-black/90 flex items-center justify-center"
           onClick={() => setExpandedDanmakuImage(null)}
         >
-          <img 
-            src={expandedDanmakuImage} 
-            alt="expanded" 
+          <img
+            src={expandedDanmakuImage}
+            alt="expanded"
             className="max-w-[90vw] max-h-[90vh] object-contain"
           />
         </div>
       )}
-      
+
       <VideoRequestModal
         isOpen={showVideoRequestModal}
         onClose={() => setShowVideoRequestModal(false)}

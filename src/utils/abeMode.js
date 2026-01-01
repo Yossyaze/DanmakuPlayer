@@ -1,0 +1,120 @@
+/**
+ * 安倍晋三モード - ジョーク機能
+ * 安倍晋三関連のキーワードや語録を虹色で強調表示する
+ */
+import {
+  FULL_ABE_QUOTES,
+  ABE_FAMOUS_QUOTES,
+  ABE_RELATED_QUOTES,
+  ABE_NICKNAMES,
+  ABE_PATTERNS,
+} from "./abeQuotesList.js";
+
+// 名前関連キーワード
+export const ABE_NAME_KEYWORDS = [
+  "安倍晋三",
+  "安倍総理",
+  "安倍首相",
+  "安倍",
+  "晋三",
+  "あべしんぞう",
+  "アベ",
+  "シンゾー",
+  "Abe",
+  "Shinzo",
+  "晋さん",
+  "晋",
+  "山上徹也",
+  "山上",
+  "山神",
+  "徹也",
+  "ヤマガミ",
+];
+
+// すべての固定キーワードを結合
+export const ALL_ABE_KEYWORDS = [
+  ...ABE_NAME_KEYWORDS,
+  ...ABE_FAMOUS_QUOTES,
+  ...ABE_RELATED_QUOTES,
+  ...ABE_NICKNAMES,
+  ...FULL_ABE_QUOTES,
+];
+
+/**
+ * 正規表現用に特殊文字をエスケープ
+ */
+const escapeRegex = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
+/**
+ * マッチング用正規表現を構築
+ * 固定キーワードは長い順にソートしてエスケープし、改変パターン（正規表現）と結合する
+ */
+const buildAbeRegex = () => {
+  const sortedFixed = [...new Set(ALL_ABE_KEYWORDS)].sort(
+    (a, b) => b.length - a.length
+  );
+  const escaped = sortedFixed.map((k) => {
+    const esc = escapeRegex(k);
+    // 英数字のみのキーワードは単語境界(\b)で囲む（abema 等の誤検知防止）
+    if (/^[A-Za-z0-9\s]+$/.test(k)) {
+      return `\\b${esc}\\b`;
+    }
+    return esc;
+  });
+  // 巨大な正規表現を作成。ABE_PATTERNSはそのまま正規表現として扱う。
+  return new RegExp(`(${[...escaped, ...ABE_PATTERNS].join("|")})`, "gi");
+};
+
+const ABE_REGEX = buildAbeRegex();
+
+/**
+ * テキストに安倍晋三関連キーワードが含まれるかチェック
+ * @param {string} text - チェックするテキスト
+ * @returns {boolean} - キーワードが含まれる場合true
+ */
+export const containsAbeKeyword = (text) => {
+  if (!text) return false;
+  // exec/testはステートフルなので、matchを使用（あるいは毎回生成）
+  const matches = text.match(ABE_REGEX);
+  return matches !== null;
+};
+
+/**
+ * テキスト内の安倍晋三関連キーワードをチェックし、含まれる場合はテキスト全体を虹色スタイルでラップ
+ * React要素の配列を返す
+ * @param {string} text - 処理するテキスト
+ * @param {function} React - React (createElement用)
+ * @returns {Array} - React要素の配列
+ */
+export const highlightAbeKeywords = (text, React) => {
+  if (!text) return [text];
+
+  if (containsAbeKeyword(text)) {
+    return [
+      React.createElement("span", { key: 0, className: "abe-rainbow" }, text),
+    ];
+  }
+
+  return [text];
+};
+
+/**
+ * プレーンテキスト用：キーワードが含まれる場合、テキスト全体のisAbeフラグを真にして返す
+ * danmakuのテキストノード用
+ * @param {string} text - 処理するテキスト
+ * @returns {object} - { hasMatch: boolean, parts: Array<{text: string, isAbe: boolean}> }
+ */
+export const parseAbeKeywords = (text) => {
+  if (!text) return { hasMatch: false, parts: [{ text: "", isAbe: false }] };
+
+  if (containsAbeKeyword(text)) {
+    return {
+      hasMatch: true,
+      parts: [{ text: text, isAbe: true }],
+    };
+  }
+
+  return { hasMatch: false, parts: [{ text: text, isAbe: false }] };
+};

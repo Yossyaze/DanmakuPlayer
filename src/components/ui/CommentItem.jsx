@@ -28,6 +28,7 @@ const CommentItem = ({
   isLogMode = false,
   aaMode = "auto", // 'auto' | 'off'
   aaOverride, // true=Forced ON, false=Forced OFF, undefined=Auto
+  abeMode = false, // 安倍晋三モード
 }) => {
   // Calculate ID color
   let idColorClass = "text-gray-400"; // Default (1 comment)
@@ -160,6 +161,7 @@ const CommentItem = ({
               showImages={showImages}
               imageLayout={imageLayout}
               setZoomedImage={setZoomedImage}
+              abeMode={abeMode}
             />
           </div>
         </div>

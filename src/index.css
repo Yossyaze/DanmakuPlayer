@@ -44,3 +44,23 @@
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+
+/* 安倍晋三モード - 虹色グラデーション（静的） */
+.abe-rainbow {
+  background: linear-gradient(
+    90deg,
+    #ff4444,
+    #ffaa00,
+    #ffff44,
+    #44ff44,
+    #44aaff,
+    #aa44ff
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+  text-shadow: none !important;
+  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.8))
+    drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.8));
+}

@@ -26,6 +26,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
             opacity: 0.7,
             area: 100,
             imageMode: "image", // none, image, placeholder
+            abeMode: false, // 安倍晋三モード
           },
           ...JSON.parse(saved),
         };
@@ -39,6 +40,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       opacity: 0.7,
       area: 100,
       imageMode: "image",
+      abeMode: false, // 安倍晋三モード
     };
   });
 

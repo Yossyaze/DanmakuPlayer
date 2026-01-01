@@ -814,6 +814,7 @@ const DesktopApp = () => {
                       dmSettings.enabled && showDanmaku && !logOnlyMode
                     }
                     isPlaying={player.isPlaying}
+                    abeMode={dmSettings.abeMode}
                   />
                 </div>
 
