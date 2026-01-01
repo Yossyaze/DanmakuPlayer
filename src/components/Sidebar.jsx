@@ -139,6 +139,7 @@ const Sidebar = ({
   // Unified Popup Stack state for multi-layered popups
   const [popupStack, setPopupStack] = useState([]); // Array of { type: 'anchor'|'reply', comment, position, replies? }
   const [sidebarContextMenu, setSidebarContextMenu] = useState(null); // { x, y, comment }
+  const suppressClickRef = useRef(false); // Flag to suppress onClick after closing layers
 
   // AA Override State (Managed by App via props)
   // const [aaOverrideMap, setAaOverrideMap] = useState({}); // Moved to App
@@ -388,9 +389,30 @@ const Sidebar = ({
     }
   };
 
-  // Close popup handler
+  // Close popup handler (for topmost - legacy)
   const handleClosePopup = () => {
     setPopupStack((prev) => prev.slice(0, -1));
+  };
+
+  // Close a specific popup by index (for X button)
+  const closePopupAtIndex = (index) => {
+    setPopupStack((prev) => prev.slice(0, index));
+  };
+
+  // Close all popups above a specific index (for clicking lower layer popup)
+  const closePopupsAbove = (index) => {
+    setPopupStack((prev) => {
+      if (prev.length > index + 1) {
+        suppressClickRef.current = true;
+      }
+      return prev.slice(0, index + 1);
+    });
+  };
+
+  // Clear all popups (for backdrop click)
+  const clearPopups = () => {
+    setPopupStack([]);
+    setSidebarContextMenu(null);
   };
 
   // Keyboard listener for Escape to close popup
@@ -429,17 +451,16 @@ const Sidebar = ({
 
   // Click handler for the comment INSIDE the popup -> Open Context Menu
   const handlePopupRowClick = (e, comment) => {
-    // We'll reuse the existing setContextMenu logic, but we might want to close the popup?
-    // Actually, user might want to keep popup open until they make a choice?
-    // But context menu is global state `contextMenu` in CommentList.jsx?
-    // Wait, CommentList manages its own context menu state. Sidebar doesn't have `contextMenu` state.
-    // Sidebar uses `UserHistoryModal` or `CommentList`.
-    // WE NEED A CONTEXT MENU FOR THE POPUP. The popup is in Sidebar, so Sidebar needs to render a context menu or reuse one.
-    // `CommentList` has its own context menu. `Sidebar` currently relies on `CommentList` for the main list context menu.
-    // To show a context menu for the POPUP comment, Sidebar needs its OWN context menu state or need to render one.
-
-    // Let's add context menu state to Sidebar for popup comments.
     e.stopPropagation();
+
+    // Check suppress flag and reset it
+    const wasSuppressed = suppressClickRef.current;
+    suppressClickRef.current = false;
+
+    if (wasSuppressed) {
+      return;
+    }
+
     setSidebarContextMenu({
       x: e.clientX,
       y: e.clientY,
@@ -1363,58 +1384,87 @@ const Sidebar = ({
       </div>
 
       {/* Active Popups Stack */}
-      {popupStack.map((popup, index) =>
-        popup.type === "anchor" ? (
-          <AnchorPopup
-            key={`${index}-${popup.comment.id}`}
-            comment={popup.comment}
-            position={popup.position}
-            parentRect={popup.parentRect}
-            onClose={handleClosePopup}
-            onClick={(e) => handlePopupRowClick(e, popup.comment)}
-            formatTime={formatTime}
-            timeOffset={timeOffset}
-            settings={{
-              fontSize: "small",
-              density: "compact",
-              showImages: showImages,
+      {popupStack.length > 0 && (
+        <>
+          {/* Single backdrop for all popups */}
+          <div
+            className="fixed inset-0 bg-black/0 cursor-default"
+            style={{ zIndex: 59 }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              clearPopups();
             }}
-            setZoomedImage={setZoomedImage}
-            onAnchorClick={(e, resNum) => handleAnchorClick(e, resNum, true)}
-            onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
-            onIdClick={onIdClick}
-            RowComponent={CommentItem}
-            totalComments={comments.length}
-            customWidth={sidebarWidth - 10 - 5 * index}
-            minX={containerLeft + 5 * (index + 1)}
-            style={{ zIndex: 60 + index * 10 }}
-          />
-        ) : (
-          <ReplyListPopup
-            key={`${index}-${popup.comment.id}`}
-            comments={popup.replies}
-            parentComment={popup.comment}
-            position={popup.position}
-            parentRect={popup.parentRect}
-            onClose={handleClosePopup}
-            formatTime={formatTime}
-            timeOffset={timeOffset}
-            settings={{
-              fontSize: "small",
-              density: "compact",
-              showImages: showImages,
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              clearPopups();
             }}
-            setZoomedImage={setZoomedImage}
-            onAnchorClick={(e, resNum) => handleAnchorClick(e, resNum, true)}
-            onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
-            onIdClick={onIdClick}
-            RowComponent={CommentItem}
-            totalComments={comments.length}
-            customWidth={sidebarWidth - 10 - 5 * index}
-            minX={containerLeft + 5 * (index + 1)}
-            style={{ zIndex: 60 + index * 10 }}
           />
-        )
+
+          {/* Popup stack */}
+          {popupStack.map((popup, index) =>
+            popup.type === "anchor" ? (
+              <AnchorPopup
+                key={`${index}-${popup.comment.id}`}
+                comment={popup.comment}
+                position={popup.position}
+                parentRect={popup.parentRect}
+                onClose={() => closePopupAtIndex(index)}
+                onPopupClick={() => closePopupsAbove(index)}
+                isTopmost={index === popupStack.length - 1}
+                onClick={(e) => handlePopupRowClick(e, popup.comment)}
+                formatTime={formatTime}
+                timeOffset={timeOffset}
+                settings={{
+                  fontSize: "small",
+                  density: "compact",
+                  showImages: showImages,
+                }}
+                setZoomedImage={setZoomedImage}
+                onAnchorClick={(e, resNum) =>
+                  handleAnchorClick(e, resNum, true)
+                }
+                onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
+                onIdClick={onIdClick}
+                RowComponent={CommentItem}
+                totalComments={comments.length}
+                customWidth={sidebarWidth - 10 - 5 * index}
+                minX={containerLeft + 5 * (index + 1)}
+                style={{ zIndex: 60 + index * 10 }}
+              />
+            ) : (
+              <ReplyListPopup
+                key={`${index}-${popup.comment.id}`}
+                comments={popup.replies}
+                parentComment={popup.comment}
+                position={popup.position}
+                parentRect={popup.parentRect}
+                onClose={() => closePopupAtIndex(index)}
+                onPopupClick={() => closePopupsAbove(index)}
+                isTopmost={index === popupStack.length - 1}
+                onClick={handlePopupRowClick}
+                formatTime={formatTime}
+                timeOffset={timeOffset}
+                settings={{
+                  fontSize: "small",
+                  density: "compact",
+                  showImages: showImages,
+                }}
+                setZoomedImage={setZoomedImage}
+                onAnchorClick={(e, resNum) =>
+                  handleAnchorClick(e, resNum, true)
+                }
+                onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
+                onIdClick={onIdClick}
+                RowComponent={CommentItem}
+                totalComments={comments.length}
+                customWidth={sidebarWidth - 10 - 5 * index}
+                minX={containerLeft + 5 * (index + 1)}
+                style={{ zIndex: 60 + index * 10 }}
+              />
+            )
+          )}
+        </>
       )}
 
       {/* Context Menu for Sidebar */}
