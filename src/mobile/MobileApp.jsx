@@ -165,6 +165,8 @@ const MobileApp = () => {
     handleLogFileChange,
     handleSyncButton,
     resetPlayerState,
+    abeModeUnlocked,
+    unlockAbeMode,
   } = useDanmakuPlayer(enableTreeView);
 
   const {
@@ -1205,6 +1207,7 @@ const MobileApp = () => {
                 formatTime={formatTime}
                 totalDuration={cmSystem.getTotalDuration}
                 scrollPositionsRef={logScrollPositionsRef}
+                unlockAbeMode={unlockAbeMode}
               />
             ) : (
               <div className="h-full min-h-0 flex flex-col relative">

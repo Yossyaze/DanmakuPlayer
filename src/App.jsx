@@ -112,6 +112,8 @@ const DesktopApp = () => {
     handleLogFileChange,
     resetPlayerState,
     danmakuComments,
+    abeModeUnlocked,
+    unlockAbeMode,
   } = useDanmakuPlayer(enableTreeView);
 
   const {
@@ -890,6 +892,7 @@ const DesktopApp = () => {
                     showDanmaku={showDanmaku}
                     setShowDanmaku={setShowDanmaku}
                     containerRef={containerRef}
+                    abeModeUnlocked={abeModeUnlocked}
                   />
                 )}
               </div>
@@ -924,6 +927,7 @@ const DesktopApp = () => {
                 scrollPositionsRef={logScrollPositionsRef}
                 sidebarOpen={logSidebarOpen}
                 onToggleSidebar={() => setLogSidebarOpen(!logSidebarOpen)}
+                unlockAbeMode={unlockAbeMode}
               />
             )}
           </div>

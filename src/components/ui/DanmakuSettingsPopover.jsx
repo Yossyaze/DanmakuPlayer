@@ -1,7 +1,11 @@
 import React from "react";
 import { Settings, Sliders } from "lucide-react";
 
-const DanmakuSettingsPopover = ({ dmSettings, setDmSettings }) => {
+const DanmakuSettingsPopover = ({
+  dmSettings,
+  setDmSettings,
+  abeModeUnlocked = false,
+}) => {
   return (
     <div
       className="absolute bottom-12 right-0 w-72 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl p-4 z-50 text-white animate-fade-in"
@@ -144,34 +148,38 @@ const DanmakuSettingsPopover = ({ dmSettings, setDmSettings }) => {
           </div>
         </div>
 
-        {/* 安倍晋三モード (Joke Feature) */}
-        <div className="space-y-1 pt-2 border-t border-gray-700">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🌈</span>
-              <div>
-                <label className="text-xs text-gray-400">安倍晋三モード</label>
-                <p className="text-[10px] text-gray-600">語録を虹色で強調</p>
+        {/* 安倍晋三モード (Hidden Feature - Unlocked by searching 安倍/晋三/安倍晋三) */}
+        {abeModeUnlocked && (
+          <div className="space-y-1 pt-2 border-t border-gray-700">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🌈</span>
+                <div>
+                  <label className="text-xs text-gray-400">
+                    安倍晋三モード
+                  </label>
+                  <p className="text-[10px] text-gray-600">語録を虹色で強調</p>
+                </div>
               </div>
-            </div>
-            <button
-              onClick={() =>
-                setDmSettings({ ...dmSettings, abeMode: !dmSettings.abeMode })
-              }
-              className={`relative w-12 h-6 rounded-full transition-all ${
-                dmSettings.abeMode
-                  ? "bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500"
-                  : "bg-gray-700"
-              }`}
-            >
-              <span
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${
-                  dmSettings.abeMode ? "left-7" : "left-1"
+              <button
+                onClick={() =>
+                  setDmSettings({ ...dmSettings, abeMode: !dmSettings.abeMode })
+                }
+                className={`relative w-12 h-6 rounded-full transition-all ${
+                  dmSettings.abeMode
+                    ? "bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500"
+                    : "bg-gray-700"
                 }`}
-              />
-            </button>
+              >
+                <span
+                  className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${
+                    dmSettings.abeMode ? "left-7" : "left-1"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

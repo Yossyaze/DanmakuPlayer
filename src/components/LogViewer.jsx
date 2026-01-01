@@ -98,6 +98,7 @@ const LogViewer = ({
   scrollPositionsRef, // Ref for storing scroll positions per file
   sidebarOpen = true, // Control sidebar visibility from outside
   onToggleSidebar, // Callback to toggle sidebar
+  unlockAbeMode, // Hidden Abe Mode unlock callback
 }) => {
   // --- Refs ---
   const internalActiveCommentRef = React.useRef(null);
@@ -363,7 +364,7 @@ const LogViewer = ({
     addToHistory,
     handleSearchKeyDown,
     displayResults,
-  } = useLogFilter(filteredComments);
+  } = useLogFilter(filteredComments, unlockAbeMode);
 
   // displayResults is now provided by useLogFilter hook
 

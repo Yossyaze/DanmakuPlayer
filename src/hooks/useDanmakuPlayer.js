@@ -15,6 +15,23 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
 
   // --- Local State ---
   const [currentTime, setCurrentTime] = useState(0);
+
+  // Hidden Abe Mode unlock state (persisted)
+  const [abeModeUnlocked, setAbeModeUnlocked] = useState(() => {
+    try {
+      return localStorage.getItem("abe_mode_unlocked") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  // Unlock Abe Mode (called from search)
+  const unlockAbeMode = useCallback(() => {
+    if (!abeModeUnlocked) {
+      setAbeModeUnlocked(true);
+      localStorage.setItem("abe_mode_unlocked", "true");
+    }
+  }, [abeModeUnlocked]);
   const [dmSettings, setDmSettings] = useState(() => {
     try {
       const saved = localStorage.getItem("danmaku_settings");
@@ -751,6 +768,8 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     currentTime,
     dmSettings,
     setDmSettings,
+    abeModeUnlocked,
+    unlockAbeMode,
     isAutoScroll,
     setIsAutoScroll,
     skipSeconds,
