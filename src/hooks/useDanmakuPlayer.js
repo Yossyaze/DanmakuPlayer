@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { usePlayer } from "./usePlayer";
+import { checkAbeUnlockCondition } from "../utils/abeMode";
 import { useCMSystem } from "./useCMSystem";
 import { useLogSystem } from "./useLogSystem";
 import { useDanmaku } from "./useDanmaku";
@@ -31,10 +32,41 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
 
   // Unlock Abe Mode and show celebration (called from search)
   const unlockAbeMode = useCallback(() => {
+    console.log("unlockAbeMode called. unlocked:", abeModeUnlocked);
     if (!abeModeUnlocked) {
+      console.log("Unlocking Abe Mode...");
       setAbeModeUnlocked(true);
       localStorage.setItem("abe_mode_unlocked", "true");
       setShowAbeUnlockCelebration(true);
+
+      // Play unlock sound & Fanfare
+      try {
+        console.log("Attempting to play audio...");
+        const audioPath = `${import.meta.env.BASE_URL}sounds/abe_unlock.wav`;
+        const fanfarePath = `${import.meta.env.BASE_URL}sounds/fanfare.mp3`;
+
+        const audio = new Audio(audioPath);
+        const fanfare = new Audio(fanfarePath);
+
+        audio.volume = 0.5;
+        fanfare.volume = 0.4; // Slightly lower volume for fanfare
+
+        fanfare
+          .play()
+          .then(() => console.log("Fanfare playing"))
+          .catch((e) => console.error("Failed to play fanfare:", e));
+
+        setTimeout(() => {
+          audio
+            .play()
+            .then(() => console.log("Unlock voice playing"))
+            .catch((e) => console.error("Failed to play unlock voice:", e));
+        }, 1500);
+      } catch (e) {
+        console.error("Audio playback error:", e);
+      }
+    } else {
+      console.log("Abe Mode already unlocked.");
     }
   }, [abeModeUnlocked]);
 
@@ -748,6 +780,15 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
         const date = new Date(newFiles[0].startDate);
         const timeStr = date.toTimeString().split(" ")[0];
         logSystem.setStartTimeStr(timeStr);
+      }
+
+      // Check Abe Mode unlock condition from thread title
+      for (const file of newFiles) {
+        const textToCheck = file.threadTitle || file.title || file.name;
+        if (checkAbeUnlockCondition(textToCheck)) {
+          unlockAbeMode();
+          break; // Unlock once is enough
+        }
       }
     }
   };

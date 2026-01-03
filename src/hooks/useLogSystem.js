@@ -267,6 +267,7 @@ export const useLogSystem = () => {
             },
           ]);
           setUrlInput("");
+          return parsed; // Return parsed object
         }
       } catch (err) {
         console.error("Failed to load URL:", err);

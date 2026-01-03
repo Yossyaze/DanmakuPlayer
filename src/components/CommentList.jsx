@@ -421,7 +421,7 @@ const CommentList = forwardRef(
               data={treeRoots}
               itemContent={itemContent}
               className="h-full scrollbar-thin scrollbar-thumb-gray-600"
-              overscan={1000} // Increased overscan
+              overscan={{ main: 2000, reverse: 2000 }} // Increased overscan for smoother scrolling
               onScroll={onScroll} // Pass onScroll prop
               initialTopMostItemIndex={initialScrollIndex}
               rangeChanged={(range) => {

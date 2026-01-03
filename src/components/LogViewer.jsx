@@ -99,6 +99,8 @@ const LogViewer = ({
   sidebarOpen = true, // Control sidebar visibility from outside
   onToggleSidebar, // Callback to toggle sidebar
   unlockAbeMode, // Hidden Abe Mode unlock callback
+  onRemoveFile, // New prop for file deletion
+  abeMode, // Abe Mode (Rainbow)
 }) => {
   // --- Refs ---
   const internalActiveCommentRef = React.useRef(null);
@@ -156,6 +158,16 @@ const LogViewer = ({
     },
     [saveCurrentScrollPosition, scrollPositionsRef]
   );
+
+  // Reset selection if file is deleted
+  React.useEffect(() => {
+    if (
+      selectedFileId !== "all" &&
+      !files.find((f) => f.id === selectedFileId)
+    ) {
+      setSelectedFileId("all");
+    }
+  }, [files, selectedFileId]);
 
   // Save scroll position when component unmounts (mode switch)
   React.useEffect(() => {
@@ -248,8 +260,13 @@ const LogViewer = ({
   const filteredComments = React.useMemo(() => {
     // 1. Filter by selected File and NG
     let baseList = comments;
+
+    // Filter only valid files (present in files prop)
+    const validFileIds = new Set(files.map((f) => f.id));
+    baseList = baseList.filter((c) => validFileIds.has(c.sourceFileId));
+
     if (selectedFileId !== "all") {
-      baseList = comments.filter((c) => c.sourceFileId === selectedFileId);
+      baseList = baseList.filter((c) => c.sourceFileId === selectedFileId);
     }
     if (ngSettings.ids && ngSettings.ids.length > 0) {
       const ngIdsSet = new Set(ngSettings.ids);
@@ -328,14 +345,13 @@ const LogViewer = ({
     });
 
     return enrichedList;
-  }, [comments, selectedFileId, ngSettings]);
+  }, [comments, selectedFileId, ngSettings, files]);
 
   // Popup & Context Menu Hook (uses filteredComments)
   const {
     popupStack,
     logContextMenu,
     setLogContextMenu,
-    handleClosePopup,
     closePopupAtIndex,
     closePopupsAbove,
     clearPopups,
@@ -441,6 +457,7 @@ const LogViewer = ({
           files={files}
           selectedFileId={selectedFileId}
           onSelectFile={handleFileSelect}
+          onRemoveFile={onRemoveFile}
         />
       </div>
 
@@ -600,7 +617,7 @@ const LogViewer = ({
             currentScrollIndexRef.current = index;
           }}
           extraRowProps={{
-            settings: logSettings,
+            settings: { ...logSettings, abeMode },
             onReplyCountClick: handleReplyCountClick,
           }}
           debugId="logviewer"

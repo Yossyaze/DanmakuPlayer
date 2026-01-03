@@ -1,4 +1,5 @@
 import { useCallback, useRef } from "react";
+import { checkAbeUnlockCondition } from "../utils/abeMode";
 
 /**
  * useAppHandlers - App.jsx から分離したハンドラーを管理するカスタムフック
@@ -37,6 +38,7 @@ export function useAppHandlers({
   projectName,
   setProjectName,
   setProjectDirPath,
+  unlockAbeMode,
 }) {
   const autoPlayRequestedRef = useRef(false);
 
@@ -45,6 +47,12 @@ export function useAppHandlers({
     (e, videoUrlInput) => {
       e.preventDefault();
       if (videoUrlInput) {
+        // Abe Mode Unlock Check
+
+        if (checkAbeUnlockCondition(videoUrlInput)) {
+          unlockAbeMode();
+        }
+
         console.log(
           "handleVideoUrlSubmit: Setting video src to",
           videoUrlInput
@@ -56,7 +64,7 @@ export function useAppHandlers({
         setShowUrlModal(false);
       }
     },
-    [player, resetPlayerState, setShowUrlModal]
+    [player, resetPlayerState, setShowUrlModal, unlockAbeMode]
   );
 
   // --- Seek and Play (for context menu "Move to this time") ---

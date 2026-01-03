@@ -43,6 +43,7 @@ import AnchorPopup from "./ui/AnchorPopup";
 import CommentContextMenu from "./ui/CommentContextMenu";
 import ReplyListPopup from "./ui/ReplyListPopup";
 import NgList from "./ui/NgList";
+import { playRandomAbeVoice } from "../utils/abeMode";
 import { padTime } from "../utils/sidebarUtils";
 
 const Sidebar = ({
@@ -104,6 +105,9 @@ const Sidebar = ({
   onCloseUserHistory,
   aaOverrideMap,
   onToggleAA,
+  abeModeUnlocked,
+  dmSettings, // Ensure dmSettings is destructured
+  setDmSettings, // Ensure setDmSettings is destructured
 }) => {
   // console.log('Sidebar formatTime:', formatTime);
   // danmakuContainerRef no longer needed for duration-based setting
@@ -942,6 +946,49 @@ const Sidebar = ({
                 </div>
               </div>
 
+              {/* Abe Mode Setting (Hidden Feature) */}
+              {abeModeUnlocked && (
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🌈</span>
+                    <div>
+                      <span className="text-gray-400 text-xs block">
+                        安倍晋三モード
+                      </span>
+                      <span className="text-[10px] text-gray-600">
+                        語録を虹色で強調
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const nextMode = !dmSettings.abeMode;
+                      if (nextMode) {
+                        playRandomAbeVoice();
+                      }
+                      setDmSettings({
+                        ...dmSettings,
+                        abeMode: nextMode,
+                      });
+                    }}
+                    style={{
+                      background: dmSettings.abeMode
+                        ? "linear-gradient(90deg, #ff4444, #ffaa00, #ffff44, #44ff44, #44aaff, #aa44ff)"
+                        : undefined,
+                    }}
+                    className={`relative w-10 h-5 rounded-full transition-all ${
+                      !dmSettings.abeMode ? "bg-gray-700" : ""
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 w-4 h-4 bg-white border border-gray-400 rounded-full shadow transition-all ${
+                        dmSettings.abeMode ? "left-5.5" : "left-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
+
               <div className="h-px bg-gray-700 my-2" />
 
               {/* 2. Sync Settings */}
@@ -1342,7 +1389,11 @@ const Sidebar = ({
           onSetCmEnd={handleSetCmEnd}
           onIdClick={onIdClick}
           setZoomedImage={setZoomedImage}
-          extraRowProps={{ onReplyCountClick: handleReplyCountClick }}
+          extraRowProps={{
+            // Pass additional props to CommentRow
+            onReplyCountClick: handleReplyCountClick,
+            abeMode: abeModeUnlocked && dmSettings.abeMode, // Pass Abe Mode
+          }}
           aaMode={aaMode}
           aaOverrideMap={aaOverrideMap}
           onToggleAA={onToggleAA}

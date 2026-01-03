@@ -25,6 +25,7 @@ import VideoRequestModal from "./components/modals/VideoRequestModal";
 import UrlInputModal from "./components/modals/UrlInputModal";
 import HLSVideo from "./components/HLSVideo";
 import { isHlsUrl } from "./utils/hlsUtils";
+import { checkAbeUnlockCondition } from "./utils/abeMode";
 import MobileApp from "./mobile/MobileApp";
 import AbeModeUnlockCelebration from "./components/ui/AbeModeUnlockCelebration";
 import HelpModal from "./components/modals/HelpModal";
@@ -235,11 +236,44 @@ const DesktopApp = () => {
     setProjectName,
     setProjectDirPath,
     setRequestedVideoPath,
+    unlockAbeMode,
   });
 
   // Wrapper for handleVideoUrlSubmit to pass videoUrlInput
   const handleVideoUrlSubmit = (e) =>
     handleVideoUrlSubmitFromHook(e, videoUrlInput);
+
+  // Wrapper for handleLogUrlLoad to check Abe condition safely
+  const handleLogUrlLoadWrapper = useCallback(
+    (url) => {
+      const isUnlockKeyword = checkAbeUnlockCondition(url);
+      if (isUnlockKeyword) {
+        unlockAbeMode();
+      }
+
+      // If it looks like a URL, try to load it. Otherwise, if it was an unlock keyword, stop here.
+      const isUrl =
+        url.includes("://") || url.includes(".") || url.startsWith("localhost");
+
+      if (isUnlockKeyword && !isUrl) {
+        console.log(
+          "Abe Mode Unlocked via log keyword. Not a URL, skipping load."
+        );
+        return Promise.resolve(); // Return resolved promise to satisfy caller
+      }
+
+      return logSystem.handleUrlLoad(url).then((result) => {
+        if (result && (result.title || result.name)) {
+          const text = result.title || result.name;
+          if (checkAbeUnlockCondition(text)) {
+            unlockAbeMode();
+          }
+        }
+        return result;
+      });
+    },
+    [logSystem, unlockAbeMode]
+  );
 
   // Handle Extension Import (URL Params & Messages)
   useEffect(() => {
@@ -265,6 +299,14 @@ const DesktopApp = () => {
         console.log("Importing as log URL:", url);
         logSystem
           .handleUrlLoad(url)
+          .then((result) => {
+            if (result && (result.title || result.name)) {
+              const text = result.title || result.name;
+              if (checkAbeUnlockCondition(text)) {
+                unlockAbeMode();
+              }
+            }
+          })
           .catch((err) => console.error("Auto-import failed:", err));
       }
     };
@@ -517,6 +559,7 @@ const DesktopApp = () => {
         projectName={projectName}
         onOpenUrlModal={() => setShowUrlModal(true)}
         onOpenHelp={() => setShowHelpModal(true)}
+        unlockAbeMode={unlockAbeMode}
       />
 
       {/* Content Area - Video/LogViewer + Sidebar */}
@@ -949,6 +992,7 @@ const DesktopApp = () => {
               <LogViewer
                 comments={logSystem.comments} // Pass ALL comments
                 files={logSystem.loadedFiles} // Pass loaded files list
+                onRemoveFile={logSystem.handleRemoveFile}
                 activeCommentId={activeCommentId}
                 activeThreadTitle={activeThreadTitle}
                 currentLogicalTime={currentTime}
@@ -975,6 +1019,7 @@ const DesktopApp = () => {
                 sidebarOpen={logSidebarOpen}
                 onToggleSidebar={() => setLogSidebarOpen(!logSidebarOpen)}
                 unlockAbeMode={unlockAbeMode}
+                abeMode={abeModeUnlocked && dmSettings.abeMode}
               />
             )}
           </div>
@@ -1185,10 +1230,10 @@ const DesktopApp = () => {
             setShowSettingsPanel={setShowSettingsPanel}
             urlInput={logSystem.urlInput}
             setUrlInput={logSystem.setUrlInput}
-            handleUrlSubmit={logSystem.handleUrlLoad}
+            handleUrlSubmit={handleLogUrlLoadWrapper}
             handleFileChange={player.handleFileChange}
             handleLogFileChange={handleLogFileChange}
-            handleUrlLoad={logSystem.handleUrlLoad}
+            handleUrlLoad={handleLogUrlLoadWrapper}
             startTimeStr={logSystem.startTimeStr}
             setStartTimeStr={logSystem.setStartTimeStr}
             videoStartTimeStr={videoStartTimeStr}
@@ -1244,6 +1289,7 @@ const DesktopApp = () => {
             onCloseUserHistory={() => setUserHistoryId(null)}
             aaOverrideMap={aaOverrideMap}
             onToggleAA={handleToggleAA}
+            abeModeUnlocked={abeModeUnlocked}
           />
         )}
         {/* --- URL Input Modal --- */}

@@ -43,6 +43,24 @@ export const ALL_ABE_KEYWORDS = [
   ...FULL_ABE_QUOTES,
 ];
 
+// ボイスファイルリスト
+export const ABE_VOICE_FILES = [
+  "abe_unlock.wav",
+  "abe_voice_kudaranai.wav",
+  "abe_voice_sonokinou.wav",
+  "abe_voice_bakamitai.wav",
+];
+
+/**
+ * ランダムに安倍関連ボイスを再生する
+ */
+export const playRandomAbeVoice = () => {
+  const randomFile =
+    ABE_VOICE_FILES[Math.floor(Math.random() * ABE_VOICE_FILES.length)];
+  const audio = new Audio(`${import.meta.env.BASE_URL}sounds/${randomFile}`);
+  audio.play().catch((e) => console.error("Failed to play Abe voice:", e));
+};
+
 /**
  * 正規表現用に特殊文字をエスケープ
  */
@@ -120,4 +138,15 @@ export const parseAbeKeywords = (text) => {
   }
 
   return { hasMatch: false, parts: [{ text: text, isAbe: false }] };
+};
+
+/**
+ * 安倍モード開放条件チェック
+ * 入力テキストに「安倍」または「晋三」が含まれているか判定
+ * @param {string} text
+ * @returns {boolean}
+ */
+export const checkAbeUnlockCondition = (text) => {
+  if (!text) return false;
+  return text.includes("安倍") || text.includes("晋三");
 };

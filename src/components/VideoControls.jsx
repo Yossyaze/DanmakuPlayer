@@ -12,6 +12,41 @@ import {
 import { formatTime } from "../utils/danmakuUtils";
 import DanmakuSettingsPopover from "./ui/DanmakuSettingsPopover";
 
+// Helper to generate a smooth Bezier path from data points
+const generateSmoothPath = (points, width, height) => {
+  if (points.length < 2) return "";
+
+  const maxY = height;
+  const ratioX = width / (points.length - 1);
+  const ratioY = maxY; // Assuming normalized 0-1 input, scaled by height
+
+  const data = points.map((val, i) => ({
+    x: i * ratioX,
+    y: maxY - val * ratioY,
+  }));
+
+  let d = `M ${data[0].x} ${maxY} L ${data[0].x} ${data[0].y}`;
+
+  // Bezier control point calculation (simple smoothing)
+  for (let i = 0; i < data.length - 1; i++) {
+    const p0 = data[i - 1] || data[i];
+    const p1 = data[i];
+    const p2 = data[i + 1];
+    const p3 = data[i + 2] || p2;
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+
+  d += ` L ${width} ${maxY} Z`;
+  return d;
+};
+
 const VideoControls = ({
   isPlaying,
   togglePlay,
@@ -40,6 +75,20 @@ const VideoControls = ({
   commentDensity = [], // Array of normalized values (0-1)
 }) => {
   const seekContainerRef = useRef(null);
+
+  // Debug log for comment density
+  useEffect(() => {
+    if (commentDensity.length > 0) {
+      const maxVal = Math.max(...commentDensity);
+      console.log(
+        `[VideoControls] Graph Rendering: ${commentDensity.length} points, Max Density: ${maxVal}`
+      );
+    } else {
+      console.log("[VideoControls] No comment density data available.");
+    }
+  }, [commentDensity]);
+
+  const settingsBtnRef = useRef(null);
   const lastSeekTimeRef = useRef(0);
   const isDraggingRef = useRef(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -268,12 +317,22 @@ const VideoControls = ({
           {/* Comment Momentum Graph (Hover Only) */}
           {commentDensity.length > 0 && (
             <div className="absolute bottom-5 left-0 right-0 h-16 pointer-events-none opacity-0 group-hover/seek:opacity-100 transition-opacity duration-300 flex items-end">
+              {/* Rectangular Fade Background (Top only) - Full Width */}
+              <div
+                className="absolute inset-0 -left-4 -right-4 w-auto h-full bg-black/40"
+                style={{
+                  maskImage:
+                    "linear-gradient(to top, black 40%, transparent 100%)",
+                  WebkitMaskImage:
+                    "linear-gradient(to top, black 40%, transparent 100%)",
+                }}
+              />
               <svg
                 width="100%"
                 height="100%"
                 viewBox="0 0 200 64"
                 preserveAspectRatio="none"
-                className="w-full h-full overflow-visible"
+                className="relative w-full h-full overflow-visible z-10"
               >
                 <defs>
                   <linearGradient
@@ -283,27 +342,24 @@ const VideoControls = ({
                     x2="0"
                     y2="1"
                   >
-                    <stop offset="0%" stopColor="#4ade80" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#4ade80" stopOpacity="0.1" />
+                    <stop offset="0%" stopColor="#4ade80" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#4ade80" stopOpacity="0.3" />
                   </linearGradient>
                 </defs>
                 <path
-                  d={`
-                    M 0 64
-                    ${commentDensity
-                      .map((val, i) => {
-                        const x = (i / (commentDensity.length - 1)) * 200;
-                        const y = 64 - val * 60; // Max height 60px (leaving 4px buffer)
-                        return `L ${x} ${y}`;
-                      })
-                      .join(" ")}
-                    L 200 64
-                    Z
-                  `}
+                  d={generateSmoothPath(
+                    commentDensity,
+                    200, // Width (from viewBox)
+                    60 // Height (max graph height)
+                  )}
+                  transform="translate(0, 4)" // Shift down 4px to align with bottom (since height is 60 in 64 box)
                   fill="url(#momentumGradient)"
                   stroke="#4ade80"
-                  strokeWidth="0.5"
+                  strokeWidth="1"
                   vectorEffect="non-scaling-stroke"
+                  // style={{
+                  //   filter: "drop-shadow(0 -8px 24px rgba(74, 222, 128, 0.6))",
+                  // }}
                 />
               </svg>
             </div>
@@ -441,6 +497,7 @@ const VideoControls = ({
           {dmSettings && setDmSettings && (
             <div className="relative">
               <button
+                ref={settingsBtnRef}
                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                 className={`transition p-1 rounded-full ${
                   isSettingsOpen
@@ -457,6 +514,7 @@ const VideoControls = ({
                   setDmSettings={setDmSettings}
                   abeModeUnlocked={abeModeUnlocked}
                   onClose={() => setIsSettingsOpen(false)}
+                  triggerRef={settingsBtnRef}
                 />
               )}
             </div>
