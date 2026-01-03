@@ -26,29 +26,60 @@ export const useDanmaku = (settings, isPlaying) => {
         return;
       }
 
-      // Time window for processing
-      let searchStart = lastProcessedTimeRef.current;
-      if (
-        currentDisplayTime < searchStart ||
-        currentDisplayTime - searchStart > 1.0
-      ) {
-        console.log("[ProcessDanmaku] Time jump detected:", {
+      // Time jump detection (Seek)
+      const timeDiff = currentDisplayTime - lastProcessedTimeRef.current;
+      const isSeek = Math.abs(timeDiff) > 1.0; // Jump forward or backward by more than 1 second
+
+      let commentsToProcess = [];
+      let isRetroactive = false;
+
+      if (isSeek) {
+        console.log("[ProcessDanmaku] Seek detected:", {
           currentDisplayTime,
-          lastProcessed: searchStart,
+          lastProcessed: lastProcessedTimeRef.current,
         });
-        searchStart = currentDisplayTime - 0.1;
+
+        // 1. Reset current state
+        // 1. Reset current state
+        // activeDanmaku reset is handled atomically at the end
+        laneMapRef.current = {};
+        laneMapRound2Ref.current = {};
+        rootStateRef.current = {};
+
+        // 2. Define lookback window
+        // Ensure we don't look back before 0
+        const lookbackStart = Math.max(
+          0,
+          currentDisplayTime - settings.duration
+        );
+
+        // 3. Gather comments for the entire visible window
+        commentsToProcess = comments.filter(
+          (c) => c.time >= lookbackStart && c.time <= currentDisplayTime
+        );
+
+        isRetroactive = true;
+        // Reset last processed time to current, so next frame continues normally
+        lastProcessedTimeRef.current = currentDisplayTime;
+      } else {
+        // Normal processing
+        commentsToProcess = comments.filter(
+          (c) =>
+            c.time > lastProcessedTimeRef.current &&
+            c.time <= currentDisplayTime
+        );
+        lastProcessedTimeRef.current = currentDisplayTime;
       }
 
-      const newComments = comments.filter(
-        (c) => c.time > searchStart && c.time <= currentDisplayTime
-      );
+      if (commentsToProcess.length > 0) {
+        if (!isRetroactive) {
+          console.log("[ProcessDanmaku] Adding new comments:", {
+            count: commentsToProcess.length,
+            searchStart: lastProcessedTimeRef.current,
+            currentDisplayTime,
+          });
+        }
 
-      if (newComments.length > 0) {
-        console.log("[ProcessDanmaku] Adding new comments:", {
-          count: newComments.length,
-          searchStart,
-          currentDisplayTime,
-        });
         const containerWidth = danmakuContainerRef.current.clientWidth;
         const containerHeight = danmakuContainerRef.current.clientHeight;
         const lineHeight = settings.fontSize * 1.2;
@@ -81,8 +112,14 @@ export const useDanmaku = (settings, isPlaying) => {
         // We need to check:
         // 1. Has the previous comment's tail entered the screen? (basic gap)
         // 2. Will the new comment catch up to the previous one before both exit? (overtake check)
-        const findAvailableLane = (newWidth, rowSpan, targetMap, laneLimit) => {
-          const now = Date.now();
+        const findAvailableLane = (
+          newWidth,
+          rowSpan,
+          targetMap,
+          laneLimit,
+          referenceTime
+        ) => {
+          const now = referenceTime; // Use simulated time for retroactive checks
           const newSpeed = (containerWidth + newWidth) / settings.duration;
 
           for (let lane = 0; lane <= laneLimit - rowSpan; lane++) {
@@ -144,8 +181,15 @@ export const useDanmaku = (settings, isPlaying) => {
         };
 
         // ===== Helper: Register lane occupation =====
-        const registerLane = (lane, width, rowSpan, targetMap, laneLimit) => {
-          const now = Date.now();
+        const registerLane = (
+          lane,
+          width,
+          rowSpan,
+          targetMap,
+          laneLimit,
+          referenceTime
+        ) => {
+          const now = referenceTime;
           for (let r = 0; r < rowSpan; r++) {
             if (lane + r < laneLimit) {
               targetMap[lane + r] = {
@@ -158,7 +202,13 @@ export const useDanmaku = (settings, isPlaying) => {
 
         // ===== Process each comment =====
         // Sort: roots first, then children by layoutIndex
-        const sorted = [...newComments].sort((a, b) => {
+        // Ensure retroactive comments are processed in time order to correctly simulate lane occupation
+        const sorted = [...commentsToProcess].sort((a, b) => {
+          // Primary sort: Time (crucial for retroactive playback)
+          const timeDiff = a.time - b.time;
+          if (Math.abs(timeDiff) > 0.01) return timeDiff;
+
+          // Secondary sort: Root vs Child relationships
           const aIsRoot = !a.rootId || a.id === a.rootId || a.layoutIndex === 0;
           const bIsRoot = !b.rootId || b.id === b.rootId || b.layoutIndex === 0;
           if (aIsRoot && !bIsRoot) return -1;
@@ -226,6 +276,13 @@ export const useDanmaku = (settings, isPlaying) => {
         const treeChildCountAccum = {}; // rootId -> number of children displayed
 
         sorted.forEach((c) => {
+          // Determine reference time for simulation
+          // For live comments: Date.now()
+          // For retroactive comments: Date.now() - (timeElapsedSinceComment * 1000)
+          const timeElapsed = currentDisplayTime - c.time;
+          const accumulatedDelay = timeElapsed * 1000; // ms
+          const referenceTime = Date.now() - accumulatedDelay;
+
           // Check if this is a tree child with existing parent
           const isTreeChild =
             c.rootId && c.id !== c.rootId && c.layoutIndex > 0;
@@ -306,7 +363,8 @@ export const useDanmaku = (settings, isPlaying) => {
               hullWidth,
               hullRowSpan,
               laneMapRef.current,
-              maxLanes
+              maxLanes,
+              referenceTime
             );
 
             // If failed, Try Round 2
@@ -315,7 +373,8 @@ export const useDanmaku = (settings, isPlaying) => {
                 hullWidth,
                 hullRowSpan,
                 laneMapRound2Ref.current,
-                maxLanesRound2
+                maxLanesRound2,
+                referenceTime
               );
               if (lane !== -1) {
                 isRound2 = true;
@@ -331,7 +390,7 @@ export const useDanmaku = (settings, isPlaying) => {
             // If this is a root, save its state for children
             if (c.rootId && c.id === c.rootId) {
               rootStateRef.current[c.id] = {
-                startTime: Date.now(),
+                startTime: referenceTime,
                 lane: lane,
                 rowSpan: rowSpan, // Save actual rowSpan for child positioning
                 speed: speed, // Save speed for children to inherit
@@ -344,7 +403,8 @@ export const useDanmaku = (settings, isPlaying) => {
                 hullWidth,
                 hullRowSpan,
                 isRound2 ? laneMapRound2Ref.current : laneMapRef.current,
-                isRound2 ? maxLanesRound2 : maxLanes
+                isRound2 ? maxLanesRound2 : maxLanes,
+                referenceTime
               );
             } else {
               // Non-tree comment: register with own size
@@ -353,7 +413,8 @@ export const useDanmaku = (settings, isPlaying) => {
                 totalWidth,
                 rowSpan,
                 isRound2 ? laneMapRound2Ref.current : laneMapRef.current,
-                isRound2 ? maxLanesRound2 : maxLanes
+                isRound2 ? maxLanesRound2 : maxLanes,
+                referenceTime
               );
             }
           }
@@ -364,10 +425,13 @@ export const useDanmaku = (settings, isPlaying) => {
               ? settings.opacity * 0.7
               : settings.opacity;
 
+            // Calculate negative animation delay for retroactive comments
+            const animationDelay = isRetroactive ? -timeElapsed : 0;
+
             added.push({
               ...c,
               nodes,
-              uniqueId: `${c.id}-${Date.now()}-${Math.random()}`,
+              uniqueId: `${c.id}-${referenceTime}-${Math.random()}`,
               top:
                 c._childTop !== undefined
                   ? c._childTop
@@ -375,6 +439,7 @@ export const useDanmaku = (settings, isPlaying) => {
               dist: dist,
               width: totalWidth,
               duration: commentDuration,
+              animationDelay: `${animationDelay}s`, // Add animationDelay
               opacity: finalOpacity / settings.opacity, // DanmakuLayer multiplies this by settings.opacity
               zIndex: isRound2 ? 0 : 10, // Round 2 behind Round 1
             });
@@ -407,6 +472,16 @@ export const useDanmaku = (settings, isPlaying) => {
               const truncDuration =
                 (containerWidth + truncWidth) / rootState.speed;
 
+              // For truncation indicators, use parent's reference time for animation delay
+              const parentStartTime = rootState.startTime;
+              const now = Date.now();
+              // How long has the parent been running?
+              // If parent is retroactive, parentStartTime is in the past
+              // If parent is new, parentStartTime is roughly now
+              const elapsed = (now - parentStartTime) / 1000;
+              // The indicator should also appear retroactively if the parent is old.
+              const animationDelay = isRetroactive ? -elapsed : 0;
+
               added.push({
                 id: `${rootId}-truncation`,
                 text: truncText,
@@ -415,6 +490,7 @@ export const useDanmaku = (settings, isPlaying) => {
                 dist: -(containerWidth + truncWidth),
                 width: truncWidth,
                 duration: truncDuration,
+                animationDelay: `${animationDelay}s`, // Inherit/calculate delay
                 color: "#888888",
                 isTruncationIndicator: true,
                 opacity: isRound2 ? 0.7 : 1, // Match parent opacity factor
@@ -424,10 +500,17 @@ export const useDanmaku = (settings, isPlaying) => {
           }
         });
 
-        setActiveDanmaku((prev) => [...prev, ...added]);
+        if (isSeek) {
+          // Atomic update for seek: replace entire list
+          setActiveDanmaku(added);
+        } else {
+          // Normal update: append new comments
+          setActiveDanmaku((prev) => [...prev, ...added]);
+        }
+      } else if (isSeek) {
+        // Seek to empty area
+        setActiveDanmaku([]);
       }
-
-      lastProcessedTimeRef.current = currentDisplayTime;
     },
     [settings]
   );

@@ -37,6 +37,7 @@ const VideoControls = ({
   setShowDanmaku, // Danmaku visibility setter
   containerRef, // For fullscreen
   abeModeUnlocked = false, // Hidden Abe Mode unlock state
+  commentDensity = [], // Array of normalized values (0-1)
 }) => {
   const seekContainerRef = useRef(null);
   const lastSeekTimeRef = useRef(0);
@@ -262,6 +263,51 @@ const VideoControls = ({
           onMouseMove={handleSeekMouseMove}
           onMouseLeave={handleSeekMouseLeave}
         >
+          {" "}
+          {/* Comment Momentum Graph (Hover Only) */}
+          {/* Comment Momentum Graph (Hover Only) */}
+          {commentDensity.length > 0 && (
+            <div className="absolute bottom-5 left-0 right-0 h-16 pointer-events-none opacity-0 group-hover/seek:opacity-100 transition-opacity duration-300 flex items-end">
+              <svg
+                width="100%"
+                height="100%"
+                viewBox="0 0 200 64"
+                preserveAspectRatio="none"
+                className="w-full h-full overflow-visible"
+              >
+                <defs>
+                  <linearGradient
+                    id="momentumGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#4ade80" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#4ade80" stopOpacity="0.1" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d={`
+                    M 0 64
+                    ${commentDensity
+                      .map((val, i) => {
+                        const x = (i / (commentDensity.length - 1)) * 200;
+                        const y = 64 - val * 60; // Max height 60px (leaving 4px buffer)
+                        return `L ${x} ${y}`;
+                      })
+                      .join(" ")}
+                    L 200 64
+                    Z
+                  `}
+                  fill="url(#momentumGradient)"
+                  stroke="#4ade80"
+                  strokeWidth="0.5"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+            </div>
+          )}
           {/* Thumbnail Preview (Moved inside seek container for easier positioning) */}
           <div
             className="absolute bottom-20 transform -translate-x-1/2 pointer-events-none transition-opacity duration-200 z-50 flex flex-col items-center w-52 min-w-52"
@@ -283,7 +329,6 @@ const VideoControls = ({
               {formatTime(hoverTime || 0)}
             </div>
           </div>
-
           {/* Background Track */}
           <div className="relative w-full h-1 group-hover/seek:h-2 transition-all duration-200 bg-gray-600 rounded-lg overflow-hidden">
             {/* Layer 2: Unplayed CM Ranges (Yellow) */}

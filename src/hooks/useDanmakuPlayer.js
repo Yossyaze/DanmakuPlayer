@@ -168,7 +168,12 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     cmSystem.resetCmState();
   }, [player, resetDanmaku, cmSystem]);
 
-  // --- Seek Logic ---
+  // --- Danmaku Tree Logic (delegated to useDanmakuTree) ---
+  const danmakuComments = useDanmakuTree(
+    logSystem.visibleComments,
+    enableTreeView
+  );
+
   const performSeek = useCallback(
     (targetLogTime) => {
       // if (!player.videoRef.current) return; // Allow seek without video (for Log Mode)
@@ -182,8 +187,8 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
         player.seekTo(videoTime);
       }
 
-      resetDanmaku();
-      lastProcessedTimeRef.current = targetLogTime;
+      // REMOVED: resetDanmaku(); to avoid checking frame
+      // REMOVED: lastProcessedTimeRef.current = targetLogTime; to allow processDanmaku to detect seek
 
       if (inCmRange && cmRange) {
         cmSystem.cmStateRef.current.isWaiting = true;
@@ -234,8 +239,17 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
           player.safePlay();
         }
       }
+
+      // Manually trigger danmaku processing if paused to update retroactive comments
+      if (!player.isPlaying) {
+        processDanmaku(
+          targetLogTime,
+          danmakuComments,
+          imageValidityMapRef.current
+        );
+      }
     },
-    [cmSystem, resetDanmaku, player]
+    [cmSystem, player, processDanmaku, danmakuComments]
   );
 
   const handleSeek = (e) => {
@@ -261,12 +275,6 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       }
     }
   };
-
-  // --- Danmaku Tree Logic (delegated to useDanmakuTree) ---
-  const danmakuComments = useDanmakuTree(
-    logSystem.visibleComments,
-    enableTreeView
-  );
 
   // --- Helper for CM Detection ---
   const checkCmCollision = useCallback(

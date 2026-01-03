@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { Tv, Link, FileVideo, FileInput, FilePen, Save } from "lucide-react";
 import logo from "./assets/logo.png";
 import YouTube from "react-youtube";
@@ -463,6 +469,37 @@ const DesktopApp = () => {
     currentTime,
   ]);
 
+  // --- Comment Density Calculation for Seek Bar Graph ---
+  const commentDensity = useMemo(() => {
+    const duration = cmSystem.getTotalDuration;
+    if (!duration || duration <= 0) return [];
+
+    const buckets = new Array(200).fill(0);
+    const startLogTime = cmSystem.timeOffset;
+
+    // Filter and bucketize comments
+    // Use visibleComments to reflect current filter state (e.g. NG filtered)
+    logSystem.visibleComments.forEach((c) => {
+      if (c.time >= startLogTime && c.time < startLogTime + duration) {
+        const relativeTime = c.time - startLogTime;
+        const index = Math.min(
+          199,
+          Math.floor((relativeTime / duration) * 200)
+        );
+        buckets[index]++;
+      }
+    });
+
+    // Normalize
+    const max = Math.max(...buckets, 1);
+    const density = buckets.map((count) => count / max);
+    return density;
+  }, [
+    cmSystem.getTotalDuration,
+    cmSystem.timeOffset,
+    logSystem.visibleComments,
+  ]);
+
   return (
     <div className="flex flex-col h-screen text-white bg-black overflow-hidden select-none">
       {/* Header - Full Width */}
@@ -902,6 +939,7 @@ const DesktopApp = () => {
                     setShowDanmaku={setShowDanmaku}
                     containerRef={containerRef}
                     abeModeUnlocked={abeModeUnlocked}
+                    commentDensity={commentDensity}
                   />
                 )}
               </div>

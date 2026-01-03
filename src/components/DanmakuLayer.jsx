@@ -112,6 +112,7 @@ const DanmakuItem = React.memo(
           : settings.opacity,
       zIndex: dm.zIndex || 0,
       animationDuration: `${dm.duration}s`,
+      animationDelay: dm.animationDelay || "0s",
       "--translate-x-end": `${dm.dist}px`,
       ...dm.style,
     };
