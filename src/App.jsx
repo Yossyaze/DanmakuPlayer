@@ -21,6 +21,7 @@ import HLSVideo from "./components/HLSVideo";
 import { isHlsUrl } from "./utils/hlsUtils";
 import MobileApp from "./mobile/MobileApp";
 import AbeModeUnlockCelebration from "./components/ui/AbeModeUnlockCelebration";
+import HelpModal from "./components/modals/HelpModal";
 
 // Initialize debug logger (Ctrl+Shift+D to download logs)
 initDebugLogger();
@@ -175,6 +176,7 @@ const DesktopApp = () => {
   // Video URL Input State
   const [videoUrlInput, setVideoUrlInput] = useState("");
   const [showUrlModal, setShowUrlModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   // User History Modal State
   const [userHistoryId, setUserHistoryId] = useState(null);
@@ -477,6 +479,7 @@ const DesktopApp = () => {
         onImport={handleImport}
         projectName={projectName}
         onOpenUrlModal={() => setShowUrlModal(true)}
+        onOpenHelp={() => setShowHelpModal(true)}
       />
 
       {/* Content Area - Video/LogViewer + Sidebar */}
@@ -1212,6 +1215,12 @@ const DesktopApp = () => {
           videoUrlInput={videoUrlInput}
           setVideoUrlInput={setVideoUrlInput}
           onSubmit={handleVideoUrlSubmit}
+        />
+
+        {/* --- Help Modal --- */}
+        <HelpModal
+          isOpen={showHelpModal}
+          onClose={() => setShowHelpModal(false)}
         />
 
         {/* --- Abe Mode Unlock Celebration --- */}
