@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Tv, Link, FileVideo, FileInput, FilePen, Save } from "lucide-react";
+import logo from "./assets/logo.png";
 import YouTube from "react-youtube";
 import { useDanmakuPlayer } from "./hooks/useDanmakuPlayer";
 import { useAppHandlers } from "./hooks/useAppHandlers";
@@ -510,9 +511,11 @@ const DesktopApp = () => {
                   <div className="text-gray-500 flex flex-col items-center justify-center h-full space-y-8 p-8">
                     {/* App Logo & Name */}
                     <div className="flex flex-col items-center gap-4 animate-fade-in">
-                      <div className="p-6 bg-gray-800/50 rounded-2xl border border-gray-700 shadow-2xl">
-                        <Tv size={64} className="text-blue-500" />
-                      </div>
+                      <img
+                        src={logo}
+                        alt="DanmakuPlayer Logo"
+                        className="w-24 h-24 object-contain"
+                      />
                       <h1 className="text-4xl font-bold bg-linear-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
                         DanmakuPlayer
                       </h1>
