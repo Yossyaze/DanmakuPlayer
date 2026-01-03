@@ -6,7 +6,8 @@
   "homepage": "https://Yossyaze.github.io/DanmakuPlayer",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "zip-extension": "zip -r public/extension.zip chrome_extension -x \"*.DS_Store\"",
+    "build": "npm run zip-extension && vite build",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist -t",
     "lint": "eslint .",

@@ -127,4 +127,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     .addEventListener("change", async (e) => {
       await chrome.storage.local.set({ preferProduction: e.target.checked });
     });
+
+  // Help Toggle
+  const helpOverlay = document.getElementById("help-overlay");
+  const helpBtn = document.getElementById("help-btn");
+  const closeHelpBtn = document.getElementById("close-help-btn");
+
+  if (helpBtn && helpOverlay && closeHelpBtn) {
+    helpBtn.addEventListener("click", () => {
+      helpOverlay.classList.remove("hidden");
+    });
+
+    closeHelpBtn.addEventListener("click", () => {
+      helpOverlay.classList.add("hidden");
+    });
+
+    // Close on click outside content
+    helpOverlay.addEventListener("click", (e) => {
+      if (e.target === helpOverlay) {
+        helpOverlay.classList.add("hidden");
+      }
+    });
+  }
 });

@@ -10,6 +10,9 @@ import {
   ABE_PATTERNS,
 } from "./abeQuotesList.js";
 
+// Re-export for celebration component
+export { ABE_FAMOUS_QUOTES };
+
 // 名前関連キーワード
 export const ABE_NAME_KEYWORDS = [
   "安倍晋三",

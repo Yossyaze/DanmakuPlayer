@@ -8,6 +8,8 @@ import {
   FileVideo,
   Sidebar,
   MessageSquare,
+  Puzzle,
+  Download,
 } from "lucide-react";
 
 const HelpModal = ({ isOpen, onClose }) => {
@@ -19,6 +21,7 @@ const HelpModal = ({ isOpen, onClose }) => {
     { id: "basic", label: "基本操作", icon: Info },
     { id: "shortcuts", label: "ショートカット", icon: Keyboard },
     { id: "features", label: "機能紹介", icon: BookOpen },
+    { id: "extensions", label: "拡張機能", icon: Puzzle },
   ];
 
   return (
@@ -201,6 +204,80 @@ const HelpModal = ({ isOpen, onClose }) => {
                 icon={<MessageSquareIcon />}
                 desc="コメント内のアスキーアートを自動検出し、崩れないようにフォントを調整して表示します。"
               />
+            </div>
+          )}
+
+          {activeTab === "extensions" && (
+            <div className="animate-fade-in space-y-6">
+              <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-6 text-center">
+                <Puzzle size={48} className="mx-auto text-blue-400 mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">
+                  DanmakuPlayer Helper
+                </h3>
+                <p className="text-gray-300 mb-6 max-w-lg mx-auto">
+                  5chなどのCORS制限のあるサイトからログを取得したり、
+                  Web上の動画を直接DanmakuPlayerで開くことができる拡張機能です。
+                </p>
+                <a
+                  href="./extension.zip"
+                  download="DanmakuPlayer_Helper.zip"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold transition-colors shadow-lg hover:shadow-blue-500/20"
+                >
+                  <Download size={20} />
+                  拡張機能をダウンロード (ZIP)
+                </a>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <MonitorPlay size={20} className="text-green-400" />
+                  インストール方法
+                </h3>
+                <div className="bg-gray-900/50 rounded-lg border border-gray-700/50 overflow-hidden">
+                  <div className="p-4 border-b border-gray-800">
+                    <ol className="list-decimal list-inside space-y-4 text-gray-300">
+                      <li className="pl-2">
+                        <span className="font-bold text-white">
+                          ダウンロード・解凍:
+                        </span>{" "}
+                        上のボタンからZIPファイルをダウンロードし、適当な場所に解凍してください。
+                      </li>
+                      <li className="pl-2">
+                        <span className="font-bold text-white">
+                          拡張機能管理画面を開く:
+                        </span>{" "}
+                        Chromeのアドレスバーに{" "}
+                        <code className="bg-gray-800 px-2 py-0.5 rounded text-blue-300 select-all">
+                          chrome://extensions
+                        </code>{" "}
+                        と入力して開きます。
+                      </li>
+                      <li className="pl-2">
+                        <span className="font-bold text-white">
+                          デベロッパーモードをON:
+                        </span>{" "}
+                        画面右上の「デベロッパーモード」スイッチをONにします。
+                      </li>
+                      <li className="pl-2">
+                        <span className="font-bold text-white">
+                          パッケージ化されていない拡張機能を読み込む:
+                        </span>{" "}
+                        左上のボタンをクリックし、手順1で解凍したフォルダ（
+                        <code className="bg-gray-800 px-2 py-0.5 rounded text-yellow-300">
+                          chrome_extension
+                        </code>
+                        フォルダ）を選択します。
+                      </li>
+                    </ol>
+                  </div>
+                  <div className="p-4 bg-gray-900/80 text-sm text-gray-400">
+                    <p className="flex items-center gap-2">
+                      <Info size={16} className="text-blue-400 shrink-0" />
+                      インストール後、ツールバーのアイコンから「DanmakuPlayerで開く」機能などが使用可能になります。
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
