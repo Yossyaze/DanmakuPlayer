@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export const usePlayer = () => {
   const playerRef = useRef(null);
@@ -10,6 +10,18 @@ export const usePlayer = () => {
   const [videoFileName, setVideoFileName] = useState('');
   const [videoFilePath, setVideoFilePath] = useState(''); // Full absolute path (for compatibility with Desktop version)
   const [isReady, setIsReady] = useState(false); // New: Track player readiness
+
+  // Sync isPlaying state with native video element
+  useEffect(() => {
+    const video = playerRef.current;
+    if (video && video.tagName === 'VIDEO') {
+      if (isPlaying) {
+        video.play().catch((e) => console.error('Play failed:', e));
+      } else {
+        video.pause();
+      }
+    }
+  }, [isPlaying]);
 
   const setPlayingState = useCallback((playing) => {
     setIsPlaying(playing);

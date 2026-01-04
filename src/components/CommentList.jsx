@@ -378,6 +378,11 @@ const CommentList = forwardRef(
       ]
     );
 
+    const handleScrollerRef = useCallback((ref) => {
+      virtusoScrollerRef.current = ref;
+      setScrollerElement((prev) => (prev === ref ? prev : ref));
+    }, []);
+
     return (
       <div ref={scrollContainerRef} className="flex-1 min-h-0 relative bg-gray-900/95">
         {comments.length === 0 ? (
@@ -389,10 +394,7 @@ const CommentList = forwardRef(
           <div className="h-full overflow-hidden">
             <Virtuoso
               ref={virtuosoRef}
-              scrollerRef={(ref) => {
-                virtusoScrollerRef.current = ref;
-                setScrollerElement(ref);
-              }}
+              scrollerRef={handleScrollerRef}
               data={treeRoots}
               itemContent={itemContent}
               className="h-full scrollbar-thin scrollbar-thumb-gray-600"
