@@ -418,6 +418,15 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     function frameLoop() {
       if (!player.videoRef.current) return;
 
+      const p = player.videoRef.current;
+      // Skip processing if native video is seeking to prevent UI jump-back
+      if (p.tagName === 'VIDEO' && p.seeking) {
+        if (player.isPlaying || cmSystem.cmStateRef.current.isWaiting) {
+          animationFrameRef.current = requestAnimationFrame(frameLoop);
+        }
+        return;
+      }
+
       let displayTime = 0;
 
       if (cmSystem.cmStateRef.current.isWaiting) {

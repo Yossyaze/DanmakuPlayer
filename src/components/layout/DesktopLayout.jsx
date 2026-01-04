@@ -174,7 +174,7 @@ const DesktopLayout = ({
     >
       {/* File Drop Overlay */}
       {isDragOver && (
-        <div className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center pointer-events-none m-4 border-4 border-blue-500/50 border-dashed rounded-2xl animate-fade-in">
+        <div className="absolute inset-0 z-100 bg-black/80 backdrop-blur-sm flex items-center justify-center pointer-events-none m-4 border-4 border-blue-500/50 border-dashed rounded-2xl animate-fade-in">
           <div className="text-center">
             <FileVideo size={64} className="mx-auto text-blue-400 mb-4 animate-bounce" />
             <p className="text-3xl font-bold text-white mb-2">ファイルをドロップ</p>
