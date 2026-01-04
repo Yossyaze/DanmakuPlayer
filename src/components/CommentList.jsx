@@ -369,8 +369,6 @@ const CommentList = forwardRef(
             )}
           </>
         );
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
       },
       [
         RowToRender,
@@ -397,6 +395,8 @@ const CommentList = forwardRef(
         enableTreeView,
         rootTimeMap,
         treeRoots,
+        imageLayout,
+        indentSize,
       ]
     );
 

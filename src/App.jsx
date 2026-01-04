@@ -23,6 +23,7 @@ import LogViewer from "./components/LogViewer";
 import ExportModal from "./components/modals/ExportModal";
 import VideoRequestModal from "./components/modals/VideoRequestModal";
 import UrlInputModal from "./components/modals/UrlInputModal";
+import ConfirmModal from "./components/modals/ConfirmModal"; // New Import
 import HLSVideo from "./components/HLSVideo";
 import { isHlsUrl } from "./utils/hlsUtils";
 import { checkAbeUnlockCondition } from "./utils/abeMode";
@@ -146,6 +147,20 @@ const DesktopApp = () => {
   const [requestedVideoPath, setRequestedVideoPath] = useState("");
   const [isResizing, setIsResizing] = useState(false);
 
+  // Confirm Modal State
+  const [confirmModalState, setConfirmModalState] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    onCancel: () => {},
+    type: "info",
+  });
+
+  const closeConfirmModal = useCallback(() => {
+    setConfirmModalState((prev) => ({ ...prev, isOpen: false }));
+  }, []);
+
   // Project file state for overwrite save
   const [projectFileHandle, setProjectFileHandle] = useState(null);
   const [projectName, setProjectName] = useState(null);
@@ -199,7 +214,9 @@ const DesktopApp = () => {
     createKeyDownHandler,
     getProjectData,
     handleSaveProject,
-    handleImport,
+    // handleImport, // Replaced by local handleImport with conflict check
+    checkImportConflicts,
+    applyImportData,
     handleSetCmStart,
     handleSetCmEnd,
     handleSetLogStart,
@@ -334,7 +351,7 @@ const DesktopApp = () => {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [logSystem, player]);
+  }, [logSystem, player, unlockAbeMode]);
 
   // --- Resize Logic ---
   const startResizing = useCallback((e) => {
@@ -511,6 +528,88 @@ const DesktopApp = () => {
     currentTime,
   ]);
 
+  // --- New Handle Import with Conflict Check ---
+  const handleImport = useCallback(
+    async (fileOrEvent) => {
+      let file = fileOrEvent;
+      let fileHandle = null;
+
+      if (fileOrEvent && fileOrEvent.target && fileOrEvent.target.files) {
+        file = fileOrEvent.target.files[0];
+      }
+
+      const performImport = async (f, fh) => {
+        try {
+          const { data, conflicts } = await checkImportConflicts(f);
+
+          if (conflicts.length > 0) {
+            // Show Conflict Modal
+            setConfirmModalState({
+              isOpen: true,
+              title: "設定の上書き確認",
+              message: `現在の設定（${conflicts.join(
+                "・"
+              )}）が存在します。\nインポートするプロジェクトの設定で上書きしますか？\n\n「いいえ」を選ぶと、現在の設定を維持しつつプロジェクトを結合します。`,
+              type: "info",
+              confirmText: "上書きする",
+              cancelText: "維持する（いいえ）",
+              onConfirm: () => {
+                applyImportData(data, f, fh, true); // Overwrite = true
+                closeConfirmModal();
+              },
+              onCancel: () => {
+                applyImportData(data, f, fh, false); // Overwrite = false
+                closeConfirmModal();
+              },
+            });
+          } else {
+            // No conflicts, just apply
+            applyImportData(data, f, fh, true);
+          }
+        } catch (e) {
+          alert("Import Error: " + e.message);
+        }
+      };
+
+      if (!file || !(file instanceof File)) {
+        // Use Web File System Access API if available
+        if ("showOpenFilePicker" in window) {
+          try {
+            const [handle] = await window.showOpenFilePicker({
+              types: [
+                {
+                  description: "Danmaku Project JSON",
+                  accept: { "application/json": [".json"] },
+                },
+              ],
+            });
+            fileHandle = handle;
+            file = await handle.getFile();
+            performImport(file, fileHandle);
+            return;
+          } catch (err) {
+            if (err.name === "AbortError") return;
+            console.warn("File System Access API failed, falling back...", err);
+          }
+        }
+
+        // Fallback to input element
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json";
+        input.onchange = async (e) => {
+          const f = e.target.files[0];
+          if (f) performImport(f);
+        };
+        input.click();
+        return;
+      }
+
+      performImport(file);
+    },
+    [checkImportConflicts, applyImportData, closeConfirmModal]
+  );
+
   // --- Comment Density Calculation for Seek Bar Graph ---
   const commentDensity = useMemo(() => {
     const duration = cmSystem.getTotalDuration;
@@ -560,6 +659,27 @@ const DesktopApp = () => {
         onOpenUrlModal={() => setShowUrlModal(true)}
         onOpenHelp={() => setShowHelpModal(true)}
         unlockAbeMode={unlockAbeMode}
+        onReset={() => {
+          // Confirm Reset
+          setConfirmModalState({
+            isOpen: true,
+            title: "設定のリセット",
+            message:
+              "すべて（ログ、動画、設定）をリセットしますか？\n未保存のプロジェクト内容は失われます。",
+            type: "warning",
+            confirmText: "リセット",
+            onConfirm: () => {
+              // Complete Reset by reloading the page
+              window.location.reload();
+            },
+            onCancel: closeConfirmModal,
+          });
+        }}
+      />
+
+      <ConfirmModal
+        {...confirmModalState}
+        onCancel={confirmModalState.onCancel || closeConfirmModal}
       />
 
       {/* Content Area - Video/LogViewer + Sidebar */}

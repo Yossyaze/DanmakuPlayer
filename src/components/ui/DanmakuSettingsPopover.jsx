@@ -7,7 +7,6 @@ const DanmakuSettingsPopover = ({
   setDmSettings,
   abeModeUnlocked = false,
   onClose,
-  triggerRef,
 }) => {
   return (
     <>

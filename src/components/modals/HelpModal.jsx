@@ -300,7 +300,7 @@ const HelpModal = ({ isOpen, onClose }) => {
 const ShortcutItem = ({ k, desc }) => (
   <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded border border-gray-700/50">
     <span className="text-gray-300 text-sm">{desc}</span>
-    <kbd className="px-2 py-1 bg-gray-700 text-gray-200 rounded text-xs font-mono font-bold border border-gray-600 min-w-[2rem] text-center">
+    <kbd className="px-2 py-1 bg-gray-700 text-gray-200 rounded text-xs font-mono font-bold border border-gray-600 min-w-8 text-center">
       {k}
     </kbd>
   </div>

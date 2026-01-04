@@ -219,57 +219,105 @@ export function useAppHandlers({
     setProjectName,
   ]);
 
-  // --- Import Project ---
-  const processImportFile = useCallback(
-    async (file, fileHandle = null, filePath = null) => {
+  // --- Import Project Helpers ---
+
+  // 1. Check for Conflicts
+  const checkImportConflicts = useCallback(
+    async (file) => {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
 
-        if (data.cmRanges) cmSystem.setCmRanges(data.cmRanges);
-        if (data.videoStartTimeStr)
+        const conflicts = [];
+        // Check CM Ranges
+        if (
+          cmSystem.cmRanges.length > 0 &&
+          data.cmRanges &&
+          data.cmRanges.length > 0
+        ) {
+          conflicts.push("cmRanges");
+        }
+        // Check Time Sync
+        if (
+          (videoStartTimeStr || logSystem.startTimeStr) &&
+          (data.videoStartTimeStr || data.startTimeStr)
+        ) {
+          conflicts.push("timeSync");
+        }
+
+        // Return parsed data and conflicts found
+        return { data, conflicts, file };
+      } catch (e) {
+        console.error("Failed to parse project file", e);
+        throw new Error("Invalid Project File");
+      }
+    },
+    [cmSystem.cmRanges, videoStartTimeStr, logSystem.startTimeStr]
+  );
+
+  // 2. Apply Import Data
+  const applyImportData = useCallback(
+    (data, file, fileHandle = null, overwriteSettings = false) => {
+      // Apply Settings (with overwrite check)
+      // If overwriteSettings is TRUE, we apply everything from data.
+      // If overwriteSettings is FALSE, we ONLY apply if current is empty.
+
+      if (data.cmRanges) {
+        if (overwriteSettings || cmSystem.cmRanges.length === 0) {
+          cmSystem.setCmRanges(data.cmRanges);
+        }
+      }
+
+      if (data.videoStartTimeStr !== undefined) {
+        if (overwriteSettings || !videoStartTimeStr) {
           setVideoStartTimeStr(data.videoStartTimeStr);
-        if (data.startTimeStr) logSystem.setStartTimeStr(data.startTimeStr);
-        if (data.ngSettings) logSystem.setNgSettings(data.ngSettings);
-        if (data.loadedFiles) logSystem.loadProject(data.loadedFiles);
-        if (data.aaOverrideMap) setAaOverrideMap(data.aaOverrideMap);
-
-        if (fileHandle) {
-          setProjectFileHandle(fileHandle);
-          setProjectName(file.name.replace(".json", ""));
-        } else {
-          setProjectName(file.name.replace(".json", ""));
         }
+      }
 
-        // Extract directory path from project file path for video lookup
-        let projectDirPath = null;
-        if (filePath) {
-          // Get directory path from full file path
-          const lastSlash = filePath.lastIndexOf("/");
-          const lastBackslash = filePath.lastIndexOf("\\");
-          const lastIdx = Math.max(lastSlash, lastBackslash);
-          if (lastIdx !== -1) {
-            projectDirPath = filePath.substring(0, lastIdx);
-          }
+      if (data.startTimeStr !== undefined) {
+        if (overwriteSettings || !logSystem.startTimeStr) {
+          logSystem.setStartTimeStr(data.startTimeStr);
         }
-        console.log("[AppHandlers] Extracted projectDirPath:", projectDirPath);
-        setProjectDirPath(projectDirPath);
+      }
 
-        if (data.videoFileName) {
-          setRequestedVideoName(data.videoFileName);
-          if (data.videoFilePath) {
-            setRequestedVideoPath(data.videoFilePath);
-          }
-          setShowVideoRequestModal(true);
+      // Always append/merge these or overwrite?
+      // For NGs and overrides, merging is safer, but "Project Load" implies state restoration.
+      // Let's overwrite NGs if they exist in file to match "Project Load" semantic.
+      if (data.ngSettings) logSystem.setNgSettings(data.ngSettings);
+
+      // Load Files (Always append or replace? Usually project load implies the workspace state)
+      // Let's assume we ADD files from project.
+      if (data.loadedFiles) logSystem.loadProject(data.loadedFiles);
+
+      if (data.aaOverrideMap) setAaOverrideMap(data.aaOverrideMap);
+
+      if (fileHandle) {
+        setProjectFileHandle(fileHandle);
+        setProjectName(file.name.replace(".json", ""));
+      } else if (file) {
+        setProjectName(file.name.replace(".json", ""));
+      }
+
+      // File Path Logic
+      if (file) {
+        // We can't easily get full path from File object in browser,
+        // but if we are using File System Access API (fileHandle), we might have context.
+        // However, for web compatibility, we just rely on what we have.
+        setProjectDirPath(null); // Reset or Try to infer?
+      }
+
+      if (data.videoFileName) {
+        setRequestedVideoName(data.videoFileName);
+        if (data.videoFilePath) {
+          setRequestedVideoPath(data.videoFilePath);
         }
-      } catch (err) {
-        console.error("Failed to import project:", err);
-        alert("プロジェクトファイルの読み込みに失敗しました。");
+        setShowVideoRequestModal(true);
       }
     },
     [
       cmSystem,
       logSystem,
+      videoStartTimeStr,
       setVideoStartTimeStr,
       setAaOverrideMap,
       setProjectFileHandle,
@@ -279,6 +327,29 @@ export function useAppHandlers({
       setShowVideoRequestModal,
       setProjectDirPath,
     ]
+  );
+
+  // Original processImportFile (Restored/Modified for backward compat or simple usage)
+  const processImportFile = useCallback(
+    async (file, fileHandle = null) => {
+      // Note: This function blindly applies without checking conflicts now?
+      // Or should we remove it?
+      // existing handleImport logic uses checkImportConflicts in App.jsx now.
+      // Only kept if used internally or we want a default behavior.
+      // Let's delegate to applyImportData with overwrite=true by default for simple load?
+      // But wait, the previous logic was "Blindly overwrite".
+      // The NEW Requirement is "Do not overwrite".
+      // So default behavior here should be overwrite=false or just use new flow.
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        applyImportData(data, file, fileHandle, false); // Default no overwrite for safety?
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    [applyImportData]
   );
 
   const handleImport = useCallback(
@@ -396,7 +467,9 @@ export function useAppHandlers({
     getProjectData,
     handleSaveProject,
     processImportFile,
-    handleImport,
+    handleImport, // Kept for file picker fallback, but App.jsx might override
+    checkImportConflicts, // Exported
+    applyImportData, // Exported
     handleSetCmStart,
     handleSetCmEnd,
     handleSetLogStart,

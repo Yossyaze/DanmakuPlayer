@@ -200,6 +200,30 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     cmSystem.resetCmState();
   }, [player, resetDanmaku, cmSystem]);
 
+  // Expose function to reset all settings (Logs, CMs, Offsets)
+  const resetAllSettings = useCallback(() => {
+    // 1. Reset Sync/Offset
+    setVideoStartTimeStr("");
+    logSystem.setStartTimeStr("");
+    cmSystem.setTimeOffset(0);
+    setCurrentTime(0);
+    timeSyncInitializedRef.current = false; // Allow re-initialization
+
+    // 2. Reset CMs
+    cmSystem.setCmRanges([]);
+    cmSystem.setCmStartInput("");
+    cmSystem.setCmEndInput("");
+    cmSystem.resetCmState();
+
+    // 3. Reset Logs and Video
+    // User requested complete reset including loaded files and video
+    logSystem.setLoadedFiles([]);
+    logSystem.setComments([]);
+    player.setVideoSrc(null);
+    player.setDuration(0);
+    player.setIsReady(false);
+  }, [cmSystem, logSystem, player]);
+
   // --- Danmaku Tree Logic (delegated to useDanmakuTree) ---
   const danmakuComments = useDanmakuTree(
     logSystem.visibleComments,
@@ -356,6 +380,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     // If already waiting in CM, resume waiting
     if (cmSystem.cmStateRef.current.isWaiting) {
       if (!player.isPlaying) {
+        player.setIsPlaying(true);
         player.setIsPlaying(true);
         cmSystem.cmStateRef.current.waitStartTime = performance.now();
       }
@@ -632,12 +657,38 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
 
   // --- Time Synchronization ---
   // Reset initialization flag when sync settings change (not when comments change)
+  // Use Refs to track 'real' changes to prevent infinite loops or accidental resets
+  const prevVideoStartTimeRef = useRef(videoStartTimeStr);
+  const prevLogStartTimeRef = useRef(logSystem.startTimeStr);
+
   useEffect(() => {
-    timeSyncInitializedRef.current = false;
+    if (
+      prevVideoStartTimeRef.current !== videoStartTimeStr ||
+      prevLogStartTimeRef.current !== logSystem.startTimeStr
+    ) {
+      timeSyncInitializedRef.current = false;
+      prevVideoStartTimeRef.current = videoStartTimeStr;
+      prevLogStartTimeRef.current = logSystem.startTimeStr;
+    }
   }, [videoStartTimeStr, logSystem.startTimeStr]);
 
   useEffect(() => {
     if (logSystem.comments.length === 0) return;
+
+    // Trigger only if settings changed, or first load.
+    // IF user manually changed offset, timeSyncInitializedRef is true.
+    // We should NOT overwrite unless videoStartTimeStr / logSystem.startTimeStr explicit change detected above.
+    if (timeSyncInitializedRef.current) {
+      // Already initialized and no config change.
+      // It means user might have manually adjusted offset.
+      // Or simple re-render.
+      // Do nothing to preserve manual offset.
+      // BUT, what if new file loaded?
+      // If passed args (comments) changed, we might need to re-calc?
+      // No, comments change shouldn't reset offset if we are "initialized".
+      // Only explicit StartTime config changes should trigger re-calc.
+      return;
+    }
 
     // 1. Determine Log Reference Time (Absolute)
     const firstComment = logSystem.comments[0];
@@ -801,8 +852,10 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     if (!currentRange) return;
 
     // Prevent re-triggering for this specific CM range
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     cmSystem.cmStateRef.current.justFinishedCmId = currentRangeId;
 
+    // Clear waiting state
     // Clear waiting state
     cmSystem.cmStateRef.current.isWaiting = false;
     cmSystem.setIsWaitingCm(false);
@@ -861,5 +914,6 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     handleMouseLeave,
     handleLogFileChange,
     resetPlayerState,
+    resetAllSettings, // Export
   };
 };

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DanmakuPlayer Helper",
-  "version": "1.2.2",
+  "version": "5.0.0",
   "description": "リンクやページをDanmakuPlayerで開く。HLSストリーム(m3u8)の自動検出機能付き。",
   "icons": {
     "16": "icons/icon16.png",

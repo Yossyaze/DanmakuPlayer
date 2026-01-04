@@ -166,7 +166,6 @@ const MobileApp = () => {
     handleLogFileChange,
     handleSyncButton,
     resetPlayerState,
-    abeModeUnlocked,
     unlockAbeMode,
     showAbeUnlockCelebration,
     closeAbeUnlockCelebration,

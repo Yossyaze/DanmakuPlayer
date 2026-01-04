@@ -10,6 +10,7 @@ import {
   BookOpen,
   Tv,
   CircleHelp,
+  RotateCcw, // Import
 } from "lucide-react";
 
 const Header = ({
@@ -27,6 +28,7 @@ const Header = ({
   handleFileChange,
   onOpenUrlModal,
   onOpenHelp,
+  onReset, // New prop
 }) => {
   return (
     <div className="bg-gray-800 py-1 px-2 flex items-center shrink-0 z-20 relative shadow-md gap-4 overflow-x-auto">
@@ -137,6 +139,14 @@ const Header = ({
             title="プロジェクトを読み込む"
           >
             <FileInput size={18} />
+          </button>
+          <div className="w-px bg-gray-700 h-6 mx-1"></div>
+          <button
+            onClick={onReset}
+            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded transition-colors"
+            title="設定をリセット"
+          >
+            <RotateCcw size={18} />
           </button>
         </div>
 

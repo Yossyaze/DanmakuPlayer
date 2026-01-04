@@ -15,18 +15,16 @@ const generateParticleStyles = () =>
  * 虹色のアニメーションとランダムな語録を表示
  */
 const AbeModeUnlockCelebration = ({ isVisible, onClose }) => {
-  const [randomQuote, setRandomQuote] = useState("");
+  const [randomQuote] = useState(
+    () =>
+      ABE_FAMOUS_QUOTES[Math.floor(Math.random() * ABE_FAMOUS_QUOTES.length)]
+  );
   const [showContent, setShowContent] = useState(false);
   // Use useState with initializer for stable particle styles
   const [particleStyles] = useState(generateParticleStyles);
 
   useEffect(() => {
     if (isVisible) {
-      // ランダムな語録を選択
-      const quote =
-        ABE_FAMOUS_QUOTES[Math.floor(Math.random() * ABE_FAMOUS_QUOTES.length)];
-      setRandomQuote(quote);
-
       // 少し遅延してコンテンツを表示（アニメーション用）
       setTimeout(() => setShowContent(true), 100);
     } else {
