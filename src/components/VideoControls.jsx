@@ -152,9 +152,11 @@ const VideoControls = ({
       // Immediate UI update (High Performance)
       updateUI(percentage);
 
-      // Throttle heavy state updates (30ms = ~30fps)
+      // Throttle heavy state updates
+      // Using 30ms for standard, but for local blobs we can go faster/smoother (e.g. 16ms ~ 60fps)
+      const throttleTime = videoSrc && videoSrc.startsWith('blob:') ? 16 : 30;
       const now = performance.now();
-      if (now - lastSeekTimeRef.current > 30) {
+      if (now - lastSeekTimeRef.current > throttleTime) {
         const time = percentage * totalDuration;
         handleSeek({ target: { value: time } });
         lastSeekTimeRef.current = now;

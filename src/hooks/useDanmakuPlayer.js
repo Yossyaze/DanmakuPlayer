@@ -259,21 +259,24 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     [cmSystem, player, processDanmaku, danmakuComments]
   );
 
-  const handleSeek = (e) => {
-    const targetVideoRelativeTime = parseFloat(e.target.value);
-    // Convert Video Relative Time to Log Time
-    const targetLogTime = targetVideoRelativeTime + cmSystem.timeOffset;
-    setCurrentTime(targetLogTime);
-    performSeek(targetLogTime);
-  };
+  const handleSeek = useCallback(
+    (e) => {
+      const targetVideoRelativeTime = parseFloat(e.target.value);
+      // Convert Video Relative Time to Log Time
+      const targetLogTime = targetVideoRelativeTime + cmSystem.timeOffset;
+      setCurrentTime(targetLogTime);
+      performSeek(targetLogTime);
+    },
+    [cmSystem.timeOffset, performSeek]
+  );
 
-  const handleSeekStart = () => {
+  const handleSeekStart = useCallback(() => {
     wasPlayingRef.current = player.isPlaying;
     isDraggingRef.current = true;
     player.setPlayingState(false);
-  };
+  }, [player]);
 
-  const handleSeekEnd = () => {
+  const handleSeekEnd = useCallback(() => {
     isDraggingRef.current = false;
     if (wasPlayingRef.current) {
       player.setPlayingState(true);
@@ -281,7 +284,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
         player.safePlay();
       }
     }
-  };
+  }, [player, cmSystem]);
 
   // --- Helper for CM Detection ---
   const checkCmCollision = useCallback(
