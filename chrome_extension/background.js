@@ -5,34 +5,34 @@
 
 // App URLs (development and production)
 const APP_URLS = {
-  development: "http://localhost:5174/",
-  production: "https://yossyaze.github.io/DanmakuPlayer/",
+  development: 'http://localhost:5174/',
+  production: 'https://yossyaze.github.io/DanmakuPlayer/',
 };
 
 // Detected HLS streams per tab
 const detectedStreams = new Map(); // tabId -> Set of m3u8 URLs
 
 // Get all app URL patterns for tab query
-const getAppUrlPatterns = () => Object.values(APP_URLS).map((url) => url + "*");
+const getAppUrlPatterns = () => Object.values(APP_URLS).map((url) => url + '*');
 
 // Create Context Menu on install
 chrome.runtime.onInstalled.addListener(() => {
   // Main context menu
   chrome.contextMenus.create({
-    id: "open-in-danmaku-player",
-    title: "DanmakuPlayerで開く",
-    contexts: ["link", "page"],
+    id: 'open-in-danmaku-player',
+    title: 'DanmakuPlayerで開く',
+    contexts: ['link', 'page'],
   });
 
   // HLS stream submenu (will be populated dynamically)
   chrome.contextMenus.create({
-    id: "hls-streams",
-    title: "HLSストリーム (検出中...)",
-    contexts: ["page"],
+    id: 'hls-streams',
+    title: 'HLSストリーム (検出中...)',
+    contexts: ['page'],
     enabled: false,
   });
 
-  console.log("DanmakuPlayer Helper: Context menus created");
+  console.log('DanmakuPlayer Helper: Context menus created');
 });
 
 // ========================================
@@ -46,9 +46,9 @@ function isHlsUrl(url) {
   if (!url) return false;
   const lowerUrl = url.toLowerCase();
   return (
-    lowerUrl.includes(".m3u8") ||
-    lowerUrl.includes("application/x-mpegurl") ||
-    lowerUrl.includes("application/vnd.apple.mpegurl")
+    lowerUrl.includes('.m3u8') ||
+    lowerUrl.includes('application/x-mpegurl') ||
+    lowerUrl.includes('application/vnd.apple.mpegurl')
   );
 }
 
@@ -67,7 +67,7 @@ function onRequestCompleted(details) {
   }
   detectedStreams.get(tabId).add(details.url);
 
-  console.log("DanmakuPlayer Helper: HLS detected:", details.url);
+  console.log('DanmakuPlayer Helper: HLS detected:', details.url);
 
   // Update context menu
   updateHlsContextMenu(tabId);
@@ -85,9 +85,9 @@ function updateBadge(tabId) {
 
   if (count > 0) {
     chrome.action.setBadgeText({ tabId, text: count.toString() });
-    chrome.action.setBadgeBackgroundColor({ tabId, color: "#3B82F6" });
+    chrome.action.setBadgeBackgroundColor({ tabId, color: '#3B82F6' });
   } else {
-    chrome.action.setBadgeText({ tabId, text: "" });
+    chrome.action.setBadgeText({ tabId, text: '' });
   }
 }
 
@@ -98,15 +98,15 @@ async function updateHlsContextMenu(tabId) {
   const streams = detectedStreams.get(tabId);
 
   if (!streams || streams.size === 0) {
-    chrome.contextMenus.update("hls-streams", {
-      title: "HLSストリーム (未検出)",
+    chrome.contextMenus.update('hls-streams', {
+      title: 'HLSストリーム (未検出)',
       enabled: false,
     });
     return;
   }
 
   // Update parent menu
-  chrome.contextMenus.update("hls-streams", {
+  chrome.contextMenus.update('hls-streams', {
     title: `HLSストリーム (${streams.size}件検出)`,
     enabled: true,
   });
@@ -123,19 +123,19 @@ async function updateHlsContextMenu(tabId) {
 
   // Add new child items (max 10)
   streamArray.slice(0, 10).forEach((url, index) => {
-    const shortUrl = url.length > 60 ? url.substring(0, 60) + "..." : url;
+    const shortUrl = url.length > 60 ? url.substring(0, 60) + '...' : url;
     chrome.contextMenus.create({
       id: `hls-stream-${index}`,
-      parentId: "hls-streams",
+      parentId: 'hls-streams',
       title: shortUrl,
-      contexts: ["page"],
+      contexts: ['page'],
     });
   });
 }
 
 // Start listening for network requests
 chrome.webRequest.onCompleted.addListener(onRequestCompleted, {
-  urls: ["<all_urls>"],
+  urls: ['<all_urls>'],
 });
 
 // Clean up when tab is closed
@@ -145,7 +145,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 // Clean up when tab navigates to new page
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.status === "loading") {
+  if (changeInfo.status === 'loading') {
     detectedStreams.delete(tabId);
     updateBadge(tabId);
   }
@@ -161,8 +161,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
  * @param {boolean} preferProduction - Prefer production URL over localhost
  */
 async function openInPlayer(url, preferProduction = false) {
-  if (!url || (!url.startsWith("http://") && !url.startsWith("https://"))) {
-    console.warn("DanmakuPlayer Helper: Invalid URL:", url);
+  if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+    console.warn('DanmakuPlayer Helper: Invalid URL:', url);
     return;
   }
 
@@ -179,52 +179,45 @@ async function openInPlayer(url, preferProduction = false) {
       // Send message to content script
       try {
         await chrome.tabs.sendMessage(tab.id, {
-          type: "IMPORT_URL",
+          type: 'IMPORT_URL',
           url: url,
         });
-        console.log("DanmakuPlayer Helper: Sent URL to existing tab:", url);
+        console.log('DanmakuPlayer Helper: Sent URL to existing tab:', url);
       } catch {
         // Content script might not be loaded yet, reload and try again
-        console.warn(
-          "DanmakuPlayer Helper: Content script not ready, reloading tab"
-        );
+        console.warn('DanmakuPlayer Helper: Content script not ready, reloading tab');
         await chrome.tabs.reload(tab.id);
         setTimeout(async () => {
           try {
             await chrome.tabs.sendMessage(tab.id, {
-              type: "IMPORT_URL",
+              type: 'IMPORT_URL',
               url: url,
             });
           } catch (retryError) {
-            console.error(
-              "DanmakuPlayer Helper: Failed to send after reload:",
-              retryError
-            );
+            console.error('DanmakuPlayer Helper: Failed to send after reload:', retryError);
           }
         }, 1500);
       }
     } else {
       // Open new tab
-      const baseUrl = preferProduction
-        ? APP_URLS.production
-        : APP_URLS.development;
+      const baseUrl = preferProduction ? APP_URLS.production : APP_URLS.development;
       const target = `${baseUrl}?import=${encodeURIComponent(url)}`;
       await chrome.tabs.create({ url: target });
-      console.log("DanmakuPlayer Helper: Opened new tab with URL:", target);
+      console.log('DanmakuPlayer Helper: Opened new tab with URL:', target);
     }
   } catch (error) {
-    console.error("DanmakuPlayer Helper: Error opening URL:", error);
+    console.error('DanmakuPlayer Helper: Error opening URL:', error);
   }
 }
 
 // Context Menu Click Handler
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === "open-in-danmaku-player") {
+  if (info.menuItemId === 'open-in-danmaku-player') {
     const targetUrl = info.linkUrl || info.pageUrl;
     openInPlayer(targetUrl);
-  } else if (info.menuItemId.startsWith("hls-stream-")) {
+  } else if (info.menuItemId.startsWith('hls-stream-')) {
     // Handle HLS stream selection
-    const index = parseInt(info.menuItemId.replace("hls-stream-", ""));
+    const index = parseInt(info.menuItemId.replace('hls-stream-', ''));
     const streams = detectedStreams.get(tab.id);
     if (streams) {
       const streamArray = Array.from(streams);
@@ -239,17 +232,16 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 // Listen for messages from content scripts or popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === "OPEN_IN_PLAYER") {
+  if (message.type === 'OPEN_IN_PLAYER') {
     openInPlayer(message.url, message.preferProduction);
     sendResponse({ success: true });
-  } else if (message.type === "FETCH_URL") {
+  } else if (message.type === 'FETCH_URL') {
     // Fetch URL via extension (bypasses CORS)
     (async () => {
       try {
         const response = await fetch(message.url, {
           headers: {
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           },
         });
         if (!response.ok) {
@@ -259,25 +251,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const arrayBuffer = await response.arrayBuffer();
         // Convert to base64 for transfer
         const base64 = btoa(
-          new Uint8Array(arrayBuffer).reduce(
-            (data, byte) => data + String.fromCharCode(byte),
-            ""
-          )
+          new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
         );
         sendResponse({
           data: base64,
-          contentType: response.headers.get("content-type"),
+          contentType: response.headers.get('content-type'),
         });
       } catch (error) {
         sendResponse({ error: error.message });
       }
     })();
     return true; // Keep channel open for async response
-  } else if (message.type === "GET_DETECTED_STREAMS") {
+  } else if (message.type === 'GET_DETECTED_STREAMS') {
     const tabId = sender.tab?.id || message.tabId;
     const streams = detectedStreams.get(tabId);
     sendResponse({ streams: streams ? Array.from(streams) : [] });
-  } else if (message.type === "DOM_URLS_FOUND") {
+  } else if (message.type === 'DOM_URLS_FOUND') {
     // Handle URLs found from DOM scanning
     const tabId = sender.tab?.id;
     if (tabId && message.urls && message.urls.length > 0) {
@@ -288,16 +277,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         detectedStreams.get(tabId).add(url);
       });
       console.log(
-        "DanmakuPlayer Helper: DOM scan added",
+        'DanmakuPlayer Helper: DOM scan added',
         message.urls.length,
-        "URLs for tab",
+        'URLs for tab',
         tabId
       );
       updateHlsContextMenu(tabId);
       updateBadge(tabId);
     }
     sendResponse({ success: true });
-  } else if (message.type === "CONTENT_SCRIPT_READY") {
+  } else if (message.type === 'CONTENT_SCRIPT_READY') {
     sendResponse({ success: true });
   }
   return true;

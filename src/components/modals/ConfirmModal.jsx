@@ -1,5 +1,5 @@
-import React from "react";
-import { AlertTriangle, Info, CheckCircle, X } from "lucide-react";
+import { AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
+import React from 'react';
 
 /**
  * ConfirmModal - A generic confirmation modal
@@ -19,19 +19,19 @@ const ConfirmModal = ({
   message,
   onConfirm,
   onCancel,
-  confirmText = "はい",
-  cancelText = "いいえ",
-  type = "info",
+  confirmText = 'はい',
+  cancelText = 'いいえ',
+  type = 'info',
 }) => {
   if (!isOpen) return null;
 
   const getIcon = () => {
     switch (type) {
-      case "danger":
+      case 'danger':
         return <AlertTriangle className="text-red-500" size={24} />;
-      case "warning":
+      case 'warning':
         return <AlertTriangle className="text-yellow-500" size={24} />;
-      case "success":
+      case 'success':
         return <CheckCircle className="text-green-500" size={24} />;
       default:
         return <Info className="text-blue-500" size={24} />;
@@ -40,12 +40,12 @@ const ConfirmModal = ({
 
   const getConfirmBtnColor = () => {
     switch (type) {
-      case "danger":
-        return "bg-red-600 hover:bg-red-700 focus:ring-red-500";
-      case "warning":
-        return "bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500";
+      case 'danger':
+        return 'bg-red-600 hover:bg-red-700 focus:ring-red-500';
+      case 'warning':
+        return 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500';
       default:
-        return "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500";
+        return 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500';
     }
   };
 
@@ -66,9 +66,7 @@ const ConfirmModal = ({
 
         {/* Body */}
         <div className="p-6">
-          <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
-            {message}
-          </p>
+          <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{message}</p>
         </div>
 
         {/* Footer */}

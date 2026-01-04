@@ -1,27 +1,27 @@
-import React, { useState } from "react";
 import {
-  X,
-  Keyboard,
-  Info,
   BookOpen,
-  MonitorPlay,
-  FileVideo,
-  Sidebar,
-  MessageSquare,
-  Puzzle,
   Download,
-} from "lucide-react";
+  FileVideo,
+  Info,
+  Keyboard,
+  MessageSquare,
+  MonitorPlay,
+  Puzzle,
+  Sidebar,
+  X,
+} from 'lucide-react';
+import React, { useState } from 'react';
 
 const HelpModal = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = useState('basic');
 
   if (!isOpen) return null;
 
   const tabs = [
-    { id: "basic", label: "基本操作", icon: Info },
-    { id: "shortcuts", label: "ショートカット", icon: Keyboard },
-    { id: "features", label: "機能紹介", icon: BookOpen },
-    { id: "extensions", label: "拡張機能", icon: Puzzle },
+    { id: 'basic', label: '基本操作', icon: Info },
+    { id: 'shortcuts', label: 'ショートカット', icon: Keyboard },
+    { id: 'features', label: '機能紹介', icon: BookOpen },
+    { id: 'extensions', label: '拡張機能', icon: Puzzle },
   ];
 
   return (
@@ -55,8 +55,8 @@ const HelpModal = ({ isOpen, onClose }) => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors relative ${
                 activeTab === tab.id
-                  ? "text-blue-400 bg-blue-900/10"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+                  ? 'text-blue-400 bg-blue-900/10'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
               }`}
             >
               <tab.icon size={16} />
@@ -70,7 +70,7 @@ const HelpModal = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 text-gray-300">
-          {activeTab === "basic" && (
+          {activeTab === 'basic' && (
             <div className="space-y-8 animate-fade-in">
               <section>
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -78,14 +78,11 @@ const HelpModal = ({ isOpen, onClose }) => {
                   動画を読み込む
                 </h3>
                 <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700/50">
-                  <p className="mb-2">
-                    以下の方法で動画を読み込むことができます：
-                  </p>
+                  <p className="mb-2">以下の方法で動画を読み込むことができます：</p>
                   <ul className="list-disc list-inside space-y-1 text-sm text-gray-400 ml-2">
                     <li>画面中央の「動画ファイルを選択」ボタンをクリック</li>
                     <li>
-                      ヘッダー右上の{" "}
-                      <FileVideo size={14} className="inline text-blue-400" />{" "}
+                      ヘッダー右上の <FileVideo size={14} className="inline text-blue-400" />{' '}
                       アイコンをクリック
                     </li>
                     <li>動画ファイルをウィンドウにドラッグ＆ドロップ</li>
@@ -100,23 +97,17 @@ const HelpModal = ({ isOpen, onClose }) => {
                   サイドバーの活用
                 </h3>
                 <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700/50">
-                  <p className="mb-2">
-                    画面右側のサイドバーでコメント（ログ）を管理できます。
-                  </p>
+                  <p className="mb-2">画面右側のサイドバーでコメント（ログ）を管理できます。</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div className="p-3 bg-black/20 rounded">
-                      <h4 className="font-bold text-sm text-white mb-1">
-                        ログファイルの読み込み
-                      </h4>
+                      <h4 className="font-bold text-sm text-white mb-1">ログファイルの読み込み</h4>
                       <p className="text-xs text-gray-500">
                         xml, json,
                         txtなどの形式に対応しています。サイドバー上部にドラッグ＆ドロップして追加できます。
                       </p>
                     </div>
                     <div className="p-3 bg-black/20 rounded">
-                      <h4 className="font-bold text-sm text-white mb-1">
-                        同期設定
-                      </h4>
+                      <h4 className="font-bold text-sm text-white mb-1">同期設定</h4>
                       <p className="text-xs text-gray-500">
                         ログの開始時間を調整したり、特定の位置に同期させたりすることができます。
                       </p>
@@ -136,9 +127,7 @@ const HelpModal = ({ isOpen, onClose }) => {
                       <MonitorPlay size={16} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white text-sm">
-                        動画モード
-                      </h4>
+                      <h4 className="font-bold text-white text-sm">動画モード</h4>
                       <p className="text-xs text-gray-400">
                         動画を見ながら流れるコメントを楽しむ通常のモードです。
                       </p>
@@ -149,9 +138,7 @@ const HelpModal = ({ isOpen, onClose }) => {
                       <BookOpen size={16} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white text-sm">
-                        ログ読みモード
-                      </h4>
+                      <h4 className="font-bold text-white text-sm">ログ読みモード</h4>
                       <p className="text-xs text-gray-400">
                         動画を非表示にし、ログを読むことに特化したモードです。過去のログをじっくり読むのに最適です。
                       </p>
@@ -162,18 +149,13 @@ const HelpModal = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {activeTab === "shortcuts" && (
+          {activeTab === 'shortcuts' && (
             <div className="animate-fade-in">
-              <h3 className="text-lg font-bold text-white mb-6">
-                キーボードショートカット一覧
-              </h3>
+              <h3 className="text-lg font-bold text-white mb-6">キーボードショートカット一覧</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ShortcutItem k="Space" desc="再生 / 一時停止" />
                 <ShortcutItem k="← / →" desc="5秒戻る / 5秒進む" />
-                <ShortcutItem
-                  k="L"
-                  desc="ログ読みモードの切り替え (Log Mode)"
-                />
+                <ShortcutItem k="L" desc="ログ読みモードの切り替え (Log Mode)" />
                 <ShortcutItem k="D" desc="弾幕表示のON/OFF (Danmaku)" />
                 <ShortcutItem k="S" desc="サイドバー表示のON/OFF (Sidebar)" />
                 <ShortcutItem k="Ctrl + S" desc="プロジェクトの上書き保存" />
@@ -182,7 +164,7 @@ const HelpModal = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {activeTab === "features" && (
+          {activeTab === 'features' && (
             <div className="space-y-8 animate-fade-in">
               <FeatureItem
                 title="NG機能"
@@ -207,13 +189,11 @@ const HelpModal = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {activeTab === "extensions" && (
+          {activeTab === 'extensions' && (
             <div className="animate-fade-in space-y-6">
               <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-6 text-center">
                 <Puzzle size={48} className="mx-auto text-blue-400 mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">
-                  DanmakuPlayer Helper
-                </h3>
+                <h3 className="text-xl font-bold text-white mb-2">DanmakuPlayer Helper</h3>
                 <p className="text-gray-300 mb-6 max-w-lg mx-auto">
                   5chなどのCORS制限のあるサイトからログを取得したり、
                   Web上の動画を直接DanmakuPlayerで開くことができる拡張機能です。
@@ -237,31 +217,25 @@ const HelpModal = ({ isOpen, onClose }) => {
                   <div className="p-4 border-b border-gray-800">
                     <ol className="list-decimal list-inside space-y-4 text-gray-300">
                       <li className="pl-2">
-                        <span className="font-bold text-white">
-                          ダウンロード・解凍:
-                        </span>{" "}
+                        <span className="font-bold text-white">ダウンロード・解凍:</span>{' '}
                         上のボタンからZIPファイルをダウンロードし、適当な場所に解凍してください。
                       </li>
                       <li className="pl-2">
-                        <span className="font-bold text-white">
-                          拡張機能管理画面を開く:
-                        </span>{" "}
-                        Chromeのアドレスバーに{" "}
+                        <span className="font-bold text-white">拡張機能管理画面を開く:</span>{' '}
+                        Chromeのアドレスバーに{' '}
                         <code className="bg-gray-800 px-2 py-0.5 rounded text-blue-300 select-all">
                           chrome://extensions
-                        </code>{" "}
+                        </code>{' '}
                         と入力して開きます。
                       </li>
                       <li className="pl-2">
-                        <span className="font-bold text-white">
-                          デベロッパーモードをON:
-                        </span>{" "}
+                        <span className="font-bold text-white">デベロッパーモードをON:</span>{' '}
                         画面右上の「デベロッパーモード」スイッチをONにします。
                       </li>
                       <li className="pl-2">
                         <span className="font-bold text-white">
                           パッケージ化されていない拡張機能を読み込む:
-                        </span>{" "}
+                        </span>{' '}
                         左上のボタンをクリックし、手順1で解凍したフォルダ（
                         <code className="bg-gray-800 px-2 py-0.5 rounded text-yellow-300">
                           chrome_extension
@@ -308,9 +282,7 @@ const ShortcutItem = ({ k, desc }) => (
 
 const FeatureItem = ({ title, icon, desc }) => (
   <div className="flex items-start gap-4 p-4 bg-gray-900/30 rounded-lg border border-gray-700/30">
-    <div className="p-3 bg-gray-800 rounded-lg text-blue-400 shrink-0">
-      {icon}
-    </div>
+    <div className="p-3 bg-gray-800 rounded-lg text-blue-400 shrink-0">{icon}</div>
     <div>
       <h4 className="font-bold text-white text-lg mb-2">{title}</h4>
       <p className="text-sm text-gray-400 leading-relaxed">{desc}</p>

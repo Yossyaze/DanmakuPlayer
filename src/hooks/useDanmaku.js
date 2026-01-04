@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { measureTextWidth } from "../utils/danmakuUtils";
-import { parseCommentToNodes } from "../utils/danmakuProcessor";
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { parseCommentToNodes } from '../utils/danmakuProcessor';
+import { measureTextWidth } from '../utils/danmakuUtils';
 
 export const useDanmaku = (settings, isPlaying) => {
   const [activeDanmaku, setActiveDanmaku] = useState([]);
@@ -20,7 +21,7 @@ export const useDanmaku = (settings, isPlaying) => {
         skipNextProcessRef.current = false;
         lastProcessedTimeRef.current = currentDisplayTime;
         console.log(
-          "[ProcessDanmaku] Skipped first frame after resume, synced to:",
+          '[ProcessDanmaku] Skipped first frame after resume, synced to:',
           currentDisplayTime
         );
         return;
@@ -34,7 +35,7 @@ export const useDanmaku = (settings, isPlaying) => {
       let isRetroactive = false;
 
       if (isSeek) {
-        console.log("[ProcessDanmaku] Seek detected:", {
+        console.log('[ProcessDanmaku] Seek detected:', {
           currentDisplayTime,
           lastProcessed: lastProcessedTimeRef.current,
         });
@@ -48,10 +49,7 @@ export const useDanmaku = (settings, isPlaying) => {
 
         // 2. Define lookback window
         // Ensure we don't look back before 0
-        const lookbackStart = Math.max(
-          0,
-          currentDisplayTime - settings.duration
-        );
+        const lookbackStart = Math.max(0, currentDisplayTime - settings.duration);
 
         // 3. Gather comments for the entire visible window
         commentsToProcess = comments.filter(
@@ -64,16 +62,14 @@ export const useDanmaku = (settings, isPlaying) => {
       } else {
         // Normal processing
         commentsToProcess = comments.filter(
-          (c) =>
-            c.time > lastProcessedTimeRef.current &&
-            c.time <= currentDisplayTime
+          (c) => c.time > lastProcessedTimeRef.current && c.time <= currentDisplayTime
         );
         lastProcessedTimeRef.current = currentDisplayTime;
       }
 
       if (commentsToProcess.length > 0) {
         if (!isRetroactive) {
-          console.log("[ProcessDanmaku] Adding new comments:", {
+          console.log('[ProcessDanmaku] Adding new comments:', {
             count: commentsToProcess.length,
             searchStart: lastProcessedTimeRef.current,
             currentDisplayTime,
@@ -84,9 +80,7 @@ export const useDanmaku = (settings, isPlaying) => {
         const containerHeight = danmakuContainerRef.current.clientHeight;
         const lineHeight = settings.fontSize * 1.2;
         const childFontScale = 1.0; // Child comments same size as parent
-        const maxLanes = Math.floor(
-          (containerHeight * (settings.area / 100)) / lineHeight
-        );
+        const maxLanes = Math.floor((containerHeight * (settings.area / 100)) / lineHeight);
         const maxLanesRound2 = Math.floor(
           (containerHeight * (settings.area / 100)) / lineHeight - 0.5
         );
@@ -112,13 +106,7 @@ export const useDanmaku = (settings, isPlaying) => {
         // We need to check:
         // 1. Has the previous comment's tail entered the screen? (basic gap)
         // 2. Will the new comment catch up to the previous one before both exit? (overtake check)
-        const findAvailableLane = (
-          newWidth,
-          rowSpan,
-          targetMap,
-          laneLimit,
-          referenceTime
-        ) => {
+        const findAvailableLane = (newWidth, rowSpan, targetMap, laneLimit, referenceTime) => {
           const now = referenceTime; // Use simulated time for retroactive checks
           const newSpeed = (containerWidth + newWidth) / settings.duration;
 
@@ -130,8 +118,7 @@ export const useDanmaku = (settings, isPlaying) => {
               if (laneState) {
                 const elapsed = (now - laneState.startTime) / 1000;
                 const prevWidth = laneState.width;
-                const prevSpeed =
-                  (containerWidth + prevWidth) / settings.duration;
+                const prevSpeed = (containerWidth + prevWidth) / settings.duration;
 
                 // Current position of previous comment's tail
                 const prevHeadPos = prevSpeed * elapsed; // How far head has traveled from right edge
@@ -161,8 +148,7 @@ export const useDanmaku = (settings, isPlaying) => {
 
                   if (catchUpTime < newExitTime && catchUpTime > 0) {
                     // Also check if previous comment is still on screen at catch up time
-                    const prevPosAtCatchUp =
-                      prevHeadPos + prevSpeed * catchUpTime;
+                    const prevPosAtCatchUp = prevHeadPos + prevSpeed * catchUpTime;
                     const prevTailAtCatchUp = prevPosAtCatchUp - prevWidth;
 
                     if (prevTailAtCatchUp < containerWidth) {
@@ -181,14 +167,7 @@ export const useDanmaku = (settings, isPlaying) => {
         };
 
         // ===== Helper: Register lane occupation =====
-        const registerLane = (
-          lane,
-          width,
-          rowSpan,
-          targetMap,
-          laneLimit,
-          referenceTime
-        ) => {
+        const registerLane = (lane, width, rowSpan, targetMap, laneLimit, referenceTime) => {
           const now = referenceTime;
           for (let r = 0; r < rowSpan; r++) {
             if (lane + r < laneLimit) {
@@ -226,9 +205,7 @@ export const useDanmaku = (settings, isPlaying) => {
           .filter((c) => !c.rootId || c.id === c.rootId || c.layoutIndex === 0)
           .forEach((root) => {
             const rootData = processCommentData(root);
-            const children = sorted.filter(
-              (c) => c.rootId === root.id && c.id !== root.id
-            );
+            const children = sorted.filter((c) => c.rootId === root.id && c.id !== root.id);
 
             let totalRowSpan = rootData.rowSpan;
             let maxWidth = rootData.totalWidth;
@@ -257,10 +234,7 @@ export const useDanmaku = (settings, isPlaying) => {
             if (truncatedCount > 0) {
               totalRowSpan += 1; // Reserve 1 row for indicator
               const truncText = `... +${truncatedCount}件`;
-              const truncWidth = measureTextWidth(
-                truncText,
-                settings.fontSize * 0.8
-              );
+              const truncWidth = measureTextWidth(truncText, settings.fontSize * 0.8);
               maxWidth = Math.max(maxWidth, truncWidth);
             }
 
@@ -284,15 +258,14 @@ export const useDanmaku = (settings, isPlaying) => {
           const referenceTime = Date.now() - accumulatedDelay;
 
           // Check if this is a tree child with existing parent
-          const isTreeChild =
-            c.rootId && c.id !== c.rootId && c.layoutIndex > 0;
-          const existingRoot = isTreeChild
-            ? rootStateRef.current[c.rootId]
-            : null;
+          const isTreeChild = c.rootId && c.id !== c.rootId && c.layoutIndex > 0;
+          const existingRoot = isTreeChild ? rootStateRef.current[c.rootId] : null;
 
           // Process comment data with child flag for proper height calculation
-          const { nodes, totalWidth, rowSpan, actualPixelHeight } =
-            processCommentData(c, !!existingRoot);
+          const { nodes, totalWidth, rowSpan, actualPixelHeight } = processCommentData(
+            c,
+            !!existingRoot
+          );
 
           // Distance to travel (from right edge to completely off left edge)
           const dist = -(containerWidth + totalWidth);
@@ -314,8 +287,7 @@ export const useDanmaku = (settings, isPlaying) => {
 
             // Parent Top includes Round 2 offset if applicable
             const parentLaneOffset = isRound2 ? 0.5 : 0;
-            const parentTop =
-              (existingRoot.lane + parentLaneOffset) * lineHeight;
+            const parentTop = (existingRoot.lane + parentLaneOffset) * lineHeight;
 
             // Use parent's actual height (includes images) instead of just lineHeight
             const parentHeight = existingRoot.actualHeight || lineHeight;
@@ -380,9 +352,7 @@ export const useDanmaku = (settings, isPlaying) => {
                 isRound2 = true;
               } else {
                 // Fallback: random lane in Round 1
-                lane = Math.floor(
-                  Math.random() * Math.max(1, maxLanes - hullRowSpan + 1)
-                );
+                lane = Math.floor(Math.random() * Math.max(1, maxLanes - hullRowSpan + 1));
                 isRound2 = false; // Fallback counts as Round 1 (no offset)
               }
             }
@@ -421,9 +391,7 @@ export const useDanmaku = (settings, isPlaying) => {
 
           if (!skip) {
             const laneOffset = isRound2 ? 0.5 : 0;
-            const finalOpacity = isRound2
-              ? settings.opacity * 0.7
-              : settings.opacity;
+            const finalOpacity = isRound2 ? settings.opacity * 0.7 : settings.opacity;
 
             // Calculate negative animation delay for retroactive comments
             const animationDelay = isRetroactive ? -timeElapsed : 0;
@@ -432,10 +400,7 @@ export const useDanmaku = (settings, isPlaying) => {
               ...c,
               nodes,
               uniqueId: `${c.id}-${referenceTime}-${Math.random()}`,
-              top:
-                c._childTop !== undefined
-                  ? c._childTop
-                  : (lane + laneOffset) * lineHeight,
+              top: c._childTop !== undefined ? c._childTop : (lane + laneOffset) * lineHeight,
               dist: dist,
               width: totalWidth,
               duration: commentDuration,
@@ -454,23 +419,18 @@ export const useDanmaku = (settings, isPlaying) => {
               // displayedHeight is now in pixels
               const displayedHeight = treeChildRowsAccum[rootId] || 0;
               const truncText = `... +${hull.truncatedCount}件`;
-              const truncWidth = measureTextWidth(
-                truncText,
-                settings.fontSize * 0.8
-              );
+              const truncWidth = measureTextWidth(truncText, settings.fontSize * 0.8);
 
               // Calculate top: parent top + parent height + children height
               const isRound2 = rootState.isRound2;
               const parentLaneOffset = isRound2 ? 0.5 : 0;
-              const parentTop =
-                (rootState.lane + parentLaneOffset) * lineHeight;
+              const parentTop = (rootState.lane + parentLaneOffset) * lineHeight;
 
               // Use parent's actual height (which includes images/newlines)
               const parentHeight = rootState.actualHeight || lineHeight;
 
               const truncTop = parentTop + parentHeight + displayedHeight;
-              const truncDuration =
-                (containerWidth + truncWidth) / rootState.speed;
+              const truncDuration = (containerWidth + truncWidth) / rootState.speed;
 
               // For truncation indicators, use parent's reference time for animation delay
               const parentStartTime = rootState.startTime;
@@ -491,7 +451,7 @@ export const useDanmaku = (settings, isPlaying) => {
                 width: truncWidth,
                 duration: truncDuration,
                 animationDelay: `${animationDelay}s`, // Inherit/calculate delay
-                color: "#888888",
+                color: '#888888',
                 isTruncationIndicator: true,
                 opacity: isRound2 ? 0.7 : 1, // Match parent opacity factor
                 zIndex: isRound2 ? 0 : 10,
@@ -523,17 +483,17 @@ export const useDanmaku = (settings, isPlaying) => {
   // This ensures correct state after DanmakuLayer remounts (e.g., exiting log mode)
   useEffect(() => {
     if (danmakuContainerRef.current) {
-      const state = isPlaying ? "running" : "paused";
-      danmakuContainerRef.current.style.setProperty("--play-state", state);
-      console.log("[Danmaku] Setting --play-state:", state);
+      const state = isPlaying ? 'running' : 'paused';
+      danmakuContainerRef.current.style.setProperty('--play-state', state);
+      console.log('[Danmaku] Setting --play-state:', state);
     }
   }, [isPlaying]);
 
   // Also set on initial render (useLayoutEffect to run before paint)
   useEffect(() => {
     if (danmakuContainerRef.current) {
-      const state = isPlaying ? "running" : "paused";
-      danmakuContainerRef.current.style.setProperty("--play-state", state);
+      const state = isPlaying ? 'running' : 'paused';
+      danmakuContainerRef.current.style.setProperty('--play-state', state);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only on mount

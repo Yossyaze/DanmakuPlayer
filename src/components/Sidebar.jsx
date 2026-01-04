@@ -1,50 +1,50 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
-  Settings,
-  ChevronUp,
-  ChevronDown,
-  Upload,
-  Clock,
-  RefreshCw,
-  Plus,
-  Edit2,
-  X,
-  Link as LinkIcon,
-  Pipette,
-  ArrowDown,
-  Hash,
-  Ban,
-  FileText,
-  Trash2,
-  Eye,
-  EyeOff,
-  GripVertical,
-} from "lucide-react";
-
-import {
-  DndContext,
   closestCenter,
+  DndContext,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import TimeInput from "./ui/TimeInput";
-import SidebarFileRow from "./SidebarFileRow";
-import CommentList from "./CommentList";
-import CommentItem from "./ui/CommentItem";
-import UserHistoryModal from "./UserHistoryModal";
-import AnchorPopup from "./ui/AnchorPopup";
-import CommentContextMenu from "./ui/CommentContextMenu";
-import ReplyListPopup from "./ui/ReplyListPopup";
-import NgList from "./ui/NgList";
-import { playRandomAbeVoice } from "../utils/abeMode";
-import { padTime } from "../utils/sidebarUtils";
+} from '@dnd-kit/sortable';
+import {
+  ArrowDown,
+  Ban,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Edit2,
+  Eye,
+  EyeOff,
+  FileText,
+  GripVertical,
+  Hash,
+  Link as LinkIcon,
+  Pipette,
+  Plus,
+  RefreshCw,
+  Settings,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+
+import { playRandomAbeVoice } from '../utils/abeMode';
+import { padTime } from '../utils/sidebarUtils';
+import CommentList from './CommentList';
+import SidebarFileRow from './SidebarFileRow';
+import AnchorPopup from './ui/AnchorPopup';
+import CommentContextMenu from './ui/CommentContextMenu';
+import CommentItem from './ui/CommentItem';
+import NgList from './ui/NgList';
+import ReplyListPopup from './ui/ReplyListPopup';
+import TimeInput from './ui/TimeInput';
+import UserHistoryModal from './UserHistoryModal';
 
 const Sidebar = ({
   sidebarWidth,
@@ -150,13 +150,13 @@ const Sidebar = ({
   // const handleToggleAA = ... // Moved to App
 
   // CM Input Modes
-  const [cmStartMode, setCmStartMode] = useState("log");
-  const [cmEndMode, setCmEndMode] = useState("log");
+  const [cmStartMode, setCmStartMode] = useState('log');
+  const [cmEndMode, setCmEndMode] = useState('log');
 
   const handleUrlSubmit = (e) => {
     e.preventDefault();
     handleUrlLoad(urlInput);
-    setUrlInput("");
+    setUrlInput('');
   };
 
   // Compute ID Stats (userIndex/userTotal) and Reply Counts
@@ -250,11 +250,11 @@ const Sidebar = ({
 
     updateDimensions();
 
-    window.addEventListener("resize", updateDimensions);
+    window.addEventListener('resize', updateDimensions);
 
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", updateDimensions);
+      window.removeEventListener('resize', updateDimensions);
     };
   }, []);
 
@@ -274,13 +274,13 @@ const Sidebar = ({
         left: 100,
         bottom: 100,
       };
-      const rowElement = e?.target?.closest(".comment-item-row");
+      const rowElement = e?.target?.closest('.comment-item-row');
       const rowRect = rowElement?.getBoundingClientRect();
 
       setPopupStack((prev) => [
         ...prev,
         {
-          type: "anchor",
+          type: 'anchor',
           comment: targetComment,
           position: { x: baseRect.left, y: baseRect.bottom },
           parentRect: !isNested ? rowRect : null,
@@ -294,9 +294,9 @@ const Sidebar = ({
     e.stopPropagation();
     if (comment.replies && comment.replies.length > 0) {
       const baseRect =
-        e.target.closest(".reply-count-indicator")?.getBoundingClientRect() ||
+        e.target.closest('.reply-count-indicator')?.getBoundingClientRect() ||
         e.target.getBoundingClientRect();
-      const rowElement = e.target.closest(".comment-item-row");
+      const rowElement = e.target.closest('.comment-item-row');
       const rowRect = rowElement?.getBoundingClientRect();
 
       // 1. Determine if this comment is a "root" (has no anchors) or "descendant" (has anchors)
@@ -347,9 +347,7 @@ const Sidebar = ({
             rootIds.add(r.id);
           }
         });
-        rootAncestors = uniqueRoots.sort(
-          (a, b) => (a.resNum || 0) - (b.resNum || 0)
-        );
+        rootAncestors = uniqueRoots.sort((a, b) => (a.resNum || 0) - (b.resNum || 0));
       }
 
       // 2. Collect everything from all roots
@@ -383,7 +381,7 @@ const Sidebar = ({
       setPopupStack((prev) => [
         ...prev,
         {
-          type: "reply",
+          type: 'reply',
           comment: comment,
           replies: allItems,
           position: { x: baseRect.left, y: baseRect.bottom },
@@ -422,7 +420,7 @@ const Sidebar = ({
   // Keyboard listener for Escape to close popup
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         if (popupStack.length > 0) {
           e.stopPropagation(); // Prevent other handlers
           handleClosePopup();
@@ -432,8 +430,8 @@ const Sidebar = ({
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [popupStack.length, sidebarContextMenu]);
 
   // Context menu "Jump to Comment" action
@@ -479,9 +477,9 @@ const Sidebar = ({
   const handleSetLogStart = (comment) => {
     // Try to parse comment.date
     let timeStr = null;
-    if (comment.date && typeof comment.date === "number") {
+    if (comment.date && typeof comment.date === 'number') {
       const date = new Date(comment.date);
-      timeStr = date.toLocaleTimeString("ja-JP", { hour12: false });
+      timeStr = date.toLocaleTimeString('ja-JP', { hour12: false });
     } else if (comment.dateDisplay) {
       const match = comment.dateDisplay.match(/(\d{1,2}):(\d{2}):(\d{2})/);
       if (match) {
@@ -497,18 +495,16 @@ const Sidebar = ({
 
   const handleSetCmStart = (time) => {
     const startSec = startTimeStr
-      ? startTimeStr.split(":").reduce((acc, v) => acc * 60 + Number(v), 0)
+      ? startTimeStr.split(':').reduce((acc, v) => acc * 60 + Number(v), 0)
       : 0;
     const targetSec = startSec + time;
 
     const h = Math.floor(targetSec / 3600);
     const m = Math.floor((targetSec % 3600) / 60);
     const s = Math.floor(targetSec % 60);
-    const timeStr = `${h}:${m.toString().padStart(2, "0")}:${s
-      .toString()
-      .padStart(2, "0")}`;
+    const timeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
-    setCmStartMode("log");
+    setCmStartMode('log');
     setCmStartInput(timeStr);
     setShowSettingsPanel(true);
     setTimeout(() => scrollToCmSettings(), 100);
@@ -516,18 +512,16 @@ const Sidebar = ({
 
   const handleSetCmEnd = (time) => {
     const startSec = startTimeStr
-      ? startTimeStr.split(":").reduce((acc, v) => acc * 60 + Number(v), 0)
+      ? startTimeStr.split(':').reduce((acc, v) => acc * 60 + Number(v), 0)
       : 0;
     const targetSec = startSec + time;
 
     const h = Math.floor(targetSec / 3600);
     const m = Math.floor((targetSec % 3600) / 60);
     const s = Math.floor(targetSec % 60);
-    const timeStr = `${h}:${m.toString().padStart(2, "0")}:${s
-      .toString()
-      .padStart(2, "0")}`;
+    const timeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
-    setCmEndMode("log");
+    setCmEndMode('log');
     setCmEndInput(timeStr);
     setShowSettingsPanel(true);
     setTimeout(() => scrollToCmSettings(), 100);
@@ -537,8 +531,8 @@ const Sidebar = ({
   const scrollToCmSettings = () => {
     if (settingsScrollRef.current && cmSettingsRef.current) {
       cmSettingsRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
+        behavior: 'smooth',
+        block: 'center',
       });
     }
   };
@@ -546,7 +540,7 @@ const Sidebar = ({
   // Helper to render time input based on mode
   const renderTimeInput = (mode, value, setValue, placeholder) => {
     const handleGetCurrent = () => {
-      if (mode === "video") {
+      if (mode === 'video') {
         // Use seekbar time (logical time = log time - timeOffset)
         const seekbarSeconds = Math.floor(currentLogicalTime - timeOffset);
         const h = Math.floor(seekbarSeconds / 3600);
@@ -554,20 +548,14 @@ const Sidebar = ({
         const s = Math.floor(seekbarSeconds % 60);
 
         if (h > 0) {
-          setValue(
-            `${h}:${m.toString().padStart(2, "0")}:${s
-              .toString()
-              .padStart(2, "0")}`
-          );
+          setValue(`${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
         } else {
-          setValue(
-            `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
-          );
+          setValue(`${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
         }
-      } else if (mode === "log") {
+      } else if (mode === 'log') {
         // Calculate Log Time: startTimeStr + currentTime
         if (!startTimeStr) return;
-        const [h, m, s] = startTimeStr.split(":").map(Number);
+        const [h, m, s] = startTimeStr.split(':').map(Number);
         if (isNaN(h) || isNaN(m) || isNaN(s)) return;
 
         const startSec = h * 3600 + m * 60 + s;
@@ -577,15 +565,15 @@ const Sidebar = ({
         const mm = Math.floor((currentSec % 3600) / 60);
         const ss = Math.floor(currentSec % 60);
 
-        const formatted = `${hh}:${mm.toString().padStart(2, "0")}:${ss
+        const formatted = `${hh}:${mm.toString().padStart(2, '0')}:${ss
           .toString()
-          .padStart(2, "0")}`;
+          .padStart(2, '0')}`;
         setValue(formatted);
       }
     };
 
-    if (mode === "log" || mode === "video" || mode === "duration") {
-      const showHours = mode === "log";
+    if (mode === 'log' || mode === 'video' || mode === 'duration') {
+      const showHours = mode === 'log';
       return (
         <div className="flex items-center gap-1">
           <TimeInput
@@ -594,7 +582,7 @@ const Sidebar = ({
             showHours={showHours}
             placeholder={placeholder}
           />
-          {(mode === "video" || mode === "log") && (
+          {(mode === 'video' || mode === 'log') && (
             <button onClick={handleGetCurrent} title="現在の時間を取得">
               <Pipette size={12} />
             </button>
@@ -623,7 +611,7 @@ const Sidebar = ({
       if (duration === null) {
         container.scrollTo({
           top: targetTop,
-          behavior: "smooth",
+          behavior: 'smooth',
         });
         return;
       }
@@ -679,23 +667,19 @@ const Sidebar = ({
 
     const handleInteraction = (e) => {
       // Ignore interactions from defined non-scroll elements (like context menus)
-      if (e.target.closest(".no-scroll-lock")) return;
+      if (e.target.closest('.no-scroll-lock')) return;
 
       // Always try to disable auto-scroll on interaction, even if Ref is already false.
       // This ensures that if the Prop is True but Ref is False (desync), we force the Prop to False.
 
       // Always disable auto-scroll on direct scroll interactions
-      if (
-        e.type === "wheel" ||
-        e.type === "touchmove" ||
-        e.type === "keydown"
-      ) {
+      if (e.type === 'wheel' || e.type === 'touchmove' || e.type === 'keydown') {
         isAutoScrollRef.current = false;
         setLocalIsAutoScroll(false);
         setIsAutoScroll(false);
       }
       // For mouse interactions, only disable if clicking the scrollbar (container target)
-      else if (e.type === "mousedown") {
+      else if (e.type === 'mousedown') {
         if (e.target === container) {
           isAutoScrollRef.current = false;
           setLocalIsAutoScroll(false);
@@ -705,18 +689,18 @@ const Sidebar = ({
     };
 
     // Use native event listeners for better reliability
-    container.addEventListener("wheel", handleInteraction, { passive: true });
-    container.addEventListener("touchmove", handleInteraction, {
+    container.addEventListener('wheel', handleInteraction, { passive: true });
+    container.addEventListener('touchmove', handleInteraction, {
       passive: true,
     });
-    container.addEventListener("keydown", handleInteraction);
-    container.addEventListener("mousedown", handleInteraction);
+    container.addEventListener('keydown', handleInteraction);
+    container.addEventListener('mousedown', handleInteraction);
 
     return () => {
-      container.removeEventListener("wheel", handleInteraction);
-      container.removeEventListener("touchmove", handleInteraction);
-      container.removeEventListener("keydown", handleInteraction);
-      container.removeEventListener("mousedown", handleInteraction);
+      container.removeEventListener('wheel', handleInteraction);
+      container.removeEventListener('touchmove', handleInteraction);
+      container.removeEventListener('keydown', handleInteraction);
+      container.removeEventListener('mousedown', handleInteraction);
     };
   }, [setIsAutoScroll]);
 
@@ -746,8 +730,7 @@ const Sidebar = ({
 
   // Determine active file IDs and Thread Title based on current comment or time
   const { activeThreadTitle } = useMemo(() => {
-    if (!loadedFiles || loadedFiles.length === 0)
-      return { activeThreadTitle: null };
+    if (!loadedFiles || loadedFiles.length === 0) return { activeThreadTitle: null };
     if (!comments || comments.length === 0) return { activeThreadTitle: null };
 
     let targetComment = null;
@@ -814,8 +797,8 @@ const Sidebar = ({
           onClick={toggleSettings}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 text-xs font-medium transition-colors ${
             showSettingsPanel
-              ? "bg-gray-700 text-blue-400 border-b-2 border-blue-500"
-              : "text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+              ? 'bg-gray-700 text-blue-400 border-b-2 border-blue-500'
+              : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'
           }`}
         >
           <Settings size={14} />
@@ -827,8 +810,8 @@ const Sidebar = ({
           onClick={toggleNgPanel}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 text-xs font-medium transition-colors ${
             showNgPanel
-              ? "bg-gray-700 text-red-400 border-b-2 border-red-500"
-              : "text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+              ? 'bg-gray-700 text-red-400 border-b-2 border-red-500'
+              : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'
           }`}
         >
           <Ban size={14} />
@@ -878,9 +861,7 @@ const Sidebar = ({
                           key={file.id}
                           file={file}
                           index={index}
-                          handleToggleFileVisibility={
-                            handleToggleFileVisibility
-                          }
+                          handleToggleFileVisibility={handleToggleFileVisibility}
                           handleRemoveFile={handleRemoveFile}
                         />
                       ))}
@@ -919,26 +900,24 @@ const Sidebar = ({
 
               {/* AA Mode Setting */}
               <div className="flex items-center justify-between">
-                <span className="text-gray-400 text-xs">
-                  AAモード（自動判定）
-                </span>
+                <span className="text-gray-400 text-xs">AAモード（自動判定）</span>
                 <div className="flex bg-gray-700 rounded p-0.5">
                   <button
-                    onClick={() => setAaMode("auto")}
+                    onClick={() => setAaMode('auto')}
                     className={`px-3 py-1 rounded text-[10px] transition-colors ${
-                      aaMode === "auto"
-                        ? "bg-blue-600 text-white shadow-sm"
-                        : "text-gray-400 hover:text-gray-200"
+                      aaMode === 'auto'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-gray-400 hover:text-gray-200'
                     }`}
                   >
                     Auto
                   </button>
                   <button
-                    onClick={() => setAaMode("off")}
+                    onClick={() => setAaMode('off')}
                     className={`px-3 py-1 rounded text-[10px] transition-colors ${
-                      aaMode === "off"
-                        ? "bg-gray-600 text-white shadow-sm"
-                        : "text-gray-400 hover:text-gray-200"
+                      aaMode === 'off'
+                        ? 'bg-gray-600 text-white shadow-sm'
+                        : 'text-gray-400 hover:text-gray-200'
                     }`}
                   >
                     OFF
@@ -952,12 +931,8 @@ const Sidebar = ({
                   <div className="flex items-center gap-2">
                     <span className="text-lg">🌈</span>
                     <div>
-                      <span className="text-gray-400 text-xs block">
-                        安倍晋三モード
-                      </span>
-                      <span className="text-[10px] text-gray-600">
-                        語録を虹色で強調
-                      </span>
+                      <span className="text-gray-400 text-xs block">安倍晋三モード</span>
+                      <span className="text-[10px] text-gray-600">語録を虹色で強調</span>
                     </div>
                   </div>
                   <button
@@ -973,16 +948,16 @@ const Sidebar = ({
                     }}
                     style={{
                       background: dmSettings.abeMode
-                        ? "linear-gradient(90deg, #ff4444, #ffaa00, #ffff44, #44ff44, #44aaff, #aa44ff)"
+                        ? 'linear-gradient(90deg, #ff4444, #ffaa00, #ffff44, #44ff44, #44aaff, #aa44ff)'
                         : undefined,
                     }}
                     className={`relative w-10 h-5 rounded-full transition-all ${
-                      !dmSettings.abeMode ? "bg-gray-700" : ""
+                      !dmSettings.abeMode ? 'bg-gray-700' : ''
                     }`}
                   >
                     <span
                       className={`absolute top-0.5 w-4 h-4 bg-white border border-gray-400 rounded-full shadow transition-all ${
-                        dmSettings.abeMode ? "left-5.5" : "left-0.5"
+                        dmSettings.abeMode ? 'left-5.5' : 'left-0.5'
                       }`}
                     />
                   </button>
@@ -999,9 +974,7 @@ const Sidebar = ({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between bg-gray-800 p-2 rounded border border-gray-700">
                     <div className="flex flex-col items-center gap-1">
-                      <span className="text-[10px] text-gray-400">
-                        ログ開始時間
-                      </span>
+                      <span className="text-[10px] text-gray-400">ログ開始時間</span>
                       <div className="flex items-center gap-1">
                         <Clock size={14} className="text-blue-400" />
                         <TimeInput
@@ -1013,9 +986,7 @@ const Sidebar = ({
                     </div>
                     <span className="text-xs text-gray-500 mt-4">=</span>
                     <div className="flex flex-col items-center gap-1">
-                      <span className="text-[10px] text-gray-400">
-                        動画時間
-                      </span>
+                      <span className="text-[10px] text-gray-400">動画時間</span>
                       <TimeInput
                         value={videoStartTimeStr}
                         onChange={setVideoStartTimeStr}
@@ -1031,7 +1002,7 @@ const Sidebar = ({
                         checked={showThreadTitle}
                         onChange={(e) => setShowThreadTitle(e.target.checked)}
                         className="rounded bg-gray-700 border-gray-600"
-                      />{" "}
+                      />{' '}
                       スレッドタイトルを表示
                     </label>
                     <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
@@ -1040,7 +1011,7 @@ const Sidebar = ({
                         checked={enableTreeView}
                         onChange={(e) => setEnableTreeView(e.target.checked)}
                         className="rounded bg-gray-700 border-gray-600"
-                      />{" "}
+                      />{' '}
                       アンカーをツリー表示 (引用)
                     </label>
                     <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
@@ -1049,28 +1020,28 @@ const Sidebar = ({
                         checked={showImages}
                         onChange={(e) => setShowImages(e.target.checked)}
                         className="rounded bg-gray-700 border-gray-600"
-                      />{" "}
+                      />{' '}
                       画像URLをインライン表示
                     </label>
                     {showImages && (
                       <div className="flex items-center gap-2 text-sm text-gray-400 ml-5">
                         <span>レイアウト:</span>
                         <button
-                          onClick={() => setImageLayout("inline")}
+                          onClick={() => setImageLayout('inline')}
                           className={`px-2 py-0.5 rounded text-xs ${
-                            imageLayout === "inline"
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-700 text-gray-300"
+                            imageLayout === 'inline'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-700 text-gray-300'
                           }`}
                         >
                           インライン
                         </button>
                         <button
-                          onClick={() => setImageLayout("grouped")}
+                          onClick={() => setImageLayout('grouped')}
                           className={`px-2 py-0.5 rounded text-xs ${
-                            imageLayout === "grouped"
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-700 text-gray-300"
+                            imageLayout === 'grouped'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-700 text-gray-300'
                           }`}
                         >
                           まとめて
@@ -1103,8 +1074,8 @@ const Sidebar = ({
                           value={skipSeconds}
                           onChange={(e) => {
                             const val = e.target.value;
-                            if (val === "") {
-                              setSkipSeconds("");
+                            if (val === '') {
+                              setSkipSeconds('');
                             } else {
                               const num = parseInt(val);
                               if (!isNaN(num)) setSkipSeconds(num);
@@ -1112,8 +1083,7 @@ const Sidebar = ({
                           }}
                           onBlur={(e) => {
                             const val = parseInt(e.target.value);
-                            if (!isNaN(val))
-                              setSkipSeconds(Math.max(1, Math.min(60, val)));
+                            if (!isNaN(val)) setSkipSeconds(Math.max(1, Math.min(60, val)));
                             else setSkipSeconds(5);
                           }}
                           className="w-12 bg-gray-800 text-right border border-gray-600 rounded px-1 py-0.5 focus:outline-none focus:border-blue-500 text-xs"
@@ -1137,9 +1107,7 @@ const Sidebar = ({
                   <div className="flex flex-col gap-2 bg-gray-800 p-2 rounded border border-gray-700">
                     {/* Start Time Row */}
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 w-8 shrink-0">
-                        開始
-                      </span>
+                      <span className="text-xs text-gray-400 w-8 shrink-0">開始</span>
                       <select
                         value={cmStartMode}
                         onChange={(e) => setCmStartMode(e.target.value)}
@@ -1152,15 +1120,13 @@ const Sidebar = ({
                         cmStartMode,
                         cmStartInput,
                         setCmStartInput,
-                        cmStartMode === "log" ? "00:00:00" : "00:00"
+                        cmStartMode === 'log' ? '00:00:00' : '00:00'
                       )}
                     </div>
 
                     {/* End Time Row */}
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 w-8 shrink-0">
-                        終了
-                      </span>
+                      <span className="text-xs text-gray-400 w-8 shrink-0">終了</span>
                       <select
                         value={cmEndMode}
                         onChange={(e) => setCmEndMode(e.target.value)}
@@ -1173,7 +1139,7 @@ const Sidebar = ({
                         cmEndMode,
                         cmEndInput,
                         setCmEndInput,
-                        cmEndMode === "log" ? "00:00:00" : "00:00"
+                        cmEndMode === 'log' ? '00:00:00' : '00:00'
                       )}
                     </div>
 
@@ -1190,8 +1156,8 @@ const Sidebar = ({
                               startTimeStr
                             );
                             setEditingCmIndex(null);
-                            setCmStartInput("");
-                            setCmEndInput("");
+                            setCmStartInput('');
+                            setCmEndInput('');
                           }}
                           className="flex-1 bg-green-600 hover:bg-green-500 text-white p-1.5 rounded text-xs flex items-center justify-center gap-1"
                         >
@@ -1200,8 +1166,8 @@ const Sidebar = ({
                         <button
                           onClick={() => {
                             setEditingCmIndex(null);
-                            setCmStartInput("");
-                            setCmEndInput("");
+                            setCmStartInput('');
+                            setCmEndInput('');
                           }}
                           className="bg-gray-600 hover:bg-gray-500 text-white p-1.5 rounded text-xs flex items-center justify-center"
                         >
@@ -1229,16 +1195,11 @@ const Sidebar = ({
                     <div className="space-y-1 mt-1">
                       {cmRanges.map((range, i) => {
                         // Calculate accumulated CM time before this interval
-                        const accumulatedCmTime = cmRanges
-                          .slice(0, i)
-                          .reduce((acc, r) => {
-                            return acc + (r.logEnd - r.logStart);
-                          }, 0);
+                        const accumulatedCmTime = cmRanges.slice(0, i).reduce((acc, r) => {
+                          return acc + (r.logEnd - r.logStart);
+                        }, 0);
 
-                        const vStart =
-                          typeof range.videoStart === "number"
-                            ? range.videoStart
-                            : 0;
+                        const vStart = typeof range.videoStart === 'number' ? range.videoStart : 0;
                         const cmDuration = range.logEnd - range.logStart;
 
                         // Convert to logical time (video time + accumulated CM time)
@@ -1249,21 +1210,17 @@ const Sidebar = ({
                           <div
                             key={i}
                             className={`flex flex-col bg-gray-900 p-1.5 rounded text-xs text-gray-400 gap-1 ${
-                              editingCmIndex === i
-                                ? "border border-blue-500"
-                                : ""
+                              editingCmIndex === i ? 'border border-blue-500' : ''
                             }`}
                           >
                             <div className="flex items-center justify-between">
-                              <span>
-                                {`ログ: ${range.labelStart} ~ ${range.labelEnd}`}
-                              </span>
+                              <span>{`ログ: ${range.labelStart} ~ ${range.labelEnd}`}</span>
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => {
                                     setEditingCmIndex(i);
-                                    setCmStartMode("log");
-                                    setCmEndMode("log");
+                                    setCmStartMode('log');
+                                    setCmEndMode('log');
                                     // Use imported padTime utility
                                     setCmStartInput(padTime(range.labelStart));
                                     setCmEndInput(padTime(range.labelEnd));
@@ -1281,8 +1238,7 @@ const Sidebar = ({
                               </div>
                             </div>
                             <span className="font-mono text-blue-400 text-[10px]">
-                              動画: {formatTime(logicalStart)} ~{" "}
-                              {formatTime(logicalEnd)}
+                              動画: {formatTime(logicalStart)} ~ {formatTime(logicalEnd)}
                             </span>
                           </div>
                         );
@@ -1300,10 +1256,7 @@ const Sidebar = ({
               className="bg-gray-700 border-b border-r border-l border-gray-600 rounded-b-md px-24 py-4 shadow-md hover:bg-gray-600 transition-colors flex items-center justify-center group"
               title="設定を閉じる"
             >
-              <ChevronUp
-                size={18}
-                className="text-gray-400 group-hover:text-white"
-              />
+              <ChevronUp size={18} className="text-gray-400 group-hover:text-white" />
             </button>
           </div>
         </>
@@ -1316,9 +1269,7 @@ const Sidebar = ({
             <div className="p-4 space-y-6">
               {/* NG Management */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                  NG管理
-                </h4>
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">NG管理</h4>
 
                 {/* NG IDs */}
                 <div className="flex-1 overflow-y-auto scrollbar-thin p-4">
@@ -1340,10 +1291,7 @@ const Sidebar = ({
               className="bg-gray-700 border-b border-r border-l border-gray-600 rounded-b-md px-24 py-4 shadow-md hover:bg-gray-600 transition-colors flex items-center justify-center group"
               title="NG管理を閉じる"
             >
-              <ChevronUp
-                size={18}
-                className="text-gray-400 group-hover:text-white"
-              />
+              <ChevronUp size={18} className="text-gray-400 group-hover:text-white" />
             </button>
           </div>
         </>
@@ -1454,7 +1402,7 @@ const Sidebar = ({
 
           {/* Popup stack */}
           {popupStack.map((popup, index) =>
-            popup.type === "anchor" ? (
+            popup.type === 'anchor' ? (
               <AnchorPopup
                 key={`${index}-${popup.comment.id}`}
                 comment={popup.comment}
@@ -1467,14 +1415,12 @@ const Sidebar = ({
                 formatTime={formatTime}
                 timeOffset={timeOffset}
                 settings={{
-                  fontSize: "small",
-                  density: "compact",
+                  fontSize: 'small',
+                  density: 'compact',
                   showImages: showImages,
                 }}
                 setZoomedImage={setZoomedImage}
-                onAnchorClick={(e, resNum) =>
-                  handleAnchorClick(e, resNum, true)
-                }
+                onAnchorClick={(e, resNum) => handleAnchorClick(e, resNum, true)}
                 onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
                 onIdClick={onIdClick}
                 RowComponent={CommentItem}
@@ -1497,14 +1443,12 @@ const Sidebar = ({
                 formatTime={formatTime}
                 timeOffset={timeOffset}
                 settings={{
-                  fontSize: "small",
-                  density: "compact",
+                  fontSize: 'small',
+                  density: 'compact',
                   showImages: showImages,
                 }}
                 setZoomedImage={setZoomedImage}
-                onAnchorClick={(e, resNum) =>
-                  handleAnchorClick(e, resNum, true)
-                }
+                onAnchorClick={(e, resNum) => handleAnchorClick(e, resNum, true)}
                 onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
                 onIdClick={onIdClick}
                 RowComponent={CommentItem}

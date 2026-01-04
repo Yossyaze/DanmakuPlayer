@@ -1,6 +1,7 @@
-import React, { useRef, useLayoutEffect } from "react";
-import { X } from "lucide-react";
-import LogCommentItem from "./LogCommentItem";
+import { X } from 'lucide-react';
+import React, { useLayoutEffect, useRef } from 'react';
+
+import LogCommentItem from './LogCommentItem';
 
 const AnchorPopup = ({
   comment,
@@ -18,7 +19,7 @@ const AnchorPopup = ({
   onAnchorClick,
   onReplyCountClick,
   onIdClick,
-  popupClassName = "",
+  popupClassName = '',
   customWidth,
   parentRect,
   style = {},
@@ -45,10 +46,7 @@ const AnchorPopup = ({
         if (customWidth) {
           x = minX;
         } else {
-          x = Math.max(
-            10,
-            Math.min(position.x, window.innerWidth - rect.width - 20)
-          );
+          x = Math.max(10, Math.min(position.x, window.innerWidth - rect.width - 20));
         }
       } else {
         if (y + rect.height + 10 > window.innerHeight) {
@@ -76,7 +74,7 @@ const AnchorPopup = ({
     <div
       ref={popupRef}
       className={`fixed bg-gray-900 border border-gray-600 rounded shadow-2xl animate-fade-in pointer-events-auto ${
-        !customWidth && !popupClassName ? "w-96" : ""
+        !customWidth && !popupClassName ? 'w-96' : ''
       } ${popupClassName}`}
       style={{
         top: position.y,
@@ -109,7 +107,7 @@ const AnchorPopup = ({
         comment={comment}
         formatTime={formatTime}
         timeOffset={timeOffset}
-        settings={{ ...settings, density: "compact" }}
+        settings={{ ...settings, density: 'compact' }}
         className="bg-gray-900 border-b border-gray-700 last:border-b-0 cursor-pointer hover:bg-gray-800"
         onClick={isTopmost ? onClick : undefined}
         onAnchorClick={onAnchorClick}

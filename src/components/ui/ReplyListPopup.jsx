@@ -1,6 +1,7 @@
-import React, { useRef, useLayoutEffect } from "react";
-import { X } from "lucide-react";
-import LogCommentItem from "./LogCommentItem";
+import { X } from 'lucide-react';
+import React, { useLayoutEffect, useRef } from 'react';
+
+import LogCommentItem from './LogCommentItem';
 
 const ReplyListPopup = ({
   comments = [],
@@ -19,7 +20,7 @@ const ReplyListPopup = ({
   totalComments,
   onIdClick,
   onReplyCountClick,
-  popupClassName = "",
+  popupClassName = '',
   customWidth,
   parentRect,
   style = {},
@@ -46,10 +47,7 @@ const ReplyListPopup = ({
         if (customWidth) {
           x = minX;
         } else {
-          x = Math.max(
-            10,
-            Math.min(position.x, window.innerWidth - rect.width - 20)
-          );
+          x = Math.max(10, Math.min(position.x, window.innerWidth - rect.width - 20));
         }
       } else {
         if (y + rect.height + 10 > window.innerHeight) {
@@ -77,7 +75,7 @@ const ReplyListPopup = ({
     <div
       ref={popupRef}
       className={`fixed bg-gray-900 border border-gray-600 rounded shadow-2xl animate-fade-in pointer-events-auto flex flex-col max-h-[60vh] ${
-        !customWidth && !popupClassName ? "w-96" : ""
+        !customWidth && !popupClassName ? 'w-96' : ''
       } ${popupClassName}`}
       style={{
         top: position.y,
@@ -131,11 +129,9 @@ const ReplyListPopup = ({
                 depth={currentDepth}
                 formatTime={formatTime}
                 timeOffset={timeOffset}
-                settings={{ ...settings, density: "compact" }}
+                settings={{ ...settings, density: 'compact' }}
                 className="bg-gray-900 border-b border-gray-700 last:border-b-0 cursor-pointer hover:bg-gray-800"
-                onClick={
-                  isTopmost ? (e) => onClick && onClick(e, comment) : undefined
-                }
+                onClick={isTopmost ? (e) => onClick && onClick(e, comment) : undefined}
                 setZoomedImage={setZoomedImage}
                 onAnchorClick={onAnchorClick}
                 onReplyCountClick={onReplyCountClick}

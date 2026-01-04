@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useRef } from "react";
-import { X, Calendar } from "lucide-react";
-import CommentContextMenu from "./ui/CommentContextMenu";
-import CommentItem from "./ui/CommentItem";
+import { Calendar, X } from 'lucide-react';
+import React, { useMemo, useRef, useState } from 'react';
+
+import CommentContextMenu from './ui/CommentContextMenu';
+import CommentItem from './ui/CommentItem';
 
 const UserHistoryModal = ({
   userId,
@@ -17,7 +18,7 @@ const UserHistoryModal = ({
   timeOffset = 0,
   totalComments, // Pass total to calculate ratio correctly
   isSidebarMode = false,
-  className = "",
+  className = '',
   setZoomedImage,
   onAnchorClick,
   onAnchorMouseEnter,
@@ -32,9 +33,7 @@ const UserHistoryModal = ({
 
   // Filter comments by userId and enrich with userIndex/userTotal
   const userComments = useMemo(() => {
-    const filtered = comments
-      .filter((c) => c.userId === userId)
-      .sort((a, b) => a.time - b.time);
+    const filtered = comments.filter((c) => c.userId === userId).sort((a, b) => a.time - b.time);
     // Add userIndex and userTotal for ID color/count display
     const userTotal = filtered.length;
     return filtered.map((c, index) => ({
@@ -75,12 +74,8 @@ const UserHistoryModal = ({
         <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800 shrink-0 bg-gray-800/80">
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-white truncate">
-                ID: {userId}
-              </h2>
-              <span className="text-gray-400 text-xs truncate">
-                ({userComments.length})
-              </span>
+              <h2 className="text-sm font-bold text-white truncate">ID: {userId}</h2>
+              <span className="text-gray-400 text-xs truncate">({userComments.length})</span>
             </div>
           </div>
           <button
@@ -95,9 +90,7 @@ const UserHistoryModal = ({
         {/* List */}
         <div className="flex-1 overflow-y-auto w-full p-0 scrollbar-thin scrollbar-thumb-gray-700">
           {userComments.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-xs">
-              投稿が見つかりませんでした
-            </div>
+            <div className="p-8 text-center text-gray-500 text-xs">投稿が見つかりませんでした</div>
           ) : (
             <div className="divide-y divide-gray-800">
               {userComments.map((comment, index) => {
@@ -111,11 +104,7 @@ const UserHistoryModal = ({
                     totalComments={totalComments}
                     onClick={(e) => handleRowClick(e, comment)}
                     // Context menu check for bg color
-                    className={`${
-                      contextMenu?.comment?.id === comment.id
-                        ? "bg-gray-800!"
-                        : ""
-                    }`}
+                    className={`${contextMenu?.comment?.id === comment.id ? 'bg-gray-800!' : ''}`}
                     onIdClick={undefined}
                     setZoomedImage={setZoomedImage}
                     showImages={settings.showImages !== false}
@@ -205,9 +194,7 @@ const UserHistoryModal = ({
         {/* List */}
         <div className="flex-1 overflow-y-auto p-0 scrollbar-thin scrollbar-thumb-gray-700">
           {userComments.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              投稿が見つかりませんでした
-            </div>
+            <div className="p-8 text-center text-gray-500">投稿が見つかりませんでした</div>
           ) : (
             <div className="divide-y divide-gray-800">
               {userComments.map((comment, index) => {
@@ -221,9 +208,7 @@ const UserHistoryModal = ({
                     totalComments={totalComments}
                     onClick={(e) => handleRowClick(e, comment)}
                     className={`px-6 py-3 ${
-                      contextMenu?.comment?.id === comment.id
-                        ? "bg-gray-800!"
-                        : ""
+                      contextMenu?.comment?.id === comment.id ? 'bg-gray-800!' : ''
                     }`}
                     setZoomedImage={setZoomedImage}
                     showImages={settings.showImages !== false}

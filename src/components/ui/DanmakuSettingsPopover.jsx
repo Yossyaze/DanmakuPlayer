@@ -1,6 +1,7 @@
-import React from "react";
-import { Settings, X } from "lucide-react";
-import { playRandomAbeVoice } from "../../utils/abeMode";
+import { Settings, X } from 'lucide-react';
+import React from 'react';
+
+import { playRandomAbeVoice } from '../../utils/abeMode';
 
 const DanmakuSettingsPopover = ({
   dmSettings,
@@ -48,9 +49,7 @@ const DanmakuSettingsPopover = ({
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-gray-400">
               <label>表示時間</label>
-              <span className="font-mono text-white">
-                {dmSettings.duration}秒
-              </span>
+              <span className="font-mono text-white">{dmSettings.duration}秒</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-gray-500">短</span>
@@ -76,9 +75,7 @@ const DanmakuSettingsPopover = ({
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-gray-400">
               <label>文字サイズ</label>
-              <span className="font-mono text-white">
-                {dmSettings.fontSize}px
-              </span>
+              <span className="font-mono text-white">{dmSettings.fontSize}px</span>
             </div>
             <input
               type="range"
@@ -124,9 +121,7 @@ const DanmakuSettingsPopover = ({
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-gray-400">
               <label>表示範囲</label>
-              <span className="font-mono text-white">
-                {dmSettings.area || 100}%
-              </span>
+              <span className="font-mono text-white">{dmSettings.area || 100}%</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-gray-500">上</span>
@@ -155,19 +150,17 @@ const DanmakuSettingsPopover = ({
             </div>
             <div className="grid grid-cols-3 gap-1 bg-gray-950 p-1 rounded-md border border-gray-700">
               {[
-                { id: "none", label: "なし" },
-                { id: "image", label: "画像" },
-                { id: "placeholder", label: "マーカー" },
+                { id: 'none', label: 'なし' },
+                { id: 'image', label: '画像' },
+                { id: 'placeholder', label: 'マーカー' },
               ].map((opt) => (
                 <button
                   key={opt.id}
-                  onClick={() =>
-                    setDmSettings({ ...dmSettings, imageMode: opt.id })
-                  }
+                  onClick={() => setDmSettings({ ...dmSettings, imageMode: opt.id })}
                   className={`py-1.5 text-xs font-medium rounded transition-all ${
-                    (dmSettings.imageMode || "none") === opt.id
-                      ? "bg-blue-600/20 text-blue-400 shadow-sm border border-blue-500/30"
-                      : "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+                    (dmSettings.imageMode || 'none') === opt.id
+                      ? 'bg-blue-600/20 text-blue-400 shadow-sm border border-blue-500/30'
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
                   }`}
                 >
                   {opt.label}
@@ -183,12 +176,8 @@ const DanmakuSettingsPopover = ({
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🌈</span>
                   <div>
-                    <label className="text-xs text-gray-400">
-                      安倍晋三モード
-                    </label>
-                    <p className="text-[10px] text-gray-600">
-                      語録を虹色で強調
-                    </p>
+                    <label className="text-xs text-gray-400">安倍晋三モード</label>
+                    <p className="text-[10px] text-gray-600">語録を虹色で強調</p>
                   </div>
                 </div>
                 <button
@@ -204,16 +193,16 @@ const DanmakuSettingsPopover = ({
                   }}
                   style={{
                     background: dmSettings.abeMode
-                      ? "linear-gradient(90deg, #ff4444, #ffaa00, #ffff44, #44ff44, #44aaff, #aa44ff)"
+                      ? 'linear-gradient(90deg, #ff4444, #ffaa00, #ffff44, #44ff44, #44aaff, #aa44ff)'
                       : undefined,
                   }}
                   className={`relative w-12 h-6 rounded-full transition-all ${
-                    !dmSettings.abeMode ? "bg-gray-700" : ""
+                    !dmSettings.abeMode ? 'bg-gray-700' : ''
                   }`}
                 >
                   <span
                     className={`absolute top-1 w-4 h-4 bg-white border border-gray-400 rounded-full shadow transition-all ${
-                      dmSettings.abeMode ? "left-7" : "left-1"
+                      dmSettings.abeMode ? 'left-7' : 'left-1'
                     }`}
                   />
                 </button>

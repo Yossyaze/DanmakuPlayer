@@ -1,17 +1,17 @@
-import React from "react";
 import {
+  BookOpen,
+  CircleHelp,
+  FileInput,
+  FilePen,
   FileVideo,
   Link as LinkIcon,
-  Save,
-  FilePen,
-  FileInput,
   MessageSquare,
   PanelRight,
-  BookOpen,
-  Tv,
-  CircleHelp,
   RotateCcw, // Import
-} from "lucide-react";
+  Save,
+  Tv,
+} from 'lucide-react';
+import React from 'react';
 
 const Header = ({
   showDanmaku,
@@ -61,10 +61,10 @@ const Header = ({
               onClick={() => setShowDanmaku(!showDanmaku)}
               className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
                 showDanmaku
-                  ? "bg-blue-600/50 text-blue-200"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+                  ? 'bg-blue-600/50 text-blue-200'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
               }`}
-              title={`弾幕 ${showDanmaku ? "ON" : "OFF"} (D)`}
+              title={`弾幕 ${showDanmaku ? 'ON' : 'OFF'} (D)`}
             >
               <MessageSquare size={18} />
             </button>
@@ -72,10 +72,10 @@ const Header = ({
               onClick={() => setShowSidebar(!showSidebar)}
               className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
                 showSidebar
-                  ? "bg-blue-600/50 text-blue-200"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+                  ? 'bg-blue-600/50 text-blue-200'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
               }`}
-              title={`サイドバー ${showSidebar ? "ON" : "OFF"} (S)`}
+              title={`サイドバー ${showSidebar ? 'ON' : 'OFF'} (S)`}
             >
               <PanelRight size={18} />
             </button>
@@ -88,26 +88,18 @@ const Header = ({
         <div
           className="flex bg-black/20 rounded-md p-0.5 border border-gray-700/50 cursor-pointer"
           onClick={() => setLogOnlyMode(!logOnlyMode)}
-          title={
-            logOnlyMode
-              ? "動画モードに切り替え (V)"
-              : "ログ読みモードに切り替え (L)"
-          }
+          title={logOnlyMode ? '動画モードに切り替え (V)' : 'ログ読みモードに切り替え (L)'}
         >
           <div
             className={`flex items-center justify-center w-8 h-8 rounded transition-all ${
-              !logOnlyMode
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-400"
+              !logOnlyMode ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-400'
             }`}
           >
             <Tv size={16} />
           </div>
           <div
             className={`flex items-center justify-center w-8 h-8 rounded transition-all ${
-              logOnlyMode
-                ? "bg-purple-600 text-white shadow-sm"
-                : "text-gray-400"
+              logOnlyMode ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-400'
             }`}
           >
             <BookOpen size={16} />
@@ -159,12 +151,7 @@ const Header = ({
             title="動画ファイルを開く"
           >
             <FileVideo size={18} />
-            <input
-              type="file"
-              accept="video/*"
-              className="hidden"
-              onChange={handleFileChange}
-            />
+            <input type="file" accept="video/*" className="hidden" onChange={handleFileChange} />
           </label>
           <button
             onClick={onOpenUrlModal}

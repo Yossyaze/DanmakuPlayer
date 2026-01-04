@@ -3,21 +3,19 @@
 
 /* global chrome */
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Get current tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   // Load settings
-  const storage = await chrome.storage.local.get("preferProduction");
-  document.getElementById("prefer-production").checked =
-    storage.preferProduction || false;
+  const storage = await chrome.storage.local.get('preferProduction');
+  document.getElementById('prefer-production').checked = storage.preferProduction || false;
 
   // Open current page button
-  document.getElementById("open-page").addEventListener("click", async () => {
-    const preferProduction =
-      document.getElementById("prefer-production").checked;
+  document.getElementById('open-page').addEventListener('click', async () => {
+    const preferProduction = document.getElementById('prefer-production').checked;
     await chrome.runtime.sendMessage({
-      type: "OPEN_IN_PLAYER",
+      type: 'OPEN_IN_PLAYER',
       url: tab.url,
       preferProduction,
     });
@@ -26,54 +24,50 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Get detected HLS streams
   const response = await chrome.runtime.sendMessage({
-    type: "GET_DETECTED_STREAMS",
+    type: 'GET_DETECTED_STREAMS',
     tabId: tab.id,
   });
 
-  const hlsList = document.getElementById("hls-list");
+  const hlsList = document.getElementById('hls-list');
   const streams = response?.streams || [];
 
   if (streams.length === 0) {
-    hlsList.innerHTML =
-      '<p class="empty-message">HLSストリームが検出されていません</p>';
+    hlsList.innerHTML = '<p class="empty-message">HLSストリームが検出されていません</p>';
   } else {
     hlsList.innerHTML = streams
       .map((url) => {
-        const isBlob = url.startsWith("blob:");
-        const shortUrl = url.length > 50 ? "..." + url.slice(-47) : url;
-        const icon = isBlob ? "📦" : "🎬";
-        const label = isBlob ? "(Blob - コピーのみ)" : "";
+        const isBlob = url.startsWith('blob:');
+        const shortUrl = url.length > 50 ? '...' + url.slice(-47) : url;
+        const icon = isBlob ? '📦' : '🎬';
+        const label = isBlob ? '(Blob - コピーのみ)' : '';
         return `
                 <div class="hls-item ${
-                  isBlob ? "blob-url" : ""
+                  isBlob ? 'blob-url' : ''
                 }" data-url="${encodeURIComponent(url)}" data-blob="${isBlob}">
                     <span class="icon" title="${
-                      isBlob ? "Blob URL (再生不可)" : "ストリームURL"
+                      isBlob ? 'Blob URL (再生不可)' : 'ストリームURL'
                     }">${icon}</span>
-                    <span class="url" title="${url}">${shortUrl}${
-          label ? " " + label : ""
-        }</span>
+                    <span class="url" title="${url}">${shortUrl}${label ? ' ' + label : ''}</span>
                     <button class="copy-btn" title="URLをコピー">📋</button>
                     ${
                       isBlob
-                        ? ""
+                        ? ''
                         : '<button class="open-btn" title="DanmakuPlayerで開く">▶️</button>'
                     }
                 </div>
             `;
       })
-      .join("");
+      .join('');
 
     // Add click handlers for open buttons
-    hlsList.querySelectorAll(".open-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
+    hlsList.querySelectorAll('.open-btn').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        const item = btn.closest(".hls-item");
+        const item = btn.closest('.hls-item');
         const url = decodeURIComponent(item.dataset.url);
-        const preferProduction =
-          document.getElementById("prefer-production").checked;
+        const preferProduction = document.getElementById('prefer-production').checked;
         await chrome.runtime.sendMessage({
-          type: "OPEN_IN_PLAYER",
+          type: 'OPEN_IN_PLAYER',
           url,
           preferProduction,
         });
@@ -82,37 +76,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // Add click handlers for copy buttons
-    hlsList.querySelectorAll(".copy-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
+    hlsList.querySelectorAll('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        const item = btn.closest(".hls-item");
+        const item = btn.closest('.hls-item');
         const url = decodeURIComponent(item.dataset.url);
         try {
           await navigator.clipboard.writeText(url);
-          btn.textContent = "✅";
+          btn.textContent = '✅';
           setTimeout(() => {
-            btn.textContent = "📋";
+            btn.textContent = '📋';
           }, 1500);
         } catch (err) {
-          console.error("Copy failed:", err);
-          btn.textContent = "❌";
+          console.error('Copy failed:', err);
+          btn.textContent = '❌';
           setTimeout(() => {
-            btn.textContent = "📋";
+            btn.textContent = '📋';
           }, 1500);
         }
       });
     });
 
     // Add click handler for entire row (also opens)
-    hlsList.querySelectorAll(".hls-item").forEach((item) => {
-      item.addEventListener("click", async (e) => {
+    hlsList.querySelectorAll('.hls-item').forEach((item) => {
+      item.addEventListener('click', async (e) => {
         // Don't trigger if clicking a button
-        if (e.target.closest("button")) return;
+        if (e.target.closest('button')) return;
         const url = decodeURIComponent(item.dataset.url);
-        const preferProduction =
-          document.getElementById("prefer-production").checked;
+        const preferProduction = document.getElementById('prefer-production').checked;
         await chrome.runtime.sendMessage({
-          type: "OPEN_IN_PLAYER",
+          type: 'OPEN_IN_PLAYER',
           url,
           preferProduction,
         });
@@ -122,30 +115,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Save settings on change
-  document
-    .getElementById("prefer-production")
-    .addEventListener("change", async (e) => {
-      await chrome.storage.local.set({ preferProduction: e.target.checked });
-    });
+  document.getElementById('prefer-production').addEventListener('change', async (e) => {
+    await chrome.storage.local.set({ preferProduction: e.target.checked });
+  });
 
   // Help Toggle
-  const helpOverlay = document.getElementById("help-overlay");
-  const helpBtn = document.getElementById("help-btn");
-  const closeHelpBtn = document.getElementById("close-help-btn");
+  const helpOverlay = document.getElementById('help-overlay');
+  const helpBtn = document.getElementById('help-btn');
+  const closeHelpBtn = document.getElementById('close-help-btn');
 
   if (helpBtn && helpOverlay && closeHelpBtn) {
-    helpBtn.addEventListener("click", () => {
-      helpOverlay.classList.remove("hidden");
+    helpBtn.addEventListener('click', () => {
+      helpOverlay.classList.remove('hidden');
     });
 
-    closeHelpBtn.addEventListener("click", () => {
-      helpOverlay.classList.add("hidden");
+    closeHelpBtn.addEventListener('click', () => {
+      helpOverlay.classList.add('hidden');
     });
 
     // Close on click outside content
-    helpOverlay.addEventListener("click", (e) => {
+    helpOverlay.addEventListener('click', (e) => {
       if (e.target === helpOverlay) {
-        helpOverlay.classList.add("hidden");
+        helpOverlay.classList.add('hidden');
       }
     });
   }

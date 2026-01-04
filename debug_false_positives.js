@@ -1,5 +1,5 @@
-import { ALL_ABE_KEYWORDS, ABE_PATTERNS } from "./src/utils/abeQuotesList.js";
-import { ABE_NAME_KEYWORDS } from "./src/utils/abeMode.js";
+import { ABE_NAME_KEYWORDS } from './src/utils/abeMode.js';
+import { ABE_PATTERNS, ALL_ABE_KEYWORDS } from './src/utils/abeQuotesList.js';
 
 const allFixed = [...new Set([...ABE_NAME_KEYWORDS, ...ALL_ABE_KEYWORDS])];
 const expanded = allFixed.flatMap((k) => {
@@ -11,17 +11,13 @@ const expanded = allFixed.flatMap((k) => {
   return [k, ...parts];
 });
 
-const testStrings = ["おまたせ", "杏子の太ももすき"];
+const testStrings = ['おまたせ', '杏子の太ももすき'];
 
-console.log("--- Debugging False Positives ---");
+console.log('--- Debugging False Positives ---');
 testStrings.forEach((s) => {
   console.log(`Checking: "${s}"`);
-  const matchesFixed = expanded.filter((k) =>
-    s.toLowerCase().includes(k.toLowerCase())
-  );
-  const matchesPatterns = ABE_PATTERNS.filter((p) =>
-    new RegExp(p, "i").test(s)
-  );
+  const matchesFixed = expanded.filter((k) => s.toLowerCase().includes(k.toLowerCase()));
+  const matchesPatterns = ABE_PATTERNS.filter((p) => new RegExp(p, 'i').test(s));
 
   if (matchesFixed.length > 0) {
     console.log(`  Matched Fixed Keywords: ${JSON.stringify(matchesFixed)}`);

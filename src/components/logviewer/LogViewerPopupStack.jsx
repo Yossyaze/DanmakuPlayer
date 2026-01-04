@@ -1,7 +1,8 @@
-import React from "react";
-import AnchorPopup from "../ui/AnchorPopup";
-import ReplyListPopup from "../ui/ReplyListPopup";
-import LogCommentItem from "../ui/LogCommentItem";
+import React from 'react';
+
+import AnchorPopup from '../ui/AnchorPopup';
+import LogCommentItem from '../ui/LogCommentItem';
+import ReplyListPopup from '../ui/ReplyListPopup';
 
 /**
  * LogViewerPopupStack - アンカー/返信ポップアップのスタック管理
@@ -48,7 +49,7 @@ const LogViewerPopupStack = ({
 
       {/* Popup stack */}
       {popupStack.map((popup, index) =>
-        popup.type === "anchor" ? (
+        popup.type === 'anchor' ? (
           <AnchorPopup
             key={`${index}-${popup.comment.id}`}
             comment={popup.comment}

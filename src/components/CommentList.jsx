@@ -1,16 +1,17 @@
+import { FileText } from 'lucide-react';
 import React, {
-  useRef,
-  useEffect,
-  useCallback,
-  useState,
-  useImperativeHandle,
   forwardRef,
-} from "react";
-import { FileText } from "lucide-react";
-import useCommentTree from "../hooks/useCommentTree";
-import { Virtuoso } from "react-virtuoso";
-import CommentContextMenu from "./ui/CommentContextMenu";
-import CommentRow from "./ui/CommentRow";
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
+import { Virtuoso } from 'react-virtuoso';
+
+import useCommentTree from '../hooks/useCommentTree';
+import CommentContextMenu from './ui/CommentContextMenu';
+import CommentRow from './ui/CommentRow';
 
 const CommentList = forwardRef(
   (
@@ -20,7 +21,7 @@ const CommentList = forwardRef(
       currentLogicalTime,
       enableTreeView,
       showImages,
-      imageLayout = "inline",
+      imageLayout = 'inline',
       showThreadTitle,
       visibleThreadTitles,
       onCommentClick,
@@ -52,7 +53,7 @@ const CommentList = forwardRef(
       initialScrollIndex = 0, // Initial scroll position
       onScrollIndexChange, // Callback when scroll index changes
       indentSize = 12, // Indent size per depth level (default: 12px for sidebar, 16px for log viewer)
-      debugId = "unknown", // DEBUG: identifier for this instance
+      debugId = 'unknown', // DEBUG: identifier for this instance
     },
     ref
   ) => {
@@ -91,13 +92,11 @@ const CommentList = forwardRef(
       });
 
       if (isAutoScroll && activeCommentId && virtuosoRef.current) {
-        const index = treeRoots.findIndex(
-          (node) => node.id === activeCommentId
-        );
+        const index = treeRoots.findIndex((node) => node.id === activeCommentId);
         console.log(
           `[CommentList:${debugId}] Found index:`,
           index,
-          "for activeCommentId:",
+          'for activeCommentId:',
           activeCommentId
         );
         if (index !== -1) {
@@ -120,9 +119,9 @@ const CommentList = forwardRef(
             console.log(
               `[CommentList:${debugId}] Tree size:`,
               treeSize,
-              "rootIndex:",
+              'rootIndex:',
               index,
-              "endIndex:",
+              'endIndex:',
               treeEndIndex
             );
 
@@ -135,30 +134,27 @@ const CommentList = forwardRef(
               // Small tree: scroll so tree end is at bottom
               virtuosoRef.current.scrollToIndex({
                 index: treeEndIndex,
-                align: "end",
+                align: 'end',
                 offset: 50,
-                behavior: "auto",
+                behavior: 'auto',
               });
             } else {
               // Large tree: scroll so root is at top
               virtuosoRef.current.scrollToIndex({
                 index,
-                align: "start",
+                align: 'start',
                 offset: -20,
-                behavior: "auto",
+                behavior: 'auto',
               });
             }
           } else {
             // Non-tree mode: original behavior
-            console.log(
-              `[CommentList:${debugId}] Calling scrollToIndex:`,
-              index
-            );
+            console.log(`[CommentList:${debugId}] Calling scrollToIndex:`, index);
             virtuosoRef.current.scrollToIndex({
               index,
-              align: "end",
+              align: 'end',
               offset: 50,
-              behavior: "auto",
+              behavior: 'auto',
             });
           }
         }
@@ -173,14 +169,14 @@ const CommentList = forwardRef(
 
       const handleInteraction = (e) => {
         // Ignore interactions from defined non-scroll elements
-        if (e.target.closest(".no-scroll-lock")) return;
+        if (e.target.closest('.no-scroll-lock')) return;
 
         // Always disable auto-scroll on user interaction if it's currently on
         if (isAutoScroll) {
           setIsAutoScroll(false);
         }
         // Don't close context menu on mousedown (let click capture handle it to prevent immediate re-opening)
-        if (contextMenu && e?.type !== "mousedown") {
+        if (contextMenu && e?.type !== 'mousedown') {
           setContextMenu(null);
         }
       };
@@ -190,24 +186,16 @@ const CommentList = forwardRef(
       // passive: true is better for performance.
       const opts = { passive: true };
 
-      scrollerElement.addEventListener("wheel", handleInteraction, opts);
-      scrollerElement.addEventListener("touchmove", handleInteraction, opts);
-      scrollerElement.addEventListener("keydown", handleInteraction, opts);
-      scrollerElement.addEventListener("mousedown", handleInteraction, opts); // Added mousedown for scrollbar clicks
+      scrollerElement.addEventListener('wheel', handleInteraction, opts);
+      scrollerElement.addEventListener('touchmove', handleInteraction, opts);
+      scrollerElement.addEventListener('keydown', handleInteraction, opts);
+      scrollerElement.addEventListener('mousedown', handleInteraction, opts); // Added mousedown for scrollbar clicks
 
       return () => {
-        scrollerElement.removeEventListener("wheel", handleInteraction, opts);
-        scrollerElement.removeEventListener(
-          "touchmove",
-          handleInteraction,
-          opts
-        );
-        scrollerElement.removeEventListener("keydown", handleInteraction, opts);
-        scrollerElement.removeEventListener(
-          "mousedown",
-          handleInteraction,
-          opts
-        );
+        scrollerElement.removeEventListener('wheel', handleInteraction, opts);
+        scrollerElement.removeEventListener('touchmove', handleInteraction, opts);
+        scrollerElement.removeEventListener('keydown', handleInteraction, opts);
+        scrollerElement.removeEventListener('mousedown', handleInteraction, opts);
       };
     }, [isAutoScroll, setIsAutoScroll, contextMenu, scrollerElement]);
 
@@ -236,13 +224,13 @@ const CommentList = forwardRef(
           if (virtuosoRef.current) {
             virtuosoRef.current.scrollToIndex({
               index,
-              align: "start", // Position at top of view
-              behavior: "auto",
+              align: 'start', // Position at top of view
+              behavior: 'auto',
             });
           }
           return true;
         } else {
-          console.warn("Target comment not found", resNum);
+          console.warn('Target comment not found', resNum);
           return false;
         }
       },
@@ -255,8 +243,8 @@ const CommentList = forwardRef(
         if (virtuosoRef.current && index >= 0 && index < treeRoots.length) {
           virtuosoRef.current.scrollToIndex({
             index,
-            align: "start",
-            behavior: "auto",
+            align: 'start',
+            behavior: 'auto',
           });
         }
       },
@@ -307,8 +295,7 @@ const CommentList = forwardRef(
     const itemContent = useCallback(
       (index, node) => {
         const currentDepth = node.depth || 0;
-        const nextDepth =
-          index < treeRoots.length - 1 ? treeRoots[index + 1]?.depth || 0 : 0;
+        const nextDepth = index < treeRoots.length - 1 ? treeRoots[index + 1]?.depth || 0 : 0;
         const isLastItem = index === treeRoots.length - 1;
 
         // Check if depth decreases to next item
@@ -317,27 +304,18 @@ const CommentList = forwardRef(
         // Border logic:
         // - When depth decreases: use complement border only (to extend to next depth)
         // - Otherwise: use normal border-b
-        const borderClass = isLastItem
-          ? ""
-          : depthDecreases
-          ? ""
-          : "border-b border-gray-700";
+        const borderClass = isLastItem ? '' : depthDecreases ? '' : 'border-b border-gray-700';
 
         return (
           <>
             <RowToRender
               node={node}
               isActive={
-                activeCommentId === node.id ||
-                (enableTreeView && node.rootId === activeCommentId)
+                activeCommentId === node.id || (enableTreeView && node.rootId === activeCommentId)
               }
               isHighlighted={highlightedCommentId === node.id}
               currentLogicalTime={currentLogicalTime}
-              rootTime={
-                enableTreeView && rootTimeMap
-                  ? rootTimeMap.get(node.rootId)
-                  : undefined
-              }
+              rootTime={enableTreeView && rootTimeMap ? rootTimeMap.get(node.rootId) : undefined}
               showThreadTitle={showThreadTitle}
               visibleThreadTitles={visibleThreadTitles}
               onCommentClick={onCommentClick}
@@ -401,10 +379,7 @@ const CommentList = forwardRef(
     );
 
     return (
-      <div
-        ref={scrollContainerRef}
-        className="flex-1 min-h-0 relative bg-gray-900/95"
-      >
+      <div ref={scrollContainerRef} className="flex-1 min-h-0 relative bg-gray-900/95">
         {comments.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-4">
             <FileText size={48} className="opacity-20" />

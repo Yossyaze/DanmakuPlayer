@@ -1,6 +1,7 @@
-import React from "react";
-import CommentItem from "./CommentItem";
-import { formatTime as defaultFormatTime } from "../../utils/danmakuUtils";
+import React from 'react';
+
+import { formatTime as defaultFormatTime } from '../../utils/danmakuUtils';
+import CommentItem from './CommentItem';
 
 /**
  * CommentRow - サイドバー用のメモ化されたコメント行コンポーネント
@@ -20,7 +21,7 @@ const CommentRow = React.memo(
     onAnchorMouseLeave,
     onUrlLoad,
     showImages,
-    imageLayout = "inline",
+    imageLayout = 'inline',
     setZoomedImage,
     timeOffset,
     formatTime = defaultFormatTime,
@@ -31,7 +32,7 @@ const CommentRow = React.memo(
     aaOverride,
     onReplyCountClick,
     abeMode, // New prop
-    className = "", // New prop for external border control
+    className = '', // New prop for external border control
   }) => {
     return (
       <CommentItem
@@ -65,13 +66,9 @@ const CommentRow = React.memo(
     // Custom comparison for performance
     // Use rootTime for tree view descendants, otherwise use node.time
     const prevEffectiveTime =
-      prevProps.rootTime !== undefined
-        ? prevProps.rootTime
-        : prevProps.node.time;
+      prevProps.rootTime !== undefined ? prevProps.rootTime : prevProps.node.time;
     const nextEffectiveTime =
-      nextProps.rootTime !== undefined
-        ? nextProps.rootTime
-        : nextProps.node.time;
+      nextProps.rootTime !== undefined ? nextProps.rootTime : nextProps.node.time;
 
     return (
       prevProps.node === nextProps.node &&

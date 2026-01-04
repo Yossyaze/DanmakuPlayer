@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from 'react';
 
 /**
  * useLogPopup - ポップアップ(Anchor/Reply)とコンテキストメニューの状態管理
@@ -72,9 +72,7 @@ export const useLogPopup = (filteredComments = []) => {
       let targetComment = null;
       if (sourceFileId) {
         targetComment = filteredComments.find(
-          (c) =>
-            (c.originalResNum || c.resNum) === targetResNum &&
-            c.sourceFileId === sourceFileId
+          (c) => (c.originalResNum || c.resNum) === targetResNum && c.sourceFileId === sourceFileId
         );
       }
 
@@ -90,13 +88,13 @@ export const useLogPopup = (filteredComments = []) => {
           left: 100,
           bottom: 100,
         };
-        const rowElement = e?.target?.closest(".comment-item-row");
+        const rowElement = e?.target?.closest('.comment-item-row');
         const rowRect = rowElement?.getBoundingClientRect();
 
         setPopupStack((prev) => [
           ...prev,
           {
-            type: "anchor",
+            type: 'anchor',
             comment: targetComment,
             position: { x: baseRect.left, y: baseRect.bottom },
             parentRect: !isNested ? rowRect : null,
@@ -114,9 +112,9 @@ export const useLogPopup = (filteredComments = []) => {
       if (!comment.replies || comment.replies.length === 0) return;
 
       const baseRect =
-        e.target.closest(".reply-count-indicator")?.getBoundingClientRect() ||
+        e.target.closest('.reply-count-indicator')?.getBoundingClientRect() ||
         e.target.getBoundingClientRect();
-      const rowElement = e.target.closest(".comment-item-row");
+      const rowElement = e.target.closest('.comment-item-row');
       const rowRect = rowElement?.getBoundingClientRect();
 
       // 1. Determine if this comment is a "root" or descendant
@@ -161,9 +159,7 @@ export const useLogPopup = (filteredComments = []) => {
             rootIds.add(r.id);
           }
         });
-        rootAncestors = uniqueRoots.sort(
-          (a, b) => (a.resNum || 0) - (b.resNum || 0)
-        );
+        rootAncestors = uniqueRoots.sort((a, b) => (a.resNum || 0) - (b.resNum || 0));
       }
 
       // 2. Collect everything from all roots
@@ -194,7 +190,7 @@ export const useLogPopup = (filteredComments = []) => {
       setPopupStack((prev) => [
         ...prev,
         {
-          type: "reply",
+          type: 'reply',
           comment: comment,
           replies: allItems,
           position: { x: baseRect.left, y: baseRect.bottom },

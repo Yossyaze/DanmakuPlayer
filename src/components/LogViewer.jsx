@@ -1,17 +1,18 @@
-import React, { useState } from "react";
-import CommentList from "./CommentList";
-import LogCommentItem from "./ui/LogCommentItem";
-import { Hash, Settings, Ban, Menu } from "lucide-react";
-import LogViewerSearch from "./logviewer/LogViewerSearch";
-import LogViewerFileList from "./logviewer/LogViewerFileList";
-import LogViewerSearchResults from "./logviewer/LogViewerSearchResults";
-import LogViewerPopupStack from "./logviewer/LogViewerPopupStack";
-import UserHistoryModal from "./UserHistoryModal";
-import LogViewerSettings from "./LogViewerSettings";
-import LogViewerNGPanel from "./LogViewerNGPanel";
-import CommentContextMenu from "./ui/CommentContextMenu";
-import { useLogFilter } from "../hooks/useLogFilter";
-import { useLogPopup } from "../hooks/useLogPopup";
+import { Ban, Hash, Menu, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+
+import { useLogFilter } from '../hooks/useLogFilter';
+import { useLogPopup } from '../hooks/useLogPopup';
+import CommentList from './CommentList';
+import LogViewerFileList from './logviewer/LogViewerFileList';
+import LogViewerPopupStack from './logviewer/LogViewerPopupStack';
+import LogViewerSearch from './logviewer/LogViewerSearch';
+import LogViewerSearchResults from './logviewer/LogViewerSearchResults';
+import LogViewerNGPanel from './LogViewerNGPanel';
+import LogViewerSettings from './LogViewerSettings';
+import CommentContextMenu from './ui/CommentContextMenu';
+import LogCommentItem from './ui/LogCommentItem';
+import UserHistoryModal from './UserHistoryModal';
 
 // Wrapper for LogCommentItem to act as row component for CommentList
 const LogCommentItemWrapper = React.memo(
@@ -32,7 +33,7 @@ const LogCommentItemWrapper = React.memo(
     settings,
     onReplyCountClick,
     aaOverride,
-    className = "",
+    className = '',
   }) => {
     return (
       <LogCommentItem
@@ -60,10 +61,10 @@ const LogCommentItemWrapper = React.memo(
 );
 
 const DEFAULT_SETTINGS = {
-  fontSize: "medium", // small, medium, large, xlarge
-  density: "comfortable", // compact, comfortable, spacious
+  fontSize: 'medium', // small, medium, large, xlarge
+  density: 'comfortable', // compact, comfortable, spacious
   showImages: true,
-  imageLayout: "inline", // 'inline' | 'grouped'
+  imageLayout: 'inline', // 'inline' | 'grouped'
   showThumbnails: false,
   showIds: true,
   enableTreeView: true,
@@ -132,7 +133,7 @@ const LogViewer = ({
 
   const [zoomedImage, setZoomedImage] = useState(null);
   const [userHistoryId, setUserHistoryId] = useState(null);
-  const [selectedFileId, setSelectedFileId] = React.useState("all");
+  const [selectedFileId, setSelectedFileId] = React.useState('all');
   // showFileList removed, always visible
   const [initialScrollIndex, setInitialScrollIndex] = React.useState(0);
   const currentScrollIndexRef = React.useRef(0);
@@ -140,8 +141,7 @@ const LogViewer = ({
   // Save scroll position when file selection changes or component unmounts
   const saveCurrentScrollPosition = React.useCallback(() => {
     if (scrollPositionsRef) {
-      scrollPositionsRef.current[selectedFileId] =
-        currentScrollIndexRef.current;
+      scrollPositionsRef.current[selectedFileId] = currentScrollIndexRef.current;
     }
   }, [scrollPositionsRef, selectedFileId]);
 
@@ -161,11 +161,8 @@ const LogViewer = ({
 
   // Reset selection if file is deleted
   React.useEffect(() => {
-    if (
-      selectedFileId !== "all" &&
-      !files.find((f) => f.id === selectedFileId)
-    ) {
-      setSelectedFileId("all");
+    if (selectedFileId !== 'all' && !files.find((f) => f.id === selectedFileId)) {
+      setSelectedFileId('all');
     }
   }, [files, selectedFileId]);
 
@@ -179,11 +176,7 @@ const LogViewer = ({
   // Restore scroll position when coming back to log mode or switching files
   React.useEffect(() => {
     const savedIndex = scrollPositionsRef?.current[selectedFileId];
-    if (
-      savedIndex !== undefined &&
-      savedIndex > 0 &&
-      commentListRef.current?.scrollToIndex
-    ) {
+    if (savedIndex !== undefined && savedIndex > 0 && commentListRef.current?.scrollToIndex) {
       // Delay to ensure Virtuoso is mounted
       setTimeout(() => {
         commentListRef.current?.scrollToIndex?.(savedIndex);
@@ -211,7 +204,7 @@ const LogViewer = ({
     const resizeObserver = new ResizeObserver(() => {
       updateDimensions();
       console.log(
-        "[LogViewer] ResizeObserver triggered, containerWidth:",
+        '[LogViewer] ResizeObserver triggered, containerWidth:',
         containerRef.current?.getBoundingClientRect().width
       );
     });
@@ -221,11 +214,11 @@ const LogViewer = ({
     updateDimensions();
 
     // Also listen for window resize
-    window.addEventListener("resize", updateDimensions);
+    window.addEventListener('resize', updateDimensions);
 
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", updateDimensions);
+      window.removeEventListener('resize', updateDimensions);
     };
   }, []); // Run once, ResizeObserver handles all size changes
   // AA Override State (Managed by App via props)
@@ -239,12 +232,12 @@ const LogViewer = ({
   // Initialize settings from localStorage lazily
   const [logSettings, setLogSettings] = useState(() => {
     try {
-      const saved = localStorage.getItem("danmaku_log_settings");
+      const saved = localStorage.getItem('danmaku_log_settings');
       if (saved) {
         return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
       }
     } catch (e) {
-      console.error("Failed to load log settings", e);
+      console.error('Failed to load log settings', e);
     }
     return DEFAULT_SETTINGS;
   });
@@ -252,7 +245,7 @@ const LogViewer = ({
   // Save settings to localStorage
   const handleSettingsChange = (newSettings) => {
     setLogSettings(newSettings);
-    localStorage.setItem("danmaku_log_settings", JSON.stringify(newSettings));
+    localStorage.setItem('danmaku_log_settings', JSON.stringify(newSettings));
   };
 
   // Filter and enrich comments with ID stats & Reply Counts
@@ -265,7 +258,7 @@ const LogViewer = ({
     const validFileIds = new Set(files.map((f) => f.id));
     baseList = baseList.filter((c) => validFileIds.has(c.sourceFileId));
 
-    if (selectedFileId !== "all") {
+    if (selectedFileId !== 'all') {
       baseList = baseList.filter((c) => c.sourceFileId === selectedFileId);
     }
     if (ngSettings.ids && ngSettings.ids.length > 0) {
@@ -386,7 +379,7 @@ const LogViewer = ({
 
   // Calculate active thread title locally based on filtered comments
   const localActiveThreadTitle = React.useMemo(() => {
-    if (filteredComments.length === 0) return "";
+    if (filteredComments.length === 0) return '';
     let active = null;
     for (let i = filteredComments.length - 1; i >= 0; i--) {
       if (filteredComments[i].time <= currentLogicalTime) {
@@ -395,7 +388,7 @@ const LogViewer = ({
       }
     }
     if (!active) active = filteredComments[0];
-    return active ? active.threadTitle || active.sourceFileId : "";
+    return active ? active.threadTitle || active.sourceFileId : '';
   }, [filteredComments, currentLogicalTime]);
   // Jump Logic (for Context Menu)
   const handleJumpToComment = (targetComment) => {
@@ -450,7 +443,7 @@ const LogViewer = ({
       {/* Left Sidebar: File List - Width collapses when closed */}
       <div
         className={`h-full transition-all duration-200 ${
-          sidebarOpen ? "w-64" : "w-0 overflow-hidden"
+          sidebarOpen ? 'w-64' : 'w-0 overflow-hidden'
         }`}
       >
         <LogViewerFileList
@@ -478,12 +471,10 @@ const LogViewer = ({
                 onClick={onToggleSidebar}
                 className={`p-1.5 rounded-lg transition-colors shrink-0 ${
                   sidebarOpen
-                    ? "bg-blue-600/20 text-blue-400"
-                    : "text-gray-400 hover:text-white hover:bg-gray-700"
+                    ? 'bg-blue-600/20 text-blue-400'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
                 }`}
-                title={
-                  sidebarOpen ? "ファイルリストを隠す" : "ファイルリストを表示"
-                }
+                title={sidebarOpen ? 'ファイルリストを隠す' : 'ファイルリストを表示'}
               >
                 <Menu size={18} />
               </button>
@@ -530,8 +521,8 @@ const LogViewer = ({
               }}
               className={`p-2 rounded-lg transition-colors ${
                 showNgPanel
-                  ? "bg-red-600/20 text-red-400"
-                  : "text-gray-400 hover:text-white hover:bg-gray-700"
+                  ? 'bg-red-600/20 text-red-400'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
               title="NG管理"
             >
@@ -547,8 +538,8 @@ const LogViewer = ({
               }}
               className={`p-2 rounded-lg transition-colors ${
                 showSettings
-                  ? "bg-blue-600/20 text-blue-400"
-                  : "text-gray-400 hover:text-white hover:bg-gray-700"
+                  ? 'bg-blue-600/20 text-blue-400'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
               title="表示設定"
             >
@@ -561,7 +552,7 @@ const LogViewer = ({
                 settings={logSettings}
                 onSettingsChange={handleSettingsChange}
                 onClose={() => setShowSettings(false)}
-                style={{ top: "100%", right: 0, marginTop: "0.5rem" }}
+                style={{ top: '100%', right: 0, marginTop: '0.5rem' }}
               />
             )}
 
@@ -569,7 +560,7 @@ const LogViewer = ({
             {showNgPanel && (
               <LogViewerNGPanel
                 onClose={() => setShowNgPanel(false)}
-                style={{ top: "100%", right: 0, marginTop: "0.5rem" }}
+                style={{ top: '100%', right: 0, marginTop: '0.5rem' }}
                 ngSettings={ngSettings}
                 removeNgId={removeNgId}
                 removeNgComment={removeNgComment}
@@ -637,7 +628,7 @@ const LogViewer = ({
           aaOverrideMap={aaOverrideMap}
           onClose={() => {
             setShowResultsPopup(false);
-            setActiveFilter("none");
+            setActiveFilter('none');
           }}
           onRowClick={(e, comment) => {
             e.stopPropagation();

@@ -1,5 +1,6 @@
-import React, { useMemo } from "react";
-import { parseAbeKeywords } from "../../utils/abeMode";
+import React, { useMemo } from 'react';
+
+import { parseAbeKeywords } from '../../utils/abeMode';
 
 const CommentContent = ({
   text,
@@ -9,7 +10,7 @@ const CommentContent = ({
   showImages = true,
   setZoomedImage,
   thumbnailMode = false,
-  imageLayout = "inline", // 'inline' | 'grouped'
+  imageLayout = 'inline', // 'inline' | 'grouped'
   onAnchorMouseEnter, // New prop
   onAnchorMouseLeave, // New prop
   abeMode = false, // 安倍晋三モード
@@ -50,7 +51,7 @@ const CommentContent = ({
 
         if (isImage && showImages) {
           // Collect image for grouped mode
-          if (imageLayout === "grouped") {
+          if (imageLayout === 'grouped') {
             collectedImages.push(part);
             // Still show the URL as text
             return (
@@ -69,8 +70,8 @@ const CommentContent = ({
 
           // Inline mode: show URL + image together
           const imgClass = thumbnailMode
-            ? "max-h-16 max-w-xs rounded mt-1 border border-gray-700 cursor-zoom-in hover:opacity-90 transition-opacity" // Compact
-            : "max-w-full max-h-40 rounded mt-1 border border-gray-700 cursor-zoom-in hover:opacity-90 transition-opacity"; // Default
+            ? 'max-h-16 max-w-xs rounded mt-1 border border-gray-700 cursor-zoom-in hover:opacity-90 transition-opacity' // Compact
+            : 'max-w-full max-h-40 rounded mt-1 border border-gray-700 cursor-zoom-in hover:opacity-90 transition-opacity'; // Default
 
           return (
             <span key={i} className="block mt-1">
@@ -138,16 +139,14 @@ const CommentContent = ({
       const subParts = part.split(anchorRegex);
       return subParts.map((subPart, j) => {
         if (subPart.match(anchorRegex)) {
-          const resNum = parseInt(subPart.replace(/[^\d]/g, ""));
+          const resNum = parseInt(subPart.replace(/[^\d]/g, ''));
           // Always render as interactive if we have handlers (even if no click handler?)
           // LogViewer passes click handler locally, so onAnchorClick is likely present.
 
           const handlers = {
-            onClick: (e) =>
-              onAnchorClick && onAnchorClick(e, resNum, comment?.sourceFileId),
+            onClick: (e) => onAnchorClick && onAnchorClick(e, resNum, comment?.sourceFileId),
             onMouseEnter: (e) =>
-              onAnchorMouseEnter &&
-              onAnchorMouseEnter(e, resNum, comment?.sourceFileId),
+              onAnchorMouseEnter && onAnchorMouseEnter(e, resNum, comment?.sourceFileId),
             onMouseLeave: (e) => onAnchorMouseLeave && onAnchorMouseLeave(e),
           };
 
@@ -186,14 +185,14 @@ const CommentContent = ({
   ]);
 
   const imgClass = thumbnailMode
-    ? "max-h-16 max-w-24 rounded border border-gray-700 cursor-zoom-in hover:opacity-90 transition-opacity object-cover"
-    : "max-h-32 max-w-48 rounded border border-gray-700 cursor-zoom-in hover:opacity-90 transition-opacity object-cover";
+    ? 'max-h-16 max-w-24 rounded border border-gray-700 cursor-zoom-in hover:opacity-90 transition-opacity object-cover'
+    : 'max-h-32 max-w-48 rounded border border-gray-700 cursor-zoom-in hover:opacity-90 transition-opacity object-cover';
 
   return (
     <>
       {textContent}
       {/* Grouped images at the end */}
-      {imageLayout === "grouped" && imageUrls.length > 0 && setZoomedImage && (
+      {imageLayout === 'grouped' && imageUrls.length > 0 && setZoomedImage && (
         <div className="flex flex-wrap gap-2 mt-2">
           {imageUrls.map((url, idx) => (
             <img

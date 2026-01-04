@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Device types
@@ -13,8 +13,8 @@ export const DeviceType = {
  * Breakpoints for screen size detection
  */
 const BREAKPOINTS = {
-  PHONE_MAX_WIDTH: 768,      // Phone: <= 768px
-  TABLET_MAX_WIDTH: 1024,    // Tablet: 769px - 1024px
+  PHONE_MAX_WIDTH: 768, // Phone: <= 768px
+  TABLET_MAX_WIDTH: 1024, // Tablet: 769px - 1024px
   // Desktop: > 1024px
 };
 
@@ -31,14 +31,17 @@ const isTouchDevice = () => {
  */
 const detectDeviceType = () => {
   if (typeof window === 'undefined') return DeviceType.DESKTOP;
-  
+
   const width = window.innerWidth;
   const height = window.innerHeight;
   const isTouch = isTouchDevice();
   const isPortrait = height > width;
 
   // Phone detection: Touch device with small screen or portrait orientation on small-medium screen
-  if (isTouch && (width <= BREAKPOINTS.PHONE_MAX_WIDTH || (isPortrait && width <= BREAKPOINTS.TABLET_MAX_WIDTH))) {
+  if (
+    isTouch &&
+    (width <= BREAKPOINTS.PHONE_MAX_WIDTH || (isPortrait && width <= BREAKPOINTS.TABLET_MAX_WIDTH))
+  ) {
     return DeviceType.PHONE;
   }
 

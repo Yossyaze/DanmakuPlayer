@@ -1,11 +1,12 @@
-import { useState, useMemo, useCallback } from "react";
-import { parseLogFile, parseDatBuffer } from "../utils/logParser";
+import { useCallback, useMemo, useState } from 'react';
+
+import { parseDatBuffer, parseLogFile } from '../utils/logParser';
 
 export const useLogSystem = () => {
   const [loadedFiles, setLoadedFiles] = useState([]);
   const [comments, setComments] = useState([]);
-  const [urlInput, setUrlInput] = useState("");
-  const [startTimeStr, setStartTimeStr] = useState("");
+  const [urlInput, setUrlInput] = useState('');
+  const [startTimeStr, setStartTimeStr] = useState('');
 
   const [ngSettings, setNgSettings] = useState({ ids: [], comments: [] });
 
@@ -76,26 +77,20 @@ export const useLogSystem = () => {
           candidates.push(`https://${server}/${board}/dat/${id}.dat`);
           // 2. Past Log (oyster): https://[server]/[board]/oyster/[id first 4 digits]/[id].dat
           if (id.length >= 4) {
-            candidates.push(
-              `https://${server}/${board}/oyster/${id.slice(0, 4)}/${id}.dat`
-            );
+            candidates.push(`https://${server}/${board}/oyster/${id.slice(0, 4)}/${id}.dat`);
           }
           return candidates;
         }
 
         // Pattern 2: bbs.eddibb.cc/board/id or bbs.eddibb.cc/test/read.cgi/board/id
-        const eddibbMatch = inputUrl.match(
-          /bbs\.eddibb\.cc\/(?:test\/read\.cgi\/)?([^/]+)\/(\d+)/
-        );
+        const eddibbMatch = inputUrl.match(/bbs\.eddibb\.cc\/(?:test\/read\.cgi\/)?([^/]+)\/(\d+)/);
         if (eddibbMatch) {
           board = eddibbMatch[1];
           id = eddibbMatch[2];
         }
 
         // Pattern 3: kyodemo.net/sdemo/r/e_e_board/id
-        const kyodemoMatch = inputUrl.match(
-          /kyodemo\.net\/sdemo\/r\/e_e_([^/]+)\/(\d+)/
-        );
+        const kyodemoMatch = inputUrl.match(/kyodemo\.net\/sdemo\/r\/e_e_([^/]+)\/(\d+)/);
         if (kyodemoMatch) {
           board = kyodemoMatch[1];
           id = kyodemoMatch[2];
@@ -109,10 +104,7 @@ export const useLogSystem = () => {
           // /board/kako/1763/17638/1763886647.dat
           if (id.length >= 5) {
             candidates.push(
-              `https://bbs.eddibb.cc/${board}/kako/${id.slice(0, 4)}/${id.slice(
-                0,
-                5
-              )}/${id}.dat`
+              `https://bbs.eddibb.cc/${board}/kako/${id.slice(0, 4)}/${id.slice(0, 5)}/${id}.dat`
             );
           }
           return candidates;
@@ -122,7 +114,7 @@ export const useLogSystem = () => {
 
       const tryFetch = async (targetUrl) => {
         // Check if URL is from 5ch (requires extension fetch due to strict access control)
-        const is5chUrl = targetUrl.includes(".5ch.net");
+        const is5chUrl = targetUrl.includes('.5ch.net');
 
         // Try extension fetch first for 5ch URLs (via content script)
         if (is5chUrl) {
@@ -133,36 +125,36 @@ export const useLogSystem = () => {
               const handleResponse = (event) => {
                 if (event.source !== window) return;
                 if (
-                  event.data?.type === "DANMAKU_FETCH_RESPONSE" &&
+                  event.data?.type === 'DANMAKU_FETCH_RESPONSE' &&
                   event.data?.requestId === requestId
                 ) {
-                  window.removeEventListener("message", handleResponse);
+                  window.removeEventListener('message', handleResponse);
                   if (event.data.error) {
                     reject(new Error(event.data.error));
                   } else if (event.data.data) {
                     resolve(event.data);
                   } else {
-                    reject(new Error("No data received"));
+                    reject(new Error('No data received'));
                   }
                 }
               };
 
-              window.addEventListener("message", handleResponse);
+              window.addEventListener('message', handleResponse);
 
               // Send request to content script
               window.postMessage(
                 {
-                  type: "DANMAKU_FETCH_REQUEST",
+                  type: 'DANMAKU_FETCH_REQUEST',
                   requestId,
                   url: targetUrl,
                 },
-                "*"
+                '*'
               );
 
               // Timeout after 15 seconds
               setTimeout(() => {
-                window.removeEventListener("message", handleResponse);
-                reject(new Error("Extension fetch timeout"));
+                window.removeEventListener('message', handleResponse);
+                reject(new Error('Extension fetch timeout'));
               }, 15000);
             });
 
@@ -172,10 +164,10 @@ export const useLogSystem = () => {
             for (let i = 0; i < binaryString.length; i++) {
               bytes[i] = binaryString.charCodeAt(i);
             }
-            console.log("Fetched via extension:", targetUrl);
+            console.log('Fetched via extension:', targetUrl);
             return bytes.buffer;
           } catch (extErr) {
-            console.warn("Extension fetch failed, trying CORS proxy:", extErr);
+            console.warn('Extension fetch failed, trying CORS proxy:', extErr);
             // Fall through to CORS proxy
           }
         }
@@ -183,16 +175,15 @@ export const useLogSystem = () => {
         // Use CORS proxy for external URLs
         let fetchUrl = targetUrl;
         if (
-          targetUrl.startsWith("http") &&
-          !targetUrl.includes("localhost") &&
-          !targetUrl.includes("127.0.0.1")
+          targetUrl.startsWith('http') &&
+          !targetUrl.includes('localhost') &&
+          !targetUrl.includes('127.0.0.1')
         ) {
-          fetchUrl = "https://corsproxy.io/?" + encodeURIComponent(targetUrl);
+          fetchUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
         }
 
         const response = await fetch(fetchUrl);
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return response.arrayBuffer();
       };
 
@@ -205,40 +196,40 @@ export const useLogSystem = () => {
         // Try candidates sequentially
         for (const candidate of candidates) {
           try {
-            console.log("Trying to fetch:", candidate);
+            console.log('Trying to fetch:', candidate);
             buffer = await tryFetch(candidate);
             usedUrl = candidate;
             break; // Success
           } catch (err) {
-            console.warn("Fetch failed for:", candidate, err);
+            console.warn('Fetch failed for:', candidate, err);
             lastError = err;
           }
         }
 
         if (!buffer) {
-          throw lastError || new Error("All fetch attempts failed");
+          throw lastError || new Error('All fetch attempts failed');
         }
 
         let parsed;
         // Check if it's a .dat file (either by extension or if we resolved it to one)
         // If we resolved to a .dat URL, treat it as .dat
-        if (usedUrl.endsWith(".dat")) {
+        if (usedUrl.endsWith('.dat')) {
           // Use parseDatBuffer for .dat files (Shift_JIS)
           // Extract ID from URL for filename/ID
           const idMatch = usedUrl.match(/\/(\d+)\.dat$/);
-          const name = idMatch ? `${idMatch[1]}.dat` : usedUrl.split("/").pop();
+          const name = idMatch ? `${idMatch[1]}.dat` : usedUrl.split('/').pop();
           parsed = parseDatBuffer(buffer, name);
         } else {
           // Assume UTF-8 text or HTML, but detect encoding
           let text;
           try {
             // Try UTF-8 first
-            const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
+            const utf8Decoder = new TextDecoder('utf-8', { fatal: true });
             text = utf8Decoder.decode(buffer);
           } catch {
-            console.log("UTF-8 decode failed, falling back to windows-31j");
+            console.log('UTF-8 decode failed, falling back to windows-31j');
             // Fallback to CP932 (Shift_JIS)
-            const sjisDecoder = new TextDecoder("windows-31j");
+            const sjisDecoder = new TextDecoder('windows-31j');
             text = sjisDecoder.decode(buffer);
           }
           parsed = await parseLogFile(text);
@@ -253,9 +244,7 @@ export const useLogSystem = () => {
             threadTitle: parsed.title || parsed.name, // Inject thread title
           }));
 
-          setComments((prev) =>
-            [...prev, ...newComments].sort((a, b) => a.rawTime - b.rawTime)
-          );
+          setComments((prev) => [...prev, ...newComments].sort((a, b) => a.rawTime - b.rawTime));
 
           setLoadedFiles((prev) => [
             ...prev,
@@ -266,12 +255,12 @@ export const useLogSystem = () => {
               count: parsed.rawComments.length,
             },
           ]);
-          setUrlInput("");
+          setUrlInput('');
           return parsed; // Return parsed object
         }
       } catch (err) {
-        console.error("Failed to load URL:", err);
-        alert("URLの読み込みに失敗しました: " + err.message);
+        console.error('Failed to load URL:', err);
+        alert('URLの読み込みに失敗しました: ' + err.message);
       }
     },
     [urlInput]
@@ -289,12 +278,7 @@ export const useLogSystem = () => {
 
   const handleReorderFiles = useCallback((fromIndex, toIndex) => {
     setLoadedFiles((prev) => {
-      if (
-        fromIndex < 0 ||
-        fromIndex >= prev.length ||
-        toIndex < 0 ||
-        toIndex >= prev.length
-      )
+      if (fromIndex < 0 || fromIndex >= prev.length || toIndex < 0 || toIndex >= prev.length)
         return prev;
       const newFiles = [...prev];
       const [movedItem] = newFiles.splice(fromIndex, 1);
@@ -317,9 +301,7 @@ export const useLogSystem = () => {
       }))
     );
 
-    setComments((prev) =>
-      [...prev, ...newComments].sort((a, b) => a.rawTime - b.rawTime)
-    );
+    setComments((prev) => [...prev, ...newComments].sort((a, b) => a.rawTime - b.rawTime));
     setLoadedFiles((prev) => [...prev, ...processedFiles]);
   }, []);
 
@@ -352,10 +334,8 @@ export const useLogSystem = () => {
     // However, comments in 'comments' state usually have 'sourceFileId'.
     if (loadedFiles.length === 0) return [];
 
-    const visibleFileIds = new Set(
-      loadedFiles.filter((f) => f.isVisible).map((f) => f.id)
-    );
-    console.log("Visible File IDs:", Array.from(visibleFileIds));
+    const visibleFileIds = new Set(loadedFiles.filter((f) => f.isVisible).map((f) => f.id));
+    console.log('Visible File IDs:', Array.from(visibleFileIds));
 
     // 1. Filter by File Visibility
     let filtered = comments.filter((c) => visibleFileIds.has(c.sourceFileId));
@@ -402,7 +382,7 @@ export const useLogSystem = () => {
       return c;
     });
 
-    console.log("Filtered visible comments:", commentsWithMeta.length);
+    console.log('Filtered visible comments:', commentsWithMeta.length);
     return commentsWithMeta;
   }, [comments, loadedFiles, ngSettings]);
 

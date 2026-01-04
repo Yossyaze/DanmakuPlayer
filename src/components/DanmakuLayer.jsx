@@ -1,6 +1,7 @@
-import React from "react";
-import { isProbablyAA } from "../utils/aaUtils";
-import { parseAbeKeywords } from "../utils/abeMode";
+import React from 'react';
+
+import { isProbablyAA } from '../utils/aaUtils';
+import { parseAbeKeywords } from '../utils/abeMode';
 
 const DanmakuLayer = ({
   containerRef,
@@ -23,13 +24,13 @@ const DanmakuLayer = ({
   // This ensures correct animation state after remount (e.g., exiting log mode)
   React.useEffect(() => {
     if (containerRef.current) {
-      const state = isPlaying ? "running" : "paused";
-      containerRef.current.style.setProperty("--play-state", state);
-      console.log("[DanmakuLayer] Setting --play-state:", state);
+      const state = isPlaying ? 'running' : 'paused';
+      containerRef.current.style.setProperty('--play-state', state);
+      console.log('[DanmakuLayer] Setting --play-state:', state);
     }
   }, [containerRef, isPlaying]);
 
-  if (mode === "sidebar") return null;
+  if (mode === 'sidebar') return null;
 
   return (
     <div
@@ -89,7 +90,7 @@ const DanmakuItem = React.memo(
       const override = aaOverrideMap[dm.id];
       if (override === true) return true;
       if (override === false) return false;
-      if (aaMode === "off") return false;
+      if (aaMode === 'off') return false;
       return isProbablyAA(dm.text);
     }, [dm.id, dm.text, aaMode, aaOverrideMap]);
 
@@ -106,14 +107,11 @@ const DanmakuItem = React.memo(
       top: `${dm.top}px`,
       fontSize: `${fontSize}px`,
       color: dm.color,
-      opacity:
-        dm.opacity !== undefined
-          ? dm.opacity * settings.opacity
-          : settings.opacity,
+      opacity: dm.opacity !== undefined ? dm.opacity * settings.opacity : settings.opacity,
       zIndex: dm.zIndex || 0,
       animationDuration: `${dm.duration}s`,
-      animationDelay: dm.animationDelay || "0s",
-      "--translate-x-end": `${dm.dist}px`,
+      animationDelay: dm.animationDelay || '0s',
+      '--translate-x-end': `${dm.dist}px`,
       ...dm.style,
     };
 
@@ -122,7 +120,7 @@ const DanmakuItem = React.memo(
       if (onTruncationClick && isTruncationIndicator) {
         e.stopPropagation();
         // Extract rootId from the truncation indicator id (format: "rootId-truncation")
-        const rootId = dm.id.replace("-truncation", "");
+        const rootId = dm.id.replace('-truncation', '');
         onTruncationClick(rootId);
       }
     };
@@ -148,31 +146,29 @@ const DanmakuItem = React.memo(
         className="absolute animate-danmaku text-shadow-md font-bold"
         style={{
           ...commonStyle,
-          textShadow: "1px 1px 2px black, 0 0 1em black",
-          whiteSpace: isAA ? "pre" : "nowrap",
+          textShadow: '1px 1px 2px black, 0 0 1em black',
+          whiteSpace: isAA ? 'pre' : 'nowrap',
         }}
         onAnimationEnd={() => onAnimationEnd(dm.uniqueId)}
       >
         {/* Text Row */}
         <div
-          className={`flex items-center gap-1 ${
-            isAA ? "font-aa text-[0.8em] leading-none" : ""
-          }`}
-          style={{ whiteSpace: isAA ? "pre" : undefined }}
+          className={`flex items-center gap-1 ${isAA ? 'font-aa text-[0.8em] leading-none' : ''}`}
+          style={{ whiteSpace: isAA ? 'pre' : undefined }}
         >
           {dm.nodes ? (
             dm.nodes
-              .filter((n) => n.type !== "image")
+              .filter((n) => n.type !== 'image')
               .map((node, idx) => {
-                if (node.type === "placeholder") {
+                if (node.type === 'placeholder') {
                   const hasContent = node.content && node.content.length > 0;
                   return (
                     <span
                       key={idx}
                       className={`shrink-0 ${
                         hasContent
-                          ? "cursor-pointer pointer-events-auto text-cyan-400 hover:text-cyan-300 hover:underline"
-                          : "text-cyan-400"
+                          ? 'cursor-pointer pointer-events-auto text-cyan-400 hover:text-cyan-300 hover:underline'
+                          : 'text-cyan-400'
                       }`}
                       onMouseEnter={
                         hasContent
@@ -184,15 +180,13 @@ const DanmakuItem = React.memo(
                               })
                           : undefined
                       }
-                      onMouseLeave={
-                        hasContent ? () => setHoveredImage(null) : undefined
-                      }
+                      onMouseLeave={hasContent ? () => setHoveredImage(null) : undefined}
                     >
                       {node.text}
                     </span>
                   );
                 }
-                if (node.type === "image_error") {
+                if (node.type === 'image_error') {
                   return (
                     <span
                       key={idx}
@@ -224,30 +218,27 @@ const DanmakuItem = React.memo(
         </div>
 
         {/* Image Row (below text) - indent based on tree depth for child/grandchild */}
-        {dm.nodes && dm.nodes.some((n) => n.type === "image") && (
+        {dm.nodes && dm.nodes.some((n) => n.type === 'image') && (
           <div
             className="flex items-center gap-1 mt-0.5"
             style={{
-              marginLeft:
-                dm.depth > 0 ? `${settings.fontSize * 1.2 * dm.depth}px` : 0,
+              marginLeft: dm.depth > 0 ? `${settings.fontSize * 1.2 * dm.depth}px` : 0,
             }}
           >
             {dm.nodes
-              .filter((n) => n.type === "image")
+              .filter((n) => n.type === 'image')
               .map((node, idx) => (
                 <div
                   key={idx}
                   className={`shrink-0 relative ${
                     onImageClick
-                      ? "cursor-pointer pointer-events-auto hover:opacity-80"
-                      : "pointer-events-none"
+                      ? 'cursor-pointer pointer-events-auto hover:opacity-80'
+                      : 'pointer-events-none'
                   }`}
                   style={{
                     height: node.height || `${settings.fontSize * 4}px`,
                   }}
-                  onClick={
-                    onImageClick ? () => onImageClick(node.content) : undefined
-                  }
+                  onClick={onImageClick ? () => onImageClick(node.content) : undefined}
                 >
                   <img
                     src={node.content}
@@ -256,7 +247,7 @@ const DanmakuItem = React.memo(
                     onError={(e) => {
                       // Replace with compact error placeholder
                       const container = e.target.parentElement;
-                      container.style.height = "auto";
+                      container.style.height = 'auto';
                       container.innerHTML = `<span style="color: #ff6b6b; font-size: ${
                         settings.fontSize * 0.7
                       }px; white-space: nowrap;">[画像エラー]</span>`;

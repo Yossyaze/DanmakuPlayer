@@ -1,5 +1,5 @@
-import { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
-import Hls from "hls.js";
+import Hls from 'hls.js';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 /**
  * HLSVideo - HLS.jsを使用してm3u8ストリームを再生するコンポーネント
@@ -18,7 +18,7 @@ const HLSVideo = forwardRef(
       onReady,
       volume = 1,
       muted = false,
-      className = "",
+      className = '',
       onClick,
     },
     ref
@@ -48,7 +48,7 @@ const HLSVideo = forwardRef(
         }
       },
       get tagName() {
-        return "VIDEO";
+        return 'VIDEO';
       },
       play: () => videoRef.current?.play(),
       pause: () => videoRef.current?.pause(),
@@ -88,40 +88,36 @@ const HLSVideo = forwardRef(
         hls.attachMedia(video);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          console.log("HLS: Manifest parsed");
+          console.log('HLS: Manifest parsed');
           if (onReady) onReady();
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
-          console.error("HLS Error:", data);
+          console.error('HLS Error:', data);
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                console.error(
-                  "HLS: Fatal network error, attempting to recover..."
-                );
+                console.error('HLS: Fatal network error, attempting to recover...');
                 hls.startLoad();
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                console.error(
-                  "HLS: Fatal media error, attempting to recover..."
-                );
+                console.error('HLS: Fatal media error, attempting to recover...');
                 hls.recoverMediaError();
                 break;
               default:
-                console.error("HLS: Fatal error, cannot recover");
+                console.error('HLS: Fatal error, cannot recover');
                 hls.destroy();
                 if (onError) onError(data);
                 break;
             }
           }
         });
-      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         // Safari native HLS support
         video.src = src;
       } else {
-        console.error("HLS is not supported in this browser");
-        if (onError) onError({ message: "HLS not supported" });
+        console.error('HLS is not supported in this browser');
+        if (onError) onError({ message: 'HLS not supported' });
       }
 
       return () => {
@@ -146,21 +142,21 @@ const HLSVideo = forwardRef(
         className={className}
         onClick={onClick}
         onLoadedMetadata={(e) => {
-          console.log("HLSVideo: onLoadedMetadata");
+          console.log('HLSVideo: onLoadedMetadata');
           if (onLoadedMetadata) onLoadedMetadata(e);
           if (onDuration && e.target.duration) {
             onDuration(e.target.duration);
           }
         }}
         onCanPlay={(e) => {
-          console.log("HLSVideo: onCanPlay");
+          console.log('HLSVideo: onCanPlay');
           if (onCanPlay) onCanPlay(e);
         }}
         onEnded={onEnded}
         onPause={onPause}
         onPlay={onPlay}
         onError={(e) => {
-          console.error("HLSVideo: onError", e.nativeEvent);
+          console.error('HLSVideo: onError', e.nativeEvent);
           if (onError) onError(e);
         }}
       />
@@ -168,6 +164,6 @@ const HLSVideo = forwardRef(
   }
 );
 
-HLSVideo.displayName = "HLSVideo";
+HLSVideo.displayName = 'HLSVideo';
 
 export default HLSVideo;

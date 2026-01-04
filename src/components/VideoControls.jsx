@@ -1,20 +1,21 @@
-import React, { useRef, useState, useEffect } from "react";
 import {
-  Play,
+  Maximize,
+  MessageSquare,
+  Minimize,
   Pause,
+  Play,
+  Settings,
   Volume2,
   VolumeX,
-  Settings,
-  MessageSquare,
-  Maximize,
-  Minimize,
-} from "lucide-react";
-import { formatTime } from "../utils/danmakuUtils";
-import DanmakuSettingsPopover from "./ui/DanmakuSettingsPopover";
+} from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+
+import { formatTime } from '../utils/danmakuUtils';
+import DanmakuSettingsPopover from './ui/DanmakuSettingsPopover';
 
 // Helper to generate a smooth Bezier path from data points
 const generateSmoothPath = (points, width, height) => {
-  if (points.length < 2) return "";
+  if (points.length < 2) return '';
 
   const maxY = height;
   const ratioX = width / (points.length - 1);
@@ -84,7 +85,7 @@ const VideoControls = ({
         `[VideoControls] Graph Rendering: ${commentDensity.length} points, Max Density: ${maxVal}`
       );
     } else {
-      console.log("[VideoControls] No comment density data available.");
+      console.log('[VideoControls] No comment density data available.');
     }
   }, [commentDensity]);
 
@@ -99,9 +100,8 @@ const VideoControls = ({
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () =>
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
   const toggleFullscreen = () => {
@@ -109,7 +109,7 @@ const VideoControls = ({
 
     if (!document.fullscreenElement) {
       containerRef.current.requestFullscreen().catch((err) => {
-        console.error("Fullscreen error:", err);
+        console.error('Fullscreen error:', err);
       });
     } else {
       document.exitFullscreen();
@@ -174,12 +174,12 @@ const VideoControls = ({
       }
 
       handleSeekEnd();
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
     };
 
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
   };
 
   const handleTouchStart = (e) => {
@@ -229,12 +229,12 @@ const VideoControls = ({
       // Ideally we just finish here.
 
       handleSeekEnd();
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
     };
 
-    window.addEventListener("touchmove", onTouchMove, { passive: false });
-    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd);
   };
 
   const [hoverTime, setHoverTime] = React.useState(null);
@@ -296,9 +296,7 @@ const VideoControls = ({
   return (
     <div
       className={`absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${
-        visible
-          ? "opacity-100 pointer-events-auto"
-          : "opacity-0 pointer-events-none"
+        visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
       onClick={(e) => e.stopPropagation()} // Prevent click from bubbling to video container (which toggles play)
     >
@@ -312,7 +310,7 @@ const VideoControls = ({
           onMouseMove={handleSeekMouseMove}
           onMouseLeave={handleSeekMouseLeave}
         >
-          {" "}
+          {' '}
           {/* Comment Momentum Graph (Hover Only) */}
           {/* Comment Momentum Graph (Hover Only) */}
           {commentDensity.length > 0 && (
@@ -321,10 +319,8 @@ const VideoControls = ({
               <div
                 className="absolute inset-0 -left-4 -right-4 w-auto h-full bg-black/40"
                 style={{
-                  maskImage:
-                    "linear-gradient(to top, black 40%, transparent 100%)",
-                  WebkitMaskImage:
-                    "linear-gradient(to top, black 40%, transparent 100%)",
+                  maskImage: 'linear-gradient(to top, black 40%, transparent 100%)',
+                  WebkitMaskImage: 'linear-gradient(to top, black 40%, transparent 100%)',
                 }}
               />
               <svg
@@ -335,13 +331,7 @@ const VideoControls = ({
                 className="relative w-full h-full overflow-visible z-10"
               >
                 <defs>
-                  <linearGradient
-                    id="momentumGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
+                  <linearGradient id="momentumGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#4ade80" stopOpacity="0.8" />
                     <stop offset="100%" stopColor="#4ade80" stopOpacity="0.3" />
                   </linearGradient>
@@ -370,7 +360,7 @@ const VideoControls = ({
             style={{
               left: `${hoverPos}px`, // Use pixels
               opacity: hoverTime !== null ? 1 : 0,
-              visibility: hoverTime !== null ? "visible" : "hidden",
+              visibility: hoverTime !== null ? 'visible' : 'hidden',
             }}
           >
             <video
@@ -392,10 +382,8 @@ const VideoControls = ({
               const start = range.logStart - timeOffset;
               const end = range.logEnd - timeOffset;
               const duration = end - start;
-              const leftPct =
-                totalDuration > 0 ? (start / totalDuration) * 100 : 0;
-              const widthPct =
-                totalDuration > 0 ? (duration / totalDuration) * 100 : 0;
+              const leftPct = totalDuration > 0 ? (start / totalDuration) * 100 : 0;
+              const widthPct = totalDuration > 0 ? (duration / totalDuration) * 100 : 0;
               return (
                 <div
                   key={`cm-bg-${i}`}
@@ -411,9 +399,7 @@ const VideoControls = ({
               ref={progressBarRef}
               className="absolute top-0 left-0 h-full bg-blue-500 pointer-events-none"
               style={{
-                width: `${
-                  totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0
-                }%`,
+                width: `${totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0}%`,
               }}
             />
 
@@ -427,10 +413,8 @@ const VideoControls = ({
 
               if (overlapDur <= 0) return null;
 
-              const leftPct =
-                totalDuration > 0 ? (start / totalDuration) * 100 : 0;
-              const widthPct =
-                totalDuration > 0 ? (overlapDur / totalDuration) * 100 : 0;
+              const leftPct = totalDuration > 0 ? (start / totalDuration) * 100 : 0;
+              const widthPct = totalDuration > 0 ? (overlapDur / totalDuration) * 100 : 0;
 
               return (
                 <div
@@ -452,10 +436,7 @@ const VideoControls = ({
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
-            onClick={togglePlay}
-            className="hover:text-blue-400 transition text-white"
-          >
+          <button onClick={togglePlay} className="hover:text-blue-400 transition text-white">
             {isPlaying ? <Pause size={24} /> : <Play size={24} />}
           </button>
           <div className="flex items-center gap-2 group/vol">
@@ -483,11 +464,9 @@ const VideoControls = ({
             <button
               onClick={() => setShowDanmaku(!showDanmaku)}
               className={`transition p-1 rounded-full ${
-                showDanmaku
-                  ? "text-white bg-blue-500"
-                  : "text-white/50 hover:bg-white/10"
+                showDanmaku ? 'text-white bg-blue-500' : 'text-white/50 hover:bg-white/10'
               }`}
-              title={`弾幕 ${showDanmaku ? "ON" : "OFF"} (D)`}
+              title={`弾幕 ${showDanmaku ? 'ON' : 'OFF'} (D)`}
             >
               <MessageSquare size={20} />
             </button>
@@ -500,9 +479,7 @@ const VideoControls = ({
                 ref={settingsBtnRef}
                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                 className={`transition p-1 rounded-full ${
-                  isSettingsOpen
-                    ? "text-white bg-white/20"
-                    : "text-white hover:bg-white/10"
+                  isSettingsOpen ? 'text-white bg-white/20' : 'text-white hover:bg-white/10'
                 }`}
                 title="弾幕設定"
               >
@@ -524,7 +501,7 @@ const VideoControls = ({
           <button
             onClick={toggleFullscreen}
             className="transition p-1 rounded-full text-white hover:bg-white/10"
-            title={isFullscreen ? "縮小" : "全画面"}
+            title={isFullscreen ? '縮小' : '全画面'}
           >
             {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
           </button>

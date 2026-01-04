@@ -1,5 +1,6 @@
-import { useCallback, useRef } from "react";
-import { checkAbeUnlockCondition } from "../utils/abeMode";
+import { useCallback, useRef } from 'react';
+
+import { checkAbeUnlockCondition } from '../utils/abeMode';
 
 /**
  * useAppHandlers - App.jsx から分離したハンドラーを管理するカスタムフック
@@ -29,7 +30,7 @@ export function useAppHandlers({
   aaOverrideMap,
   setAaOverrideMap,
   setShowExportModal,
-  setShowUrlModal,
+
   setRequestedVideoName,
   setRequestedVideoPath,
   setShowVideoRequestModal,
@@ -53,18 +54,14 @@ export function useAppHandlers({
           unlockAbeMode();
         }
 
-        console.log(
-          "handleVideoUrlSubmit: Setting video src to",
-          videoUrlInput
-        );
+        console.log('handleVideoUrlSubmit: Setting video src to', videoUrlInput);
         player.setVideoSrc(videoUrlInput);
         resetPlayerState();
-        console.log("handleVideoUrlSubmit: Requesting deferred AutoPlay");
+        console.log('handleVideoUrlSubmit: Requesting deferred AutoPlay');
         autoPlayRequestedRef.current = true;
-        setShowUrlModal(false);
       }
     },
-    [player, resetPlayerState, setShowUrlModal, unlockAbeMode]
+    [player, resetPlayerState, unlockAbeMode]
   );
 
   // --- Seek and Play (for context menu "Move to this time") ---
@@ -83,28 +80,28 @@ export function useAppHandlers({
     (handleSaveProject) => {
       return (e) => {
         // Ctrl+S / Cmd+S for Save
-        if ((e.ctrlKey || e.metaKey) && e.code === "KeyS") {
+        if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
           e.preventDefault();
           handleSaveProject();
           return;
         }
 
         // Ctrl+R / Cmd+R for Reload
-        if ((e.ctrlKey || e.metaKey) && e.code === "KeyR") {
+        if ((e.ctrlKey || e.metaKey) && e.code === 'KeyR') {
           // In some Tauri environments, standard reload is blocked.
           // We'll allow it if possible, or force it if it's the expected behavior.
           window.location.reload();
           return;
         }
 
-        if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)) return;
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
 
         switch (e.code) {
-          case "Space":
+          case 'Space':
             e.preventDefault();
             togglePlay();
             break;
-          case "ArrowRight":
+          case 'ArrowRight':
             e.preventDefault();
             handleSeek({
               target: {
@@ -115,26 +112,23 @@ export function useAppHandlers({
               },
             });
             break;
-          case "ArrowLeft":
+          case 'ArrowLeft':
             e.preventDefault();
             handleSeek({
               target: {
-                value: Math.max(
-                  0,
-                  currentTime - cmSystem.timeOffset - (Number(skipSeconds) || 5)
-                ),
+                value: Math.max(0, currentTime - cmSystem.timeOffset - (Number(skipSeconds) || 5)),
               },
             });
             break;
-          case "KeyD":
+          case 'KeyD':
             e.preventDefault();
             if (!logOnlyMode) setShowDanmaku((prev) => !prev);
             break;
-          case "KeyS":
+          case 'KeyS':
             e.preventDefault();
             if (!logOnlyMode) setShowSidebar((prev) => !prev);
             break;
-          case "KeyL":
+          case 'KeyL':
             e.preventDefault();
             setLogOnlyMode((prev) => !prev);
             break;
@@ -159,7 +153,7 @@ export function useAppHandlers({
   // --- Project Data Helper ---
   const getProjectData = useCallback(
     () => ({
-      version: "3.4.0",
+      version: '3.4.0',
       timestamp: Date.now(),
       videoStartTimeStr: videoStartTimeStr,
       startTimeStr: logSystem.startTimeStr,
@@ -199,15 +193,15 @@ export function useAppHandlers({
       await writable.write(jsonString);
       await writable.close();
 
-      console.log("Project saved:", projectName);
+      console.log('Project saved:', projectName);
     } catch (err) {
-      console.error("Save failed:", err);
-      if (err.name === "NotAllowedError") {
+      console.error('Save failed:', err);
+      if (err.name === 'NotAllowedError') {
         setProjectFileHandle(null);
         setProjectName(null);
-        alert("ファイルへのアクセス権限が失われました。新規保存してください。");
+        alert('ファイルへのアクセス権限が失われました。新規保存してください。');
       } else {
-        alert("保存に失敗しました: " + err.message);
+        alert('保存に失敗しました: ' + err.message);
       }
     }
   }, [
@@ -230,26 +224,22 @@ export function useAppHandlers({
 
         const conflicts = [];
         // Check CM Ranges
-        if (
-          cmSystem.cmRanges.length > 0 &&
-          data.cmRanges &&
-          data.cmRanges.length > 0
-        ) {
-          conflicts.push("cmRanges");
+        if (cmSystem.cmRanges.length > 0 && data.cmRanges && data.cmRanges.length > 0) {
+          conflicts.push('cmRanges');
         }
         // Check Time Sync
         if (
           (videoStartTimeStr || logSystem.startTimeStr) &&
           (data.videoStartTimeStr || data.startTimeStr)
         ) {
-          conflicts.push("timeSync");
+          conflicts.push('timeSync');
         }
 
         // Return parsed data and conflicts found
         return { data, conflicts, file };
       } catch (e) {
-        console.error("Failed to parse project file", e);
-        throw new Error("Invalid Project File");
+        console.error('Failed to parse project file', e);
+        throw new Error('Invalid Project File');
       }
     },
     [cmSystem.cmRanges, videoStartTimeStr, logSystem.startTimeStr]
@@ -293,9 +283,9 @@ export function useAppHandlers({
 
       if (fileHandle) {
         setProjectFileHandle(fileHandle);
-        setProjectName(file.name.replace(".json", ""));
+        setProjectName(file.name.replace('.json', ''));
       } else if (file) {
-        setProjectName(file.name.replace(".json", ""));
+        setProjectName(file.name.replace('.json', ''));
       }
 
       // File Path Logic
@@ -363,13 +353,13 @@ export function useAppHandlers({
 
       if (!file || !(file instanceof File)) {
         // Use Web File System Access API if available
-        if ("showOpenFilePicker" in window) {
+        if ('showOpenFilePicker' in window) {
           try {
             const [handle] = await window.showOpenFilePicker({
               types: [
                 {
-                  description: "Danmaku Project JSON",
-                  accept: { "application/json": [".json"] },
+                  description: 'Danmaku Project JSON',
+                  accept: { 'application/json': ['.json'] },
                 },
               ],
             });
@@ -378,15 +368,15 @@ export function useAppHandlers({
             processImportFile(file, fileHandle);
             return;
           } catch (err) {
-            if (err.name === "AbortError") return;
-            console.warn("File System Access API failed, falling back...", err);
+            if (err.name === 'AbortError') return;
+            console.warn('File System Access API failed, falling back...', err);
           }
         }
 
         // Fallback to input element
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".json";
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
         input.onchange = async (e) => {
           const f = e.target.files[0];
           if (f) processImportFile(f);
@@ -404,19 +394,15 @@ export function useAppHandlers({
   const handleSetCmStart = useCallback(
     (time) => {
       const startSec = logSystem.startTimeStr
-        ? logSystem.startTimeStr
-            .split(":")
-            .reduce((acc, v) => acc * 60 + Number(v), 0)
+        ? logSystem.startTimeStr.split(':').reduce((acc, v) => acc * 60 + Number(v), 0)
         : 0;
       const targetSec = startSec + time;
       const h = Math.floor(targetSec / 3600);
       const m = Math.floor((targetSec % 3600) / 60);
       const s = Math.floor(targetSec % 60);
-      const timeStr = `${h}:${m.toString().padStart(2, "0")}:${s
-        .toString()
-        .padStart(2, "0")}`;
+      const timeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
       cmSystem.setCmStartInput(timeStr);
-      console.log("Set CM Start:", timeStr);
+      console.log('Set CM Start:', timeStr);
     },
     [cmSystem, logSystem.startTimeStr]
   );
@@ -424,25 +410,21 @@ export function useAppHandlers({
   const handleSetCmEnd = useCallback(
     (time) => {
       const startSec = logSystem.startTimeStr
-        ? logSystem.startTimeStr
-            .split(":")
-            .reduce((acc, v) => acc * 60 + Number(v), 0)
+        ? logSystem.startTimeStr.split(':').reduce((acc, v) => acc * 60 + Number(v), 0)
         : 0;
       const targetSec = startSec + time;
       const h = Math.floor(targetSec / 3600);
       const m = Math.floor((targetSec % 3600) / 60);
       const s = Math.floor(targetSec % 60);
-      const timeStr = `${h}:${m.toString().padStart(2, "0")}:${s
-        .toString()
-        .padStart(2, "0")}`;
+      const timeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
       cmSystem.setCmEndInput(timeStr);
-      console.log("Set CM End:", timeStr);
+      console.log('Set CM End:', timeStr);
     },
     [cmSystem, logSystem.startTimeStr]
   );
 
   const handleSetLogStart = useCallback((comment) => {
-    console.log("Set Log Start request for comment:", comment.id);
+    console.log('Set Log Start request for comment:', comment.id);
   }, []);
 
   const handleAddNgId = useCallback(

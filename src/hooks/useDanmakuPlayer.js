@@ -1,12 +1,15 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { usePlayer } from "./usePlayer";
-import { checkAbeUnlockCondition } from "../utils/abeMode";
-import { useCMSystem } from "./useCMSystem";
-import { useLogSystem } from "./useLogSystem";
-import { useDanmaku } from "./useDanmaku";
-import { useDanmakuTree } from "./useDanmakuTree";
-import { parseLogFile } from "../utils/logParser";
-import { checkImageUrl } from "../utils/imageChecker";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { checkAbeUnlockCondition } from '../utils/abeMode';
+import { checkImageUrl } from '../utils/imageChecker';
+import { parseLogFile } from '../utils/logParser';
+import { useAbeMode } from './useAbeMode';
+import { useCMSystem } from './useCMSystem';
+import { useDanmaku } from './useDanmaku';
+import { useDanmakuTree } from './useDanmakuTree';
+import { useLogSystem } from './useLogSystem';
+import { usePlayer } from './usePlayer';
+import { useTimeSync } from './useTimeSync';
 
 export const useDanmakuPlayer = (enableTreeView = false) => {
   // --- Custom Hooks ---
@@ -17,66 +20,21 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
   // --- Local State ---
   const [currentTime, setCurrentTime] = useState(0);
 
-  // Hidden Abe Mode unlock state (persisted)
-  const [abeModeUnlocked, setAbeModeUnlocked] = useState(() => {
-    try {
-      return localStorage.getItem("abe_mode_unlocked") === "true";
-    } catch {
-      return false;
-    }
+  const { abeModeUnlocked, showAbeUnlockCelebration, unlockAbeMode, closeAbeUnlockCelebration } =
+    useAbeMode();
+
+  const [videoStartTimeStr, setVideoStartTimeStr] = useState('');
+
+  // --- Time Synchronization (Extracted) ---
+  const { timeSyncInitializedRef } = useTimeSync({
+    videoStartTimeStr,
+    logSystem,
+    cmSystem,
+    setCurrentTime,
   });
-
-  // Celebration modal visibility
-  const [showAbeUnlockCelebration, setShowAbeUnlockCelebration] =
-    useState(false);
-
-  // Unlock Abe Mode and show celebration (called from search)
-  const unlockAbeMode = useCallback(() => {
-    console.log("unlockAbeMode called. unlocked:", abeModeUnlocked);
-    if (!abeModeUnlocked) {
-      console.log("Unlocking Abe Mode...");
-      setAbeModeUnlocked(true);
-      localStorage.setItem("abe_mode_unlocked", "true");
-      setShowAbeUnlockCelebration(true);
-
-      // Play unlock sound & Fanfare
-      try {
-        console.log("Attempting to play audio...");
-        const audioPath = `${import.meta.env.BASE_URL}sounds/abe_unlock.wav`;
-        const fanfarePath = `${import.meta.env.BASE_URL}sounds/fanfare.mp3`;
-
-        const audio = new Audio(audioPath);
-        const fanfare = new Audio(fanfarePath);
-
-        audio.volume = 0.5;
-        fanfare.volume = 0.4; // Slightly lower volume for fanfare
-
-        fanfare
-          .play()
-          .then(() => console.log("Fanfare playing"))
-          .catch((e) => console.error("Failed to play fanfare:", e));
-
-        setTimeout(() => {
-          audio
-            .play()
-            .then(() => console.log("Unlock voice playing"))
-            .catch((e) => console.error("Failed to play unlock voice:", e));
-        }, 1500);
-      } catch (e) {
-        console.error("Audio playback error:", e);
-      }
-    } else {
-      console.log("Abe Mode already unlocked.");
-    }
-  }, [abeModeUnlocked]);
-
-  // Close celebration modal
-  const closeAbeUnlockCelebration = useCallback(() => {
-    setShowAbeUnlockCelebration(false);
-  }, []);
   const [dmSettings, setDmSettings] = useState(() => {
     try {
-      const saved = localStorage.getItem("danmaku_settings");
+      const saved = localStorage.getItem('danmaku_settings');
       if (saved) {
         return {
           ...{
@@ -84,40 +42,39 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
             fontSize: 20,
             opacity: 0.7,
             area: 100,
-            imageMode: "image", // none, image, placeholder
+            imageMode: 'image', // none, image, placeholder
             abeMode: false, // 安倍晋三モード
           },
           ...JSON.parse(saved),
         };
       }
     } catch (e) {
-      console.error("Failed to load danmaku settings", e);
+      console.error('Failed to load danmaku settings', e);
     }
     return {
       duration: 5,
       fontSize: 20,
       opacity: 0.7,
       area: 100,
-      imageMode: "image",
+      imageMode: 'image',
       abeMode: false, // 安倍晋三モード
     };
   });
 
   // Save settings to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("danmaku_settings", JSON.stringify(dmSettings));
+    localStorage.setItem('danmaku_settings', JSON.stringify(dmSettings));
   }, [dmSettings]);
   const [isAutoScroll, setIsAutoScroll] = useState(true);
 
   const [skipSeconds, setSkipSeconds] = useState(() => {
-    const saved = localStorage.getItem("danmaku_skip_seconds");
+    const saved = localStorage.getItem('danmaku_skip_seconds');
     return saved ? Number(saved) : 5;
   });
 
   useEffect(() => {
-    localStorage.setItem("danmaku_skip_seconds", skipSeconds);
+    localStorage.setItem('danmaku_skip_seconds', skipSeconds);
   }, [skipSeconds]);
-  const [videoStartTimeStr, setVideoStartTimeStr] = useState("");
 
   // UI State that is tightly coupled with logic
   const [showControls, setShowControls] = useState(false);
@@ -144,12 +101,10 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
   const thumbRef = useRef(null);
   const wasPlayingRef = useRef(false);
   const isDraggingRef = useRef(false);
-  const timeSyncInitializedRef = useRef(false); // Track if time sync has been done
 
   // --- Danmaku Hook ---
   const danmaku = useDanmaku(dmSettings, player.isPlaying);
-  const { processDanmaku, resetDanmaku, danmakuContainerRef, skipNextProcess } =
-    danmaku;
+  const { processDanmaku, resetDanmaku, danmakuContainerRef, skipNextProcess } = danmaku;
 
   // --- Image Validity Checking ---
   const imageValidityMapRef = useRef(new Map());
@@ -185,7 +140,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       }
     };
 
-    if (dmSettings.imageMode === "image") {
+    if (dmSettings.imageMode === 'image') {
       extractAndCheckImages();
     }
   }, [logSystem.visibleComments, dmSettings.imageMode]);
@@ -203,17 +158,17 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
   // Expose function to reset all settings (Logs, CMs, Offsets)
   const resetAllSettings = useCallback(() => {
     // 1. Reset Sync/Offset
-    setVideoStartTimeStr("");
-    logSystem.setStartTimeStr("");
+    setVideoStartTimeStr('');
+    logSystem.setStartTimeStr('');
     cmSystem.setTimeOffset(0);
     setCurrentTime(0);
     timeSyncInitializedRef.current = false; // Allow re-initialization
 
     // 2. Reset CMs
     cmSystem.setCmRanges([]);
-    cmSystem.setCmStartInput("");
-    cmSystem.setCmEndInput("");
-    cmSystem.resetCmState();
+    cmSystem.setCmStartInput('');
+    cmSystem.setCmEndInput('');
+    cmSystem.resetCmState(); // Reset via hook method
 
     // 3. Reset Logs and Video
     // User requested complete reset including loaded files and video
@@ -222,21 +177,17 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     player.setVideoSrc(null);
     player.setDuration(0);
     player.setIsReady(false);
-  }, [cmSystem, logSystem, player]);
+  }, [cmSystem, logSystem, player, timeSyncInitializedRef]);
 
   // --- Danmaku Tree Logic (delegated to useDanmakuTree) ---
-  const danmakuComments = useDanmakuTree(
-    logSystem.visibleComments,
-    enableTreeView
-  );
+  const danmakuComments = useDanmakuTree(logSystem.visibleComments, enableTreeView);
 
   const performSeek = useCallback(
     (targetLogTime) => {
       // if (!player.videoRef.current) return; // Allow seek without video (for Log Mode)
 
       // Video Time Calculation
-      const { videoTime, inCmRange, cmRange } =
-        cmSystem.logTimeToVideoTime(targetLogTime);
+      const { videoTime, inCmRange, cmRange } = cmSystem.logTimeToVideoTime(targetLogTime);
       // Debug logs removed
 
       if (player.videoRef.current) {
@@ -247,14 +198,18 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       // REMOVED: lastProcessedTimeRef.current = targetLogTime; to allow processDanmaku to detect seek
 
       if (inCmRange && cmRange) {
-        cmSystem.cmStateRef.current.isWaiting = true;
-        cmSystem.cmStateRef.current.waitStartTime = performance.now();
-        cmSystem.cmStateRef.current.waitStartLogTime = targetLogTime;
-        cmSystem.cmStateRef.current.cmRangeId = cmRange.id;
+        cmSystem.updateCmState({
+          isWaiting: true,
+          waitStartTime: performance.now(),
+          waitStartLogTime: targetLogTime,
+          cmRangeId: cmRange.id,
+        });
         cmSystem.setIsWaitingCm(true);
       } else {
-        cmSystem.cmStateRef.current.isWaiting = false;
-        cmSystem.cmStateRef.current.cmRangeId = null;
+        cmSystem.updateCmState({
+          isWaiting: false,
+          cmRangeId: null,
+        });
         cmSystem.setIsWaitingCm(false);
       }
 
@@ -268,26 +223,26 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       if (inCmRange && cmRange) {
         const waitTime = targetLogTime - cmRange.logStart;
         cmSystem.setCurrentCmWaitTime(waitTime);
-        cmSystem.cmStateRef.current.accumulatedWaitTime = waitTime;
 
-        cmSystem.cmStateRef.current.isWaiting = true;
-        cmSystem.cmStateRef.current.cmRangeId = cmRange.id;
-        // waitStartLogTime needs to be set to the start of CM, not user seek time?
-        // Actually waitStartLogTime is used to calculate elapsed.
-        // If we seek to middle of CM, we want elapsed to reflect that?
-        // No, accumulatedWaitTime takes care of the offset.
-        // waitStartTime needs to be NOW.
-        cmSystem.cmStateRef.current.waitStartTime = performance.now();
-        cmSystem.cmStateRef.current.waitStartLogTime = cmRange.logStart; // Reset to start of CM range
+        cmSystem.updateCmState({
+          accumulatedWaitTime: waitTime,
+          isWaiting: true,
+          cmRangeId: cmRange.id,
+          waitStartTime: performance.now(),
+          waitStartLogTime: cmRange.logStart,
+        });
 
         cmSystem.setIsWaitingCm(true);
       } else {
         cmSystem.setCurrentCmWaitTime(0);
-        cmSystem.cmStateRef.current.accumulatedWaitTime = 0;
 
-        // Clear CM wait state (Moved from top)
-        cmSystem.cmStateRef.current.isWaiting = false;
-        cmSystem.cmStateRef.current.cmRangeId = null;
+        // Clear CM wait state
+        cmSystem.updateCmState({
+          accumulatedWaitTime: 0,
+          isWaiting: false,
+          cmRangeId: null,
+        });
+
         cmSystem.setIsWaitingCm(false);
 
         // If we seeked out of CM range and we are supposed to be playing, resume video
@@ -298,11 +253,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
 
       // Manually trigger danmaku processing if paused to update retroactive comments
       if (!player.isPlaying) {
-        processDanmaku(
-          targetLogTime,
-          danmakuComments,
-          imageValidityMapRef.current
-        );
+        processDanmaku(targetLogTime, danmakuComments, imageValidityMapRef.current);
       }
     },
     [cmSystem, player, processDanmaku, danmakuComments]
@@ -335,9 +286,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
   // --- Helper for CM Detection ---
   const checkCmCollision = useCallback(
     (vidTime, lookAhead = 0) => {
-      const sortedRanges = [...cmSystem.cmRanges].sort(
-        (a, b) => a.logStart - b.logStart
-      );
+      const sortedRanges = [...cmSystem.cmRanges].sort((a, b) => a.logStart - b.logStart);
       let accDuration = 0;
 
       for (const range of sortedRanges) {
@@ -362,10 +311,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
         // Original: vidTime >= videoStart && vidTime < videoStart + 0.25
         // New with LookAhead: vidTime >= videoStart - lookAhead && vidTime < videoStart + 0.25 + lookAhead
 
-        if (
-          vidTime >= videoStart - lookAhead &&
-          vidTime < videoStart + 0.25 + lookAhead
-        ) {
+        if (vidTime >= videoStart - lookAhead && vidTime < videoStart + 0.25 + lookAhead) {
           return { range, logStart: range.logStart };
         }
         accDuration += range.logEnd - range.logStart;
@@ -381,8 +327,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     if (cmSystem.cmStateRef.current.isWaiting) {
       if (!player.isPlaying) {
         player.setIsPlaying(true);
-        player.setIsPlaying(true);
-        cmSystem.cmStateRef.current.waitStartTime = performance.now();
+        cmSystem.updateCmState({ waitStartTime: performance.now() });
       }
       return;
     }
@@ -391,7 +336,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
 
     // NEW: Check if player is ready
     if (!player.isReady) {
-      console.warn("requestPlay ignored: Player not ready");
+      console.warn('requestPlay ignored: Player not ready');
       return;
     }
 
@@ -404,7 +349,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     // Use LookAhead of 0.5s to prevent immediate collision after play
     // Valid vidTime check
     if (!isFinite(vidTime)) {
-      console.warn("Invalid video time in requestPlay:", vidTime);
+      console.warn('Invalid video time in requestPlay:', vidTime);
       return;
     }
 
@@ -417,13 +362,16 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     const collision = immediateCollision || predCollision;
 
     if (collision) {
-      console.log("SafePlay prevented collision:", collision);
+      console.log('SafePlay prevented collision:', collision);
       // Enter CM Wait directly instead of playing
-      cmSystem.cmStateRef.current.isWaiting = true;
-      cmSystem.cmStateRef.current.cmRangeId = collision.range.id;
-      cmSystem.cmStateRef.current.waitStartLogTime = collision.logStart;
-      cmSystem.cmStateRef.current.waitStartTime = performance.now();
-      cmSystem.cmStateRef.current.accumulatedWaitTime = 0;
+      cmSystem.updateCmState({
+        isWaiting: true,
+        cmRangeId: collision.range.id,
+        waitStartLogTime: collision.logStart,
+        waitStartTime: performance.now(),
+        accumulatedWaitTime: 0,
+      });
+
       cmSystem.setIsWaitingCm(true);
       cmSystem.setCurrentCmWaitTime(0);
 
@@ -432,9 +380,9 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       return;
     }
 
-    console.log("SafePlay allowed. vidTime:", vidTime);
+    console.log('SafePlay allowed. vidTime:', vidTime);
     if (danmakuContainerRef.current) {
-      danmakuContainerRef.current.style.setProperty("--play-state", "running");
+      danmakuContainerRef.current.style.setProperty('--play-state', 'running');
     }
     player.setIsPlaying(true);
   }, [player, cmSystem, checkCmCollision, danmakuContainerRef]);
@@ -445,19 +393,17 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       // PAUSE Logic
       if (cmSystem.cmStateRef.current.isWaiting) {
         player.setIsPlaying(false);
-        const elapsed =
-          (performance.now() - cmSystem.cmStateRef.current.waitStartTime) /
-          1000;
-        cmSystem.cmStateRef.current.accumulatedWaitTime += elapsed;
-        cmSystem.setCurrentCmWaitTime(
-          cmSystem.cmStateRef.current.accumulatedWaitTime
-        );
+        const elapsed = (performance.now() - cmSystem.cmStateRef.current.waitStartTime) / 1000;
+        const newAccumulated = cmSystem.cmStateRef.current.accumulatedWaitTime + elapsed;
+
+        cmSystem.updateCmState({
+          accumulatedWaitTime: newAccumulated,
+        });
+
+        cmSystem.setCurrentCmWaitTime(newAccumulated);
       } else {
         if (danmakuContainerRef.current) {
-          danmakuContainerRef.current.style.setProperty(
-            "--play-state",
-            "paused"
-          );
+          danmakuContainerRef.current.style.setProperty('--play-state', 'paused');
         }
         player.setIsPlaying(false);
       }
@@ -468,163 +414,145 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
   };
 
   // --- Main Loop ---
-  const processDanmakuFrame = useCallback(() => {
-    if (!player.videoRef.current) return;
+  const processDanmakuFrame = useCallback(
+    function frameLoop() {
+      if (!player.videoRef.current) return;
 
-    let displayTime = 0;
+      let displayTime = 0;
 
-    if (cmSystem.cmStateRef.current.isWaiting) {
-      // [CM MODE]
-      const activeRange = cmSystem.cmRanges.find(
-        (r) => r.id === cmSystem.cmStateRef.current.cmRangeId
-      );
+      if (cmSystem.cmStateRef.current.isWaiting) {
+        // [CM MODE]
+        const activeRange = cmSystem.cmRanges.find(
+          (r) => r.id === cmSystem.cmStateRef.current.cmRangeId
+        );
 
-      if (activeRange) {
-        if (player.isPlaying) {
-          const elapsed =
-            (performance.now() - cmSystem.cmStateRef.current.waitStartTime) /
-            1000;
-          // displayTime = CM Start + Accumulated Wait (Ref) + Current Session Elapsed
-          displayTime =
-            activeRange.logStart +
-            cmSystem.cmStateRef.current.accumulatedWaitTime +
-            elapsed;
+        if (activeRange) {
+          if (player.isPlaying) {
+            const elapsed = (performance.now() - cmSystem.cmStateRef.current.waitStartTime) / 1000;
+            // displayTime = CM Start + Accumulated Wait (Ref) + Current Session Elapsed
+            displayTime =
+              activeRange.logStart + cmSystem.cmStateRef.current.accumulatedWaitTime + elapsed;
 
-          if (displayTime >= activeRange.logEnd) {
-            // Exit CM
-            cmSystem.cmStateRef.current.isWaiting = false;
-            cmSystem.cmStateRef.current.cmRangeId = null;
-            cmSystem.cmStateRef.current.justFinishedCmId = activeRange.id;
-            cmSystem.setIsWaitingCm(false);
+            if (displayTime >= activeRange.logEnd) {
+              // Exit CM
+              cmSystem.updateCmState({
+                isWaiting: false,
+                cmRangeId: null,
+                justFinishedCmId: activeRange.id,
+              });
+              cmSystem.setIsWaitingCm(false);
 
-            // Sync video time
-            const { videoTime } = cmSystem.logTimeToVideoTime(
-              activeRange.logEnd
-            );
-            if (Math.abs(player.getCurrentTime() - videoTime) > 0.5) {
-              player.seekTo(videoTime);
+              // Sync video time
+              const { videoTime } = cmSystem.logTimeToVideoTime(activeRange.logEnd);
+              if (Math.abs(player.getCurrentTime() - videoTime) > 0.5) {
+                player.seekTo(videoTime);
+              }
+
+              displayTime = activeRange.logEnd;
+              cmSystem.setTotalWaitOffset(
+                (prev) => prev + (activeRange.logEnd - activeRange.logStart)
+              );
+
+              // Resume video playback
+              player.safePlay();
             }
-
-            displayTime = activeRange.logEnd;
-            cmSystem.setTotalWaitOffset(
-              (prev) => prev + (activeRange.logEnd - activeRange.logStart)
-            );
-
-            // Resume video playback
-            player.safePlay();
+          } else {
+            // Paused in CM
+            // displayTime = CM Start + Accumulated Wait (Ref)
+            displayTime = activeRange.logStart + cmSystem.cmStateRef.current.accumulatedWaitTime;
           }
         } else {
-          // Paused in CM
-          // displayTime = CM Start + Accumulated Wait (Ref)
-          displayTime =
-            activeRange.logStart +
-            cmSystem.cmStateRef.current.accumulatedWaitTime;
+          // Fallback if range not found
+          cmSystem.updateCmState({ isWaiting: false });
+          cmSystem.setIsWaitingCm(false);
+          player.safePlay();
+          displayTime = cmSystem.videoTimeToLogTime(player.getCurrentTime());
         }
       } else {
-        // Fallback if range not found
-        cmSystem.cmStateRef.current.isWaiting = false;
-        cmSystem.setIsWaitingCm(false);
-        player.safePlay();
-        displayTime = cmSystem.videoTimeToLogTime(player.getCurrentTime());
-      }
-    } else {
-      // [VIDEO MODE]
-      const vidTime = player.getCurrentTime();
-      displayTime = cmSystem.videoTimeToLogTime(vidTime);
+        // [VIDEO MODE]
+        const vidTime = player.getCurrentTime();
+        displayTime = cmSystem.videoTimeToLogTime(vidTime);
 
-      if (player.isPlaying) {
-        // Check for ignore reset
-        const justFinishedCmId = cmSystem.cmStateRef.current.justFinishedCmId;
-        if (justFinishedCmId) {
-          // Find that range to check distance
-          // Optimization: checkCmCollision handles iteration, so maybe we just reset if needed here
-          // But checkCmCollision logic is cleaner.
-          // IMPORTANT: We must perform the reset logic here because checkCmCollision is pure-ish
-          const range = cmSystem.cmRanges.find(
-            (r) => r.id === justFinishedCmId
-          );
-          if (range) {
-            // Calculate videoStart approx
-            // This is tricky without the accumulation map.
-            // Simpler: iterate to find video start for this ID
-            let d = 0;
-            for (const r of [...cmSystem.cmRanges].sort(
-              (a, b) => a.logStart - b.logStart
-            )) {
-              if (r.id === justFinishedCmId) {
-                const vs =
-                  r.videoStart !== undefined
-                    ? r.videoStart
-                    : r.logStart - d - cmSystem.timeOffset;
-                if (Math.abs(vidTime - vs) > 1.0) {
-                  cmSystem.cmStateRef.current.justFinishedCmId = null;
+        if (player.isPlaying) {
+          // Check for ignore reset
+          const justFinishedCmId = cmSystem.cmStateRef.current.justFinishedCmId;
+          if (justFinishedCmId) {
+            // Find that range to check distance
+            // Optimization: checkCmCollision handles iteration, so maybe we just reset if needed here
+            // But checkCmCollision logic is cleaner.
+            // IMPORTANT: We must perform the reset logic here because checkCmCollision is pure-ish
+            const range = cmSystem.cmRanges.find((r) => r.id === justFinishedCmId);
+            if (range) {
+              // Calculate videoStart approx
+              // This is tricky without the accumulation map.
+              // Simpler: iterate to find video start for this ID
+              let d = 0;
+              for (const r of [...cmSystem.cmRanges].sort((a, b) => a.logStart - b.logStart)) {
+                if (r.id === justFinishedCmId) {
+                  const vs =
+                    r.videoStart !== undefined
+                      ? r.videoStart
+                      : r.logStart - d - cmSystem.timeOffset;
+                  if (Math.abs(vidTime - vs) > 1.0) {
+                    cmSystem.updateCmState({ justFinishedCmId: null });
+                  }
+                  break;
                 }
-                break;
+                d += r.logEnd - r.logStart;
               }
-              d += r.logEnd - r.logStart;
             }
           }
-        }
 
-        const collision = checkCmCollision(vidTime, 0.5); // Use lookahead here too
-        if (collision) {
-          console.log(
-            "FrameLoop: Collision detected. Entering Wait Mode.",
-            collision
-          );
-          // Do NOT stop playing state. We keep isPlaying=true so the loop continues.
-          // player.setPlayingState(false);
+          const collision = checkCmCollision(vidTime, 0.5); // Use lookahead here too
+          if (collision) {
+            console.log('FrameLoop: Collision detected. Entering Wait Mode.', collision);
+            // Do NOT stop playing state. We keep isPlaying=true so the loop continues.
+            // player.setPlayingState(false);
 
-          cmSystem.cmStateRef.current.isWaiting = true;
-          cmSystem.cmStateRef.current.cmRangeId = collision.range.id;
-          cmSystem.cmStateRef.current.waitStartLogTime = collision.logStart;
-          cmSystem.cmStateRef.current.waitStartTime = performance.now();
-          cmSystem.cmStateRef.current.accumulatedWaitTime = 0; // Reset accumulated time
-          cmSystem.setIsWaitingCm(true);
-          cmSystem.setCurrentCmWaitTime(0); // Reset UI wait time
+            cmSystem.updateCmState({
+              isWaiting: true,
+              cmRangeId: collision.range.id,
+              waitStartLogTime: collision.logStart,
+              waitStartTime: performance.now(),
+              accumulatedWaitTime: 0,
+            });
 
-          displayTime = collision.logStart;
+            cmSystem.setIsWaitingCm(true);
+            cmSystem.setCurrentCmWaitTime(0); // Reset UI wait time
+
+            displayTime = collision.logStart;
+          }
         }
       }
-    }
 
-    // DOM Updates
-    if (
-      progressBarRef.current &&
-      cmSystem.getTotalDuration > 0 &&
-      !isDraggingRef.current
-    ) {
-      // Display Time is Log Time. We want to show progress relative to Video Start (which is at Log Time = timeOffset).
-      // So relative time = displayTime - timeOffset.
-      const relativeTime = displayTime - cmSystem.timeOffset;
-      const percent = (relativeTime / cmSystem.getTotalDuration) * 100;
-      progressBarRef.current.style.width = `${Math.max(
-        0,
-        Math.min(100, percent)
-      )}%`;
-    }
-    if (
-      thumbRef.current &&
-      cmSystem.getTotalDuration > 0 &&
-      !isDraggingRef.current
-    ) {
-      const relativeTime = displayTime - cmSystem.timeOffset;
-      const percent = (relativeTime / cmSystem.getTotalDuration) * 100;
-      thumbRef.current.style.left = `${Math.max(0, Math.min(100, percent))}%`;
-    }
+      // DOM Updates
+      if (progressBarRef.current && cmSystem.getTotalDuration > 0 && !isDraggingRef.current) {
+        // Display Time is Log Time. We want to show progress relative to Video Start (which is at Log Time = timeOffset).
+        // So relative time = displayTime - timeOffset.
+        const relativeTime = displayTime - cmSystem.timeOffset;
+        const percent = (relativeTime / cmSystem.getTotalDuration) * 100;
+        progressBarRef.current.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+      }
+      if (thumbRef.current && cmSystem.getTotalDuration > 0 && !isDraggingRef.current) {
+        const relativeTime = displayTime - cmSystem.timeOffset;
+        const percent = (relativeTime / cmSystem.getTotalDuration) * 100;
+        thumbRef.current.style.left = `${Math.max(0, Math.min(100, percent))}%`;
+      }
 
-    if (Math.abs(displayTime - lastTimeUpdateRef.current) > 0.5) {
-      setCurrentTime(displayTime);
-      lastTimeUpdateRef.current = displayTime;
-    }
+      if (Math.abs(displayTime - lastTimeUpdateRef.current) > 0.5) {
+        setCurrentTime(displayTime);
+        lastTimeUpdateRef.current = displayTime;
+      }
 
-    // Use danmakuComments for Danmaku display (Tree support)
-    processDanmaku(displayTime, danmakuComments, imageValidityMapRef.current);
+      // Use danmakuComments for Danmaku display (Tree support)
+      processDanmaku(displayTime, danmakuComments, imageValidityMapRef.current);
 
-    if (player.isPlaying || cmSystem.cmStateRef.current.isWaiting) {
-      animationFrameRef.current = requestAnimationFrame(processDanmakuFrame);
-    }
-  }, [cmSystem, processDanmaku, danmakuComments, checkCmCollision, player]);
+      if (player.isPlaying || cmSystem.cmStateRef.current.isWaiting) {
+        animationFrameRef.current = requestAnimationFrame(frameLoop);
+      }
+    },
+    [cmSystem, processDanmaku, danmakuComments, checkCmCollision, player]
+  );
 
   // Track previous isPlaying state for detecting play start
   const prevIsPlayingRef = useRef(player.isPlaying);
@@ -636,125 +564,22 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     if (!wasPlaying && nowPlaying) {
       // Playback just started - skip first processDanmaku to prevent stale comments
       // This handles the case where user paused, browsed log, then resumed
-      console.log("[PlayStart] Skipping next process frame");
+      console.log('[PlayStart] Skipping next process frame');
       skipNextProcess();
     }
 
     if (nowPlaying) {
       animationFrameRef.current = requestAnimationFrame(processDanmakuFrame);
     } else {
-      if (animationFrameRef.current)
-        cancelAnimationFrame(animationFrameRef.current);
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     }
 
     prevIsPlayingRef.current = nowPlaying;
 
     return () => {
-      if (animationFrameRef.current)
-        cancelAnimationFrame(animationFrameRef.current);
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
   }, [player.isPlaying, processDanmakuFrame, skipNextProcess]);
-
-  // --- Time Synchronization ---
-  // Reset initialization flag when sync settings change (not when comments change)
-  // Use Refs to track 'real' changes to prevent infinite loops or accidental resets
-  const prevVideoStartTimeRef = useRef(videoStartTimeStr);
-  const prevLogStartTimeRef = useRef(logSystem.startTimeStr);
-
-  useEffect(() => {
-    if (
-      prevVideoStartTimeRef.current !== videoStartTimeStr ||
-      prevLogStartTimeRef.current !== logSystem.startTimeStr
-    ) {
-      timeSyncInitializedRef.current = false;
-      prevVideoStartTimeRef.current = videoStartTimeStr;
-      prevLogStartTimeRef.current = logSystem.startTimeStr;
-    }
-  }, [videoStartTimeStr, logSystem.startTimeStr]);
-
-  useEffect(() => {
-    if (logSystem.comments.length === 0) return;
-
-    // Trigger only if settings changed, or first load.
-    // IF user manually changed offset, timeSyncInitializedRef is true.
-    // We should NOT overwrite unless videoStartTimeStr / logSystem.startTimeStr explicit change detected above.
-    if (timeSyncInitializedRef.current) {
-      // Already initialized and no config change.
-      // It means user might have manually adjusted offset.
-      // Or simple re-render.
-      // Do nothing to preserve manual offset.
-      // BUT, what if new file loaded?
-      // If passed args (comments) changed, we might need to re-calc?
-      // No, comments change shouldn't reset offset if we are "initialized".
-      // Only explicit StartTime config changes should trigger re-calc.
-      return;
-    }
-
-    // 1. Determine Log Reference Time (Absolute)
-    const firstComment = logSystem.comments[0];
-    let logRefTime = firstComment.rawTime;
-    if (logSystem.startTimeStr) {
-      const parts = logSystem.startTimeStr.split(":").map(Number);
-      if (parts.length === 3) {
-        const h = parts[0];
-        const m = parts[1];
-        const s = parts[2];
-        const refDate = new Date(firstComment.rawTime);
-        refDate.setHours(h, m, s, 0);
-        logRefTime = refDate.getTime();
-      }
-    }
-
-    // 2. Determine Video Reference Time (Relative duration from 0:00)
-    let videoRefDuration = 0;
-    if (videoStartTimeStr) {
-      const parts = videoStartTimeStr.split(":").map(Number);
-      if (parts.length === 3) {
-        videoRefDuration = (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000;
-      } else if (parts.length === 2) {
-        videoRefDuration = (parts[0] * 60 + parts[1]) * 1000;
-      }
-    }
-
-    // 3. Calculate Video Start Timestamp (Absolute time when video is at 0:00)
-    const videoStartTimestamp = logRefTime - videoRefDuration;
-
-    // 4. Calculate Time Offset (Log Time at Video 0)
-    // If video starts 10 mins after log, offset is 600s.
-    // Video 0 -> Log 600.
-    const offset = (videoStartTimestamp - logRefTime) / 1000;
-    cmSystem.setTimeOffset(offset);
-
-    // Reset currentTime to offset (Video Time 0:00) ONLY on first initialization
-    // This prevents the seek bar from jumping to a non-zero video time when loading a project
-    // but avoids resetting currentTime during playback when comments update
-    if (!timeSyncInitializedRef.current) {
-      setCurrentTime(offset);
-      timeSyncInitializedRef.current = true;
-    }
-
-    // Check if we need to update to avoid infinite loop
-    let needsUpdate = false;
-    const updatedComments = logSystem.comments.map((c) => {
-      // Comment Time is relative to Log Start (logRefTime)
-      const newTime = (c.rawTime - logRefTime) / 1000;
-      if (c.time === undefined || Math.abs(c.time - newTime) > 0.001) {
-        needsUpdate = true;
-      }
-      return { ...c, time: newTime };
-    });
-
-    if (needsUpdate) {
-      logSystem.setComments(updatedComments);
-    }
-  }, [
-    videoStartTimeStr,
-    logSystem.comments,
-    logSystem.startTimeStr,
-    cmSystem.setTimeOffset,
-    logSystem,
-    cmSystem,
-  ]); // Added startTimeStr dependency
 
   // --- Derived State for Active Comment ID ---
   // Use visibleComments (time-sorted) instead of danmakuComments (tree-sorted)
@@ -773,7 +598,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
         if (enableTreeView && anchorRegex.test(sourceComments[i].text)) {
           continue;
         }
-        console.log("[ActiveCommentId]", {
+        console.log('[ActiveCommentId]', {
           currentTime,
           commentTime: sourceComments[i].time,
           id: sourceComments[i].id,
@@ -821,7 +646,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
           newFiles.push(result);
         }
       } catch (err) {
-        console.error("Error parsing file:", file.name, err);
+        console.error('Error parsing file:', file.name, err);
       }
     }
 
@@ -829,7 +654,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       logSystem.addLoadedFiles(newFiles);
       if (!logSystem.startTimeStr && newFiles[0].startDate) {
         const date = new Date(newFiles[0].startDate);
-        const timeStr = date.toTimeString().split(" ")[0];
+        const timeStr = date.toTimeString().split(' ')[0];
         logSystem.setStartTimeStr(timeStr);
       }
 
@@ -852,12 +677,11 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     if (!currentRange) return;
 
     // Prevent re-triggering for this specific CM range
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    cmSystem.cmStateRef.current.justFinishedCmId = currentRangeId;
+    cmSystem.updateCmState({ justFinishedCmId: currentRangeId });
 
     // Clear waiting state
     // Clear waiting state
-    cmSystem.cmStateRef.current.isWaiting = false;
+    cmSystem.updateCmState({ isWaiting: false });
     cmSystem.setIsWaitingCm(false);
 
     // Seek to end of CM (plus small buffer to ensure we are out of range)

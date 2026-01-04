@@ -1,8 +1,9 @@
-import React from "react";
-import CommentContent from "./CommentContent";
-import { formatTime as defaultFormatTime } from "../../utils/danmakuUtils";
-import { MessageCircle } from "lucide-react";
-import { isProbablyAA } from "../../utils/aaUtils";
+import { MessageCircle } from 'lucide-react';
+import React from 'react';
+
+import { isProbablyAA } from '../../utils/aaUtils';
+import { formatTime as defaultFormatTime } from '../../utils/danmakuUtils';
+import CommentContent from './CommentContent';
 
 const CommentItem = ({
   comment,
@@ -22,24 +23,24 @@ const CommentItem = ({
   depth = 0,
   rootTime, // Time of the root comment in tree view
   showImages = true,
-  imageLayout = "inline", // 'inline' | 'grouped'
+  imageLayout = 'inline', // 'inline' | 'grouped'
   setZoomedImage,
-  className = "",
+  className = '',
   isLogMode = false,
-  aaMode = "auto", // 'auto' | 'off'
+  aaMode = 'auto', // 'auto' | 'off'
   aaOverride, // true=Forced ON, false=Forced OFF, undefined=Auto
   abeMode = false, // 安倍晋三モード
 }) => {
   // Calculate ID color
-  let idColorClass = "text-gray-400"; // Default (1 comment)
+  let idColorClass = 'text-gray-400'; // Default (1 comment)
   if (comment.userTotal && comment.userTotal > 1 && totalComments > 0) {
     const percentage = (comment.userTotal / totalComments) * 100;
     if (percentage >= 0.5) {
-      idColorClass = "text-red-400";
+      idColorClass = 'text-red-400';
     } else if (percentage >= 0.25) {
-      idColorClass = "text-green-400";
+      idColorClass = 'text-green-400';
     } else {
-      idColorClass = "text-blue-400";
+      idColorClass = 'text-blue-400';
     }
   }
 
@@ -47,16 +48,14 @@ const CommentItem = ({
   // This ensures descendants are marked as "played" when their root is played
   const effectiveTime = rootTime !== undefined ? rootTime : comment.time;
   const isFuture =
-    !isLogMode &&
-    currentLogicalTime !== undefined &&
-    effectiveTime > currentLogicalTime;
+    !isLogMode && currentLogicalTime !== undefined && effectiveTime > currentLogicalTime;
   const shouldHighlightActive = !isLogMode && isActive;
 
   // AA Logic
   const isAA = React.useMemo(() => {
     if (aaOverride === true) return true;
     if (aaOverride === false) return false;
-    if (aaMode === "off") return false;
+    if (aaMode === 'off') return false;
     return isProbablyAA(comment.text);
   }, [comment.text, aaMode, aaOverride]);
 
@@ -66,19 +65,17 @@ const CommentItem = ({
       onClick={(e) => onClick && onClick(e, comment)}
       className={`comment-item-row cursor-pointer transition-colors duration-200 ${
         shouldHighlightActive
-          ? "bg-blue-600/20"
+          ? 'bg-blue-600/20'
           : isHighlighted
-          ? "bg-yellow-500/20"
-          : isFuture
-          ? "opacity-40 grayscale-50"
-          : "hover:bg-gray-800/60"
-      } ${
-        isLogMode ? "text-base py-3 px-3" : "text-sm py-1 px-2"
-      } ${className}`}
+            ? 'bg-yellow-500/20'
+            : isFuture
+              ? 'opacity-40 grayscale-50'
+              : 'hover:bg-gray-800/60'
+      } ${isLogMode ? 'text-base py-3 px-3' : 'text-sm py-1 px-2'} ${className}`}
       style={{
-        marginLeft: depth > 0 ? `${depth * (isLogMode ? 16 : 12)}px` : "0",
-        borderLeft: depth > 0 ? "2px solid #374151" : "none",
-        paddingLeft: depth > 0 ? (isLogMode ? "12px" : "8px") : "",
+        marginLeft: depth > 0 ? `${depth * (isLogMode ? 16 : 12)}px` : '0',
+        borderLeft: depth > 0 ? '2px solid #374151' : 'none',
+        paddingLeft: depth > 0 ? (isLogMode ? '12px' : '8px') : '',
       }}
     >
       <div className="flex gap-2">
@@ -90,15 +87,13 @@ const CommentItem = ({
           <span className="text-gray-600 font-mono text-[9px] whitespace-nowrap">
             {(() => {
               // Extract date part: "2025/12/31(火)" -> "12/31(火)"
-              const match = comment.dateDisplay?.match(
-                /(\d{1,2})\/(\d{1,2})(\([^)]+\))/
-              );
+              const match = comment.dateDisplay?.match(/(\d{1,2})\/(\d{1,2})(\([^)]+\))/);
               if (match) return `${match[1]}/${match[2]}${match[3]}`;
-              return "";
+              return '';
             })()}
           </span>
           <span className="text-gray-500 font-mono text-[10px] whitespace-nowrap">
-            {comment.dateDisplay?.split(" ")[1]?.split(".")[0] || ""}
+            {comment.dateDisplay?.split(' ')[1]?.split('.')[0] || ''}
           </span>
         </div>
 
@@ -120,14 +115,10 @@ const CommentItem = ({
                   title={`${comment.replyCount}件の返信`}
                 >
                   <MessageCircle size={10} className="fill-blue-400/20" />
-                  <span className="text-[9px] font-bold">
-                    {comment.replyCount}
-                  </span>
+                  <span className="text-[9px] font-bold">{comment.replyCount}</span>
                 </span>
               )}
-              <span className="text-gray-500 truncate ml-1 flex-1">
-                {comment.name}
-              </span>
+              <span className="text-gray-500 truncate ml-1 flex-1">{comment.name}</span>
             </span>
             <span></span>
             <span
@@ -148,7 +139,7 @@ const CommentItem = ({
           {/* Body */}
           <div
             className={`text-white break-all whitespace-pre-wrap text-sm leading-snug ${
-              isAA ? "font-aa text-[12px]" : ""
+              isAA ? 'font-aa text-[12px]' : ''
             }`}
           >
             <CommentContent

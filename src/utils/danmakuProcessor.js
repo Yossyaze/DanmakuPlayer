@@ -1,4 +1,4 @@
-import { measureTextWidth } from "./danmakuUtils";
+import { measureTextWidth } from './danmakuUtils';
 
 /**
  * parseCommentToNodes - コメントをノード配列に分解し、幅を計算
@@ -30,19 +30,17 @@ export function parseCommentToNodes(comment, options) {
   let imageCount = 0;
   let hasText = false; // Track if there's any text content
   let imageHeight = 0; // Track image height for rowSpan calculation
-  const effectiveLineHeight = isChild
-    ? lineHeight * childFontScale
-    : lineHeight;
+  const effectiveLineHeight = isChild ? lineHeight * childFontScale : lineHeight;
 
   // Check if this is AA (simple heuristic: contains multiple lines and special chars)
-  const lines = comment.text.split("\n");
+  const lines = comment.text.split('\n');
 
   // Remove tree indicators (└├│) from AA check - they're used for comment trees, not AA
-  const textWithoutTreeIndicators = comment.text.replace(/[└├│┌┐┘┬┴┼]/g, "");
+  const textWithoutTreeIndicators = comment.text.replace(/[└├│┌┐┘┬┴┼]/g, '');
 
   const isAA =
     lines.length >= 3 &&
-    (comment.text.includes("　") || // Full-width space
+    (comment.text.includes('　') || // Full-width space
       /[─━┃┏┓┗┛┣┫┳┻╋]/.test(textWithoutTreeIndicators) || // Box drawing (excluding tree chars)
       /[○●◎◇◆□■△▲▽▼]/.test(comment.text)); // Geometric shapes
 
@@ -56,7 +54,7 @@ export function parseCommentToNodes(comment, options) {
       const w = measureTextWidth(line, aaFontSize);
       if (w > maxLineWidth) maxLineWidth = w;
     });
-    nodes.push({ type: "text", text: comment.text, width: maxLineWidth });
+    nodes.push({ type: 'text', text: comment.text, width: maxLineWidth });
     rowSpan = lines.length;
     const totalWidth = maxLineWidth;
     return { nodes, totalWidth, rowSpan, isAA: true };
@@ -73,7 +71,7 @@ export function parseCommentToNodes(comment, options) {
 
       if (isImage) {
         imageCount++;
-        if (imageMode === "image") {
+        if (imageMode === 'image') {
           // Check if image is valid (use cached result or assume valid)
           const cachedValidity = imageValidityMap?.get(url);
           const isValid = cachedValidity !== false; // null means not checked yet, treat as valid
@@ -83,7 +81,7 @@ export function parseCommentToNodes(comment, options) {
             imageHeight = effectiveLineHeight * imageRows;
             const w = imageHeight * (16 / 9);
             nodes.push({
-              type: "image",
+              type: 'image',
               content: url,
               width: w,
               height: imageHeight,
@@ -92,10 +90,10 @@ export function parseCommentToNodes(comment, options) {
             imageWidth += w + 4; // 4px gap between images
           } else {
             // Image is known to be invalid, treat as error placeholder
-            const errorText = "[画像エラー]";
+            const errorText = '[画像エラー]';
             const w = measureTextWidth(errorText, fontSize * 0.7);
             nodes.push({
-              type: "image_error",
+              type: 'image_error',
               content: url,
               text: errorText,
               width: w,
@@ -104,9 +102,9 @@ export function parseCommentToNodes(comment, options) {
           }
         }
         // url mode: display as text
-        if (imageMode === "url") {
+        if (imageMode === 'url') {
           const w = measureTextWidth(url, fontSize);
-          nodes.push({ type: "text", text: url, width: w });
+          nodes.push({ type: 'text', text: url, width: w });
           textWidth += w;
           hasText = true;
         }
@@ -114,7 +112,7 @@ export function parseCommentToNodes(comment, options) {
       } else {
         // Non-image URL: just render as text
         const w = measureTextWidth(url, fontSize);
-        nodes.push({ type: "text", text: url, width: w });
+        nodes.push({ type: 'text', text: url, width: w });
         textWidth += w;
         hasText = true;
       }
@@ -122,18 +120,18 @@ export function parseCommentToNodes(comment, options) {
       const trimmed = part.trim();
       if (trimmed) hasText = true;
       const w = measureTextWidth(part, fontSize);
-      nodes.push({ type: "text", text: part, width: w });
+      nodes.push({ type: 'text', text: part, width: w });
       textWidth += w;
     }
   });
 
   // Add placeholder for images in placeholder mode
-  if (imageMode === "placeholder" && imageCount > 0) {
-    const text = imageCount === 1 ? "[画像]" : `[画像x${imageCount}]`;
+  if (imageMode === 'placeholder' && imageCount > 0) {
+    const text = imageCount === 1 ? '[画像]' : `[画像x${imageCount}]`;
     const w = measureTextWidth(text, fontSize);
     nodes.push({
-      type: "placeholder",
-      content: "",
+      type: 'placeholder',
+      content: '',
       text,
       width: w,
       imageCount,
@@ -143,16 +141,14 @@ export function parseCommentToNodes(comment, options) {
   }
 
   // Calculate rowSpan for images
-  if (imageCount > 0 && imageMode === "image") {
+  if (imageCount > 0 && imageMode === 'image') {
     const imageMargin = hasText ? 2 : 0; // Only apply margin if there's text
     const adjustedImageHeight = imageHeight - imageMargin;
     // Update node heights with adjusted value
     nodes.forEach((n) => {
-      if (n.type === "image") n.height = adjustedImageHeight;
+      if (n.type === 'image') n.height = adjustedImageHeight;
     });
-    const totalHeight = hasText
-      ? lineHeight + adjustedImageHeight
-      : adjustedImageHeight;
+    const totalHeight = hasText ? lineHeight + adjustedImageHeight : adjustedImageHeight;
     rowSpan = Math.max(rowSpan, Math.ceil(totalHeight / lineHeight));
   }
 
@@ -161,10 +157,8 @@ export function parseCommentToNodes(comment, options) {
 
   // Calculate actual pixel height for this comment (text + images)
   let actualPixelHeight = effectiveLineHeight; // Base text height
-  if (imageCount > 0 && imageMode === "image") {
-    actualPixelHeight = hasText
-      ? effectiveLineHeight + imageHeight
-      : imageHeight;
+  if (imageCount > 0 && imageMode === 'image') {
+    actualPixelHeight = hasText ? effectiveLineHeight + imageHeight : imageHeight;
   }
 
   return { nodes, totalWidth, rowSpan, isAA: false, actualPixelHeight };

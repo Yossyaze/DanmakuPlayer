@@ -3,35 +3,35 @@
  * 安倍晋三関連のキーワードや語録を虹色で強調表示する
  */
 import {
-  FULL_ABE_QUOTES,
   ABE_FAMOUS_QUOTES,
-  ABE_RELATED_QUOTES,
   ABE_NICKNAMES,
   ABE_PATTERNS,
-} from "./abeQuotesList.js";
+  ABE_RELATED_QUOTES,
+  FULL_ABE_QUOTES,
+} from './abeQuotesList.js';
 
 // Re-export for celebration component
 export { ABE_FAMOUS_QUOTES };
 
 // 名前関連キーワード
 export const ABE_NAME_KEYWORDS = [
-  "安倍晋三",
-  "安倍総理",
-  "安倍首相",
-  "安倍",
-  "晋三",
-  "あべしんぞう",
-  "アベ",
-  "シンゾー",
-  "Abe",
-  "Shinzo",
-  "晋さん",
-  "晋",
-  "山上徹也",
-  "山上",
-  "山神",
-  "徹也",
-  "ヤマガミ",
+  '安倍晋三',
+  '安倍総理',
+  '安倍首相',
+  '安倍',
+  '晋三',
+  'あべしんぞう',
+  'アベ',
+  'シンゾー',
+  'Abe',
+  'Shinzo',
+  '晋さん',
+  '晋',
+  '山上徹也',
+  '山上',
+  '山神',
+  '徹也',
+  'ヤマガミ',
 ];
 
 // すべての固定キーワードを結合
@@ -45,27 +45,26 @@ export const ALL_ABE_KEYWORDS = [
 
 // ボイスファイルリスト
 export const ABE_VOICE_FILES = [
-  "abe_unlock.wav",
-  "abe_voice_kudaranai.wav",
-  "abe_voice_sonokinou.wav",
-  "abe_voice_bakamitai.wav",
+  'abe_unlock.wav',
+  'abe_voice_kudaranai.wav',
+  'abe_voice_sonokinou.wav',
+  'abe_voice_bakamitai.wav',
 ];
 
 /**
  * ランダムに安倍関連ボイスを再生する
  */
 export const playRandomAbeVoice = () => {
-  const randomFile =
-    ABE_VOICE_FILES[Math.floor(Math.random() * ABE_VOICE_FILES.length)];
+  const randomFile = ABE_VOICE_FILES[Math.floor(Math.random() * ABE_VOICE_FILES.length)];
   const audio = new Audio(`${import.meta.env.BASE_URL}sounds/${randomFile}`);
-  audio.play().catch((e) => console.error("Failed to play Abe voice:", e));
+  audio.play().catch((e) => console.error('Failed to play Abe voice:', e));
 };
 
 /**
  * 正規表現用に特殊文字をエスケープ
  */
 const escapeRegex = (string) => {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 };
 
 /**
@@ -73,9 +72,7 @@ const escapeRegex = (string) => {
  * 固定キーワードは長い順にソートしてエスケープし、改変パターン（正規表現）と結合する
  */
 const buildAbeRegex = () => {
-  const sortedFixed = [...new Set(ALL_ABE_KEYWORDS)].sort(
-    (a, b) => b.length - a.length
-  );
+  const sortedFixed = [...new Set(ALL_ABE_KEYWORDS)].sort((a, b) => b.length - a.length);
   const escaped = sortedFixed.map((k) => {
     const esc = escapeRegex(k);
     // 英数字のみのキーワードは単語境界(\b)で囲む（abema 等の誤検知防止）
@@ -85,7 +82,7 @@ const buildAbeRegex = () => {
     return esc;
   });
   // 巨大な正規表現を作成。ABE_PATTERNSはそのまま正規表現として扱う。
-  return new RegExp(`(${[...escaped, ...ABE_PATTERNS].join("|")})`, "gi");
+  return new RegExp(`(${[...escaped, ...ABE_PATTERNS].join('|')})`, 'gi');
 };
 
 const ABE_REGEX = buildAbeRegex();
@@ -113,9 +110,7 @@ export const highlightAbeKeywords = (text, React) => {
   if (!text) return [text];
 
   if (containsAbeKeyword(text)) {
-    return [
-      React.createElement("span", { key: 0, className: "abe-rainbow" }, text),
-    ];
+    return [React.createElement('span', { key: 0, className: 'abe-rainbow' }, text)];
   }
 
   return [text];
@@ -128,7 +123,7 @@ export const highlightAbeKeywords = (text, React) => {
  * @returns {object} - { hasMatch: boolean, parts: Array<{text: string, isAbe: boolean}> }
  */
 export const parseAbeKeywords = (text) => {
-  if (!text) return { hasMatch: false, parts: [{ text: "", isAbe: false }] };
+  if (!text) return { hasMatch: false, parts: [{ text: '', isAbe: false }] };
 
   if (containsAbeKeyword(text)) {
     return {
@@ -148,5 +143,5 @@ export const parseAbeKeywords = (text) => {
  */
 export const checkAbeUnlockCondition = (text) => {
   if (!text) return false;
-  return text.includes("安倍") || text.includes("晋三");
+  return text.includes('安倍') || text.includes('晋三');
 };

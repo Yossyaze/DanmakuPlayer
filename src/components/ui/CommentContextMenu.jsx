@@ -1,17 +1,18 @@
-import React, { useEffect, useRef } from "react";
 import {
-  Play,
-  Clock,
-  ArrowRightToLine,
   ArrowLeftToLine,
+  ArrowRightToLine,
   Ban,
+  Clock,
+  Copy,
+  Play,
   Trash2,
   Type,
   X,
-  Copy,
-} from "lucide-react";
-import CommentItem from "./CommentItem";
-import { isProbablyAA } from "../../utils/aaUtils";
+} from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+
+import { isProbablyAA } from '../../utils/aaUtils';
+import CommentItem from './CommentItem';
 
 const CommentContextMenu = ({
   comment,
@@ -45,14 +46,14 @@ const CommentContextMenu = ({
     };
 
     const timeoutId = setTimeout(() => {
-      document.addEventListener("click", handleClickOutside, true);
-      document.addEventListener("contextmenu", handleClickOutside, true);
+      document.addEventListener('click', handleClickOutside, true);
+      document.addEventListener('contextmenu', handleClickOutside, true);
     }, 0);
 
     return () => {
       clearTimeout(timeoutId);
-      document.removeEventListener("click", handleClickOutside, true);
-      document.removeEventListener("contextmenu", handleClickOutside, true);
+      document.removeEventListener('click', handleClickOutside, true);
+      document.removeEventListener('contextmenu', handleClickOutside, true);
     };
   }, [onClose]);
 
@@ -60,7 +61,7 @@ const CommentContextMenu = ({
   const isAA = React.useMemo(() => {
     if (aaOverride === true) return true;
     if (aaOverride === false) return false;
-    if (aaMode === "off") return false;
+    if (aaMode === 'off') return false;
     return isProbablyAA(comment.text);
   }, [comment.text, aaMode, aaOverride]);
 
@@ -136,11 +137,8 @@ const CommentContextMenu = ({
               onClose();
             }}
           >
-            <Type
-              size={16}
-              className={isAA ? "text-blue-400" : "text-gray-400"}
-            />
-            <span>{isAA ? "AA表示OFF" : "AA表示ON"}</span>
+            <Type size={16} className={isAA ? 'text-blue-400' : 'text-gray-400'} />
+            <span>{isAA ? 'AA表示OFF' : 'AA表示ON'}</span>
           </button>
           <div className="h-px bg-gray-700 mx-2 my-1" />
           <button
@@ -184,7 +182,7 @@ const CommentContextMenu = ({
           <button
             className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-red-900/50 hover:text-white flex items-center gap-3 transition-colors active:bg-red-900/70"
             onClick={() => {
-              if (window.confirm("このコメントをNGに追加しますか？")) {
+              if (window.confirm('このコメントをNGに追加しますか？')) {
                 onAddNgComment(comment.id);
                 onClose();
               }
