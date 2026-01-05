@@ -11,7 +11,9 @@ const LogViewerSearchResults = ({
   displayResults,
   activeFilter,
   activeSearchQuery,
+  activeUserId, // New prop
   containerWidth,
+  containerHeight, // Add containerHeight
   currentLogicalTime,
   timeOffset,
   formatTime,
@@ -28,6 +30,8 @@ const LogViewerSearchResults = ({
 
   const getTitle = () => {
     switch (activeFilter) {
+      case 'user':
+        return `ID: ${activeUserId} の投稿一覧`;
       case 'image':
         return '画像付きコメント';
       case 'popular':
@@ -49,9 +53,13 @@ const LogViewerSearchResults = ({
       onClick={onClose}
     >
       <div
-        className="max-h-[80vh] bg-gray-900 border border-gray-700 rounded-xl shadow-2xl flex flex-col overflow-hidden"
+        className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
-        style={{ width: containerWidth ? `${containerWidth * 0.95}px` : '100%', maxWidth: '95vw' }}
+        style={{
+          width: containerWidth ? `${containerWidth * 0.98}px` : '100%',
+          maxWidth: '98vw',
+          maxHeight: containerHeight ? `${containerHeight * 0.98}px` : '95vh',
+        }}
       >
         {/* Header */}
         <div className="bg-gray-800 px-4 py-3 border-b border-gray-700 flex justify-between items-center shrink-0">

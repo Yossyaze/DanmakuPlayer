@@ -229,6 +229,7 @@ const DesktopApp = () => {
     setProjectDirPath,
     setRequestedVideoPath,
     unlockAbeMode,
+    setIsAutoScroll,
   });
 
   // Video URL Input State via Hook (Moved after useAppHandlers to resolve dependency)

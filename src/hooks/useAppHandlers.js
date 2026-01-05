@@ -40,6 +40,7 @@ export function useAppHandlers({
   setProjectName,
   setProjectDirPath,
   unlockAbeMode,
+  setIsAutoScroll,
 }) {
   const autoPlayRequestedRef = useRef(false);
 
@@ -280,6 +281,9 @@ export function useAppHandlers({
       if (data.loadedFiles) logSystem.loadProject(data.loadedFiles);
 
       if (data.aaOverrideMap) setAaOverrideMap(data.aaOverrideMap);
+
+      // Force enable auto-scroll on project load to ensure sidebar aligns with initial time
+      if (setIsAutoScroll) setIsAutoScroll(true);
 
       if (fileHandle) {
         setProjectFileHandle(fileHandle);

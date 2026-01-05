@@ -14,7 +14,9 @@ const ABE_UNLOCK_KEYWORDS = ['安倍', '晋三', '安倍晋三'];
 export const useLogFilter = (filteredComments = [], unlockAbeMode = null) => {
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('none'); // 'none' | 'image' | 'popular' | 'url' | 'video' | 'aa'
+  const [activeFilter, setActiveFilter] = useState('none'); // 'none' | 'image' | 'popular' | 'url' | 'video' | 'aa' | 'user'
+  const [activeUserId, setActiveUserId] = useState(null);
+
   const [showResultsPopup, setShowResultsPopup] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
@@ -45,9 +47,35 @@ export const useLogFilter = (filteredComments = [], unlockAbeMode = null) => {
   // Clear active filter and search
   const clearFilter = useCallback(() => {
     setActiveFilter('none');
+    setActiveUserId(null); // Clear user ID
     setActiveSearchQuery('');
     setShowResultsPopup(false);
   }, []);
+
+  // Set active user ID helper
+  const setActiveUserIdHelper = useCallback((userId) => {
+    setActiveUserId(userId);
+    setActiveFilter('user');
+    setActiveSearchQuery('');
+    setSearchQuery('');
+    setShowResultsPopup(true);
+    setShowFilterMenu(false);
+  }, []);
+
+  // Set active filter helper (clears user ID)
+  const setActiveFilterHelper = useCallback((filter) => {
+    setActiveFilter(filter);
+    setActiveUserId(null); // Clear user ID when changing filter
+    setActiveSearchQuery('');
+    setSearchQuery('');
+    if (filter !== 'none') {
+      setShowResultsPopup(true);
+    } else {
+      setShowResultsPopup(false);
+    }
+    setShowFilterMenu(false);
+  }, []);
+
 
   // Handle Enter key and Arrow keys for search
   const handleSearchKeyDown = useCallback(
@@ -82,6 +110,7 @@ export const useLogFilter = (filteredComments = [], unlockAbeMode = null) => {
           addToHistory(queryToUse);
           setActiveSearchQuery(queryToUse);
           setActiveFilter('none'); // Clear filter when searching
+          setActiveUserId(null); // Clear user ID when searching
           setShowResultsPopup(true);
           setShowSearchDropdown(false);
           setSearchHistoryIndex(-1);
@@ -107,6 +136,8 @@ export const useLogFilter = (filteredComments = [], unlockAbeMode = null) => {
   const displayResults = useMemo(() => {
     if (activeFilter !== 'none') {
       switch (activeFilter) {
+        case 'user':
+          return activeUserId ? filteredComments.filter((c) => c.userId === activeUserId) : [];
         case 'image':
           return filteredComments.filter(
             (c) =>
@@ -172,6 +203,9 @@ export const useLogFilter = (filteredComments = [], unlockAbeMode = null) => {
 
     // Derived
     displayResults,
+    activeUserId,
+    setActiveUserId: setActiveUserIdHelper,
+    setActiveFilter: setActiveFilterHelper, // Override setActiveFilter to handle clearing user ID
   };
 };
 

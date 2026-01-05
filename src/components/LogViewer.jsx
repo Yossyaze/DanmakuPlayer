@@ -12,7 +12,6 @@ import LogViewerNGPanel from './LogViewerNGPanel';
 import LogViewerSettings from './LogViewerSettings';
 import CommentContextMenu from './ui/CommentContextMenu';
 import LogCommentItem from './ui/LogCommentItem';
-import UserHistoryModal from './UserHistoryModal';
 
 // Wrapper for LogCommentItem to act as row component for CommentList
 const LogCommentItemWrapper = React.memo(
@@ -132,7 +131,7 @@ const LogViewer = ({
   }, [scrollToCommentId, comments, onScrollComplete]);
 
   const [zoomedImage, setZoomedImage] = useState(null);
-  const [userHistoryId, setUserHistoryId] = useState(null);
+  // UserHistoryModal state removed
   const [selectedFileId, setSelectedFileId] = React.useState('all');
   // showFileList removed, always visible
   const [initialScrollIndex, setInitialScrollIndex] = React.useState(0);
@@ -187,6 +186,7 @@ const LogViewer = ({
   // Container width and left position measurement for popups
   const containerRef = React.useRef(null);
   const [containerWidth, setContainerWidth] = React.useState(0);
+  const [containerHeight, setContainerHeight] = React.useState(0);
   const [containerLeft, setContainerLeft] = React.useState(0);
 
   React.useEffect(() => {
@@ -196,6 +196,7 @@ const LogViewer = ({
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         setContainerWidth(rect.width);
+        setContainerHeight(rect.height);
         setContainerLeft(rect.left);
       }
     };
@@ -373,6 +374,8 @@ const LogViewer = ({
     addToHistory,
     handleSearchKeyDown,
     displayResults,
+    activeUserId, // New
+    setActiveUserId, // New
   } = useLogFilter(filteredComments, unlockAbeMode);
 
   // displayResults is now provided by useLogFilter hook
@@ -409,7 +412,7 @@ const LogViewer = ({
 
     // Close Popups (using hook action)
     clearPopups();
-    setUserHistoryId(null);
+    setActiveUserId(null); // Clear ID filter if jumping
     setShowResultsPopup(false);
   };
 
@@ -417,7 +420,7 @@ const LogViewer = ({
     if (onIdClick) {
       onIdClick(userId);
     } else {
-      setUserHistoryId(userId);
+      setActiveUserId(userId);
     }
   };
 
@@ -620,7 +623,9 @@ const LogViewer = ({
           displayResults={displayResults}
           activeFilter={activeFilter}
           activeSearchQuery={activeSearchQuery}
+          activeUserId={activeUserId} // Pass activeUserId
           containerWidth={containerWidth}
+          containerHeight={containerHeight}
           currentLogicalTime={currentLogicalTime}
           timeOffset={timeOffset}
           formatTime={customFormatTime}
@@ -628,7 +633,7 @@ const LogViewer = ({
           aaOverrideMap={aaOverrideMap}
           onClose={() => {
             setShowResultsPopup(false);
-            setActiveFilter('none');
+            setActiveFilter('none'); // This will also clear activeUserId via helper in hook
           }}
           onRowClick={(e, comment) => {
             e.stopPropagation();
@@ -692,42 +697,7 @@ const LogViewer = ({
         />
       )}
 
-      {/* Reuse UserHistoryModal if needed */}
-      {userHistoryId && (
-        <div
-          className="fixed inset-0 z-70 bg-black/60 flex items-center justify-center p-4 animate-fade-in"
-          onClick={() => setUserHistoryId(null)}
-        >
-          <div
-            className="w-full max-w-3xl h-[85vh] bg-gray-900 rounded-lg shadow-2xl overflow-hidden border border-gray-700"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <UserHistoryModal
-              isSidebarMode={true}
-              userId={userHistoryId}
-              comments={allComments || comments} // Use unfiltered comments to allow viewing NG'd users
-              onClose={() => setUserHistoryId(null)}
-              onSeek={onSeekAndPlay}
-              onAddNgId={onAddNgId}
-              onAddNgComment={onAddNgComment}
-              onSetLogStart={onSetLogStart}
-              onSetCmStart={onSetCmStart}
-              onSetCmEnd={onSetCmEnd}
-              formatTime={formatTime}
-              timeOffset={timeOffset}
-              totalComments={filteredComments.length}
-              className="h-full w-full"
-              setZoomedImage={setZoomedImage}
-              onAnchorClick={(e, resNum, sourceFileId) =>
-                handleAnchorClick(e, resNum, sourceFileId, false)
-              }
-              RowComponent={LogCommentItem}
-              settings={logSettings}
-              currentLogicalTime={currentLogicalTime}
-            />
-          </div>
-        </div>
-      )}
+      {/* Reuse UserHistoryModal if needed - REMOVED for LogViewer, integrated into SearchResults */}
 
       {/* Center Filter/Search Results Popup */}
       {/* Image Zoom Modal */}
