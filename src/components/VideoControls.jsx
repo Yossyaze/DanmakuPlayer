@@ -126,6 +126,49 @@ const VideoControls = ({
     }
   };
 
+  const updateHover = (clientX) => {
+    if (!seekContainerRef.current || totalDuration <= 0) return;
+    const rect = seekContainerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, x / rect.width));
+    const time = percentage * totalDuration;
+
+    // Thumbnail Width (w-52 = 13rem = 208px approx)
+    const halfThumbWidth = 104;
+
+    // Clamp position so thumbnail stays within video container
+    const minPos = halfThumbWidth;
+    const maxPos = rect.width - halfThumbWidth;
+
+    // If seek bar is too narrow, center it
+    let clampedX;
+    if (maxPos < minPos) {
+      clampedX = rect.width / 2;
+    } else {
+      clampedX = Math.max(minPos, Math.min(maxPos, x));
+    }
+
+    setHoverPos(clampedX);
+    setHoverTime(time);
+
+    if (previewVideoRef.current) {
+      // Convert Video Relative Time to Log Time
+      const logTime = time + timeOffset;
+
+      // Convert Log Time to Video Time (handling CMs)
+      let videoTime = logTime;
+      if (logTimeToVideoTime) {
+        const result = logTimeToVideoTime(logTime);
+        videoTime = result.videoTime;
+      }
+
+      // Check if time difference is significant to avoid stuttering updates
+      if (Math.abs(previewVideoRef.current.currentTime - videoTime) > 0.5) {
+        previewVideoRef.current.currentTime = videoTime;
+      }
+    }
+  };
+
   const handleMouseDown = (e) => {
     if (!seekContainerRef.current) return;
     e.preventDefault(); // Prevent text selection
@@ -172,6 +215,8 @@ const VideoControls = ({
           lastSeekTimeRef.current = now;
         }
       }
+
+      updateHover(moveEvent.clientX);
     };
 
     const onMouseUp = (upEvent) => {
@@ -242,6 +287,8 @@ const VideoControls = ({
           lastSeekTimeRef.current = now;
         }
       }
+
+      updateHover(t.clientX);
     };
 
     const onTouchEnd = () => {
@@ -267,52 +314,13 @@ const VideoControls = ({
   const previewVideoRef = useRef(null);
 
   const handleSeekMouseMove = (e) => {
-    if (!seekContainerRef.current || totalDuration <= 0) return;
-    const rect = seekContainerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, x / rect.width));
-    const time = percentage * totalDuration; // This is Video Relative Time (0 to TotalDuration)
-
-    // Thumbnail Width (w-52 = 13rem = 208px approx)
-    const halfThumbWidth = 104;
-
-    // Clamp position so thumbnail stays within video container
-    // Min: 0 (left edge) + 104 (half thumb) = 104
-    // Max: rect.width (right edge) - 104 = rect.width - 104
-    const minPos = halfThumbWidth;
-    const maxPos = rect.width - halfThumbWidth;
-
-    // If seek bar is too narrow, center it
-    let clampedX;
-    if (maxPos < minPos) {
-      clampedX = rect.width / 2;
-    } else {
-      clampedX = Math.max(minPos, Math.min(maxPos, x));
-    }
-
-    setHoverPos(clampedX);
-    setHoverTime(time);
-
-    if (previewVideoRef.current) {
-      // Convert Video Relative Time to Log Time
-      const logTime = time + timeOffset;
-
-      // Convert Log Time to Video Time (handling CMs)
-      let videoTime = logTime;
-      if (logTimeToVideoTime) {
-        const result = logTimeToVideoTime(logTime);
-        videoTime = result.videoTime;
-      }
-
-      // Check if time difference is significant to avoid stuttering updates
-      if (Math.abs(previewVideoRef.current.currentTime - videoTime) > 0.5) {
-        previewVideoRef.current.currentTime = videoTime;
-      }
-    }
+    updateHover(e.clientX);
   };
 
   const handleSeekMouseLeave = () => {
-    setHoverTime(null);
+    if (!isDraggingRef.current) {
+      setHoverTime(null);
+    }
   };
 
   if (!videoSrc) return null;

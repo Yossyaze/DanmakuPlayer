@@ -36,7 +36,7 @@ const Header = ({
       <div className="flex items-center gap-4 shrink-0">
         <h1 className="text-white font-bold text-lg tracking-wider flex items-baseline gap-2 select-none">
           DanmakuPlayer
-          <span className="text-xs text-blue-400 mt-1 font-mono">v5.0.0-refactoring</span>
+          <span className="text-xs text-blue-400 mt-1 font-mono">v5.1.0</span>
         </h1>
         {projectName && (
           <span
