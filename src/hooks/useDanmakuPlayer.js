@@ -183,7 +183,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
   const danmakuComments = useDanmakuTree(logSystem.visibleComments, enableTreeView);
 
   const performSeek = useCallback(
-    (targetLogTime) => {
+    (targetLogTime, isScrubbing = false) => {
       // if (!player.videoRef.current) return; // Allow seek without video (for Log Mode)
 
       // Video Time Calculation
@@ -193,9 +193,6 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       if (player.videoRef.current) {
         player.seekTo(videoTime);
       }
-
-      // REMOVED: resetDanmaku(); to avoid checking frame
-      // REMOVED: lastProcessedTimeRef.current = targetLogTime; to allow processDanmaku to detect seek
 
       if (inCmRange && cmRange) {
         cmSystem.updateCmState({
@@ -251,9 +248,14 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
         }
       }
 
-      // Manually trigger danmaku processing if paused to update retroactive comments
-      if (!player.isPlaying) {
-        processDanmaku(targetLogTime, danmakuComments, imageValidityMapRef.current);
+      // Manually trigger danmaku processing if paused OR if scrubbing (to handle playback seek race condition)
+      if (!player.isPlaying || isScrubbing) {
+        processDanmaku(
+          targetLogTime,
+          danmakuComments,
+          imageValidityMapRef.current,
+          true // isScrubbing: Force replace and simulate animation
+        );
       }
     },
     [cmSystem, player, processDanmaku, danmakuComments]
@@ -265,9 +267,47 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       // Convert Video Relative Time to Log Time
       const targetLogTime = targetVideoRelativeTime + cmSystem.timeOffset;
       setCurrentTime(targetLogTime);
-      performSeek(targetLogTime);
+      performSeek(targetLogTime, false);
     },
     [cmSystem.timeOffset, performSeek]
+  );
+
+  const lastScrubStateUpdateRef = useRef(0);
+
+  // Optimized scrub handler: Uses fastSeek for better performance
+  const handleScrub = useCallback(
+    (targetLogTime) => {
+      // 1. Immediate Video Update
+      const { videoTime } = cmSystem.logTimeToVideoTime(targetLogTime);
+
+      if (player.videoRef.current) {
+        const video = player.videoRef.current;
+        // Use fastSeek if available (Safari/Firefox) - much faster for scrubbing
+        if (typeof video.fastSeek === 'function') {
+          video.fastSeek(videoTime);
+        } else {
+          // Fallback for Chrome - direct assignment is faster than seekTo wrapper
+          video.currentTime = videoTime;
+        }
+      }
+
+      // 2. Danmaku Update
+      processDanmaku(
+        targetLogTime,
+        danmakuComments,
+        imageValidityMapRef.current,
+        true // isScrubbing: Force replace and simulate animation
+      );
+
+      // 3. Throttled UI State Update (Sidebar scroll, etc.)
+      const now = performance.now();
+      if (now - lastScrubStateUpdateRef.current > 100) {
+        // 100ms for responsive sidebar
+        setCurrentTime(targetLogTime);
+        lastScrubStateUpdateRef.current = now;
+      }
+    },
+    [cmSystem, player, processDanmaku, danmakuComments]
   );
 
   const handleSeekStart = useCallback(() => {
@@ -610,12 +650,12 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
         if (enableTreeView && anchorRegex.test(sourceComments[i].text)) {
           continue;
         }
-        console.log('[ActiveCommentId]', {
-          currentTime,
-          commentTime: sourceComments[i].time,
-          id: sourceComments[i].id,
-          index: i,
-        });
+        // console.log('[ActiveCommentId]', {
+        //   currentTime,
+        //   commentTime: sourceComments[i].time,
+        //   id: sourceComments[i].id,
+        //   index: i,
+        // });
         return sourceComments[i].id;
       }
     }
@@ -705,11 +745,51 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     }, 100);
   }, [cmSystem, player, performSeek]);
 
+  // --- Comment Density Calculation ---
+  const commentDensity = useMemo(() => {
+    const duration = cmSystem.getTotalDuration;
+    const comments = logSystem.visibleComments;
+    const offset = cmSystem.timeOffset;
+
+    if (!duration || duration <= 0 || !comments || comments.length === 0) {
+      return [];
+    }
+
+    const bucketCount = 200;
+    const buckets = new Array(bucketCount).fill(0);
+    const bucketDuration = duration / bucketCount;
+
+    comments.forEach((c) => {
+      // Convert Log Time to Video Relative Time
+      const relativeTime = c.time - offset;
+
+      if (relativeTime >= 0 && relativeTime < duration) {
+        const bucketIndex = Math.floor(relativeTime / bucketDuration);
+        if (bucketIndex >= 0 && bucketIndex < bucketCount) {
+          buckets[bucketIndex]++;
+        }
+      }
+    });
+
+    // Normalize (0.0 to 1.0)
+    let maxCount = 0;
+    for (let i = 0; i < bucketCount; i++) {
+      if (buckets[i] > maxCount) maxCount = buckets[i];
+    }
+
+    if (maxCount === 0) return new Array(bucketCount).fill(0);
+
+    return buckets.map((count) => count / maxCount);
+  }, [cmSystem.getTotalDuration, cmSystem.timeOffset, logSystem.visibleComments]);
+
   return {
     // Systems
     player,
     cmSystem,
-    logSystem,
+    logSystem: {
+      ...logSystem,
+      commentDensity,
+    },
     danmaku,
 
     // State
@@ -741,6 +821,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     togglePlay,
     requestPlay, // Export safety play
     handleSeek,
+    handleScrub, // Exported for smoother scrubbing
     handleSeekStart,
     handleSeekEnd,
     handleCmSkip, // Exported

@@ -150,6 +150,7 @@ const DesktopLayout = ({
   handleDragOver,
   handleDragLeave,
   handleDrop,
+  onScrub, // New prop
 }) => {
   const {
     playerRef,
@@ -585,10 +586,9 @@ const DesktopLayout = ({
                     abeModeUnlocked={abeModeUnlocked}
                     commentDensity={logSystem.commentDensity} // Was it passed?
                     // Line 1027 in App.jsx: commentDensity={commentDensity}
-                    // commentDensity was const { commentDensity } = useLogSystem() or something?
-                    // Line 87: logSystem
                     // logSystem hook returns commentDensity.
                     // So logSystem.commentDensity is the way.
+                    onScrub={onScrub}
                   />
                 )}
               </div>

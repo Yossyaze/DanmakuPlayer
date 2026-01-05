@@ -13,20 +13,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import { formatTime } from '../utils/danmakuUtils';
 import DanmakuSettingsPopover from './ui/DanmakuSettingsPopover';
 
-// Helper to generate a smooth Bezier path from data points
+// Helper to generate a smooth Bezier path from data points (Open Path for Stroke)
 const generateSmoothPath = (points, width, height) => {
   if (points.length < 2) return '';
 
   const maxY = height;
   const ratioX = width / (points.length - 1);
-  const ratioY = maxY; // Assuming normalized 0-1 input, scaled by height
+  const ratioY = maxY;
 
   const data = points.map((val, i) => ({
     x: i * ratioX,
     y: maxY - val * ratioY,
   }));
 
-  let d = `M ${data[0].x} ${maxY} L ${data[0].x} ${data[0].y}`;
+  let d = `M ${data[0].x} ${data[0].y}`;
 
   // Bezier control point calculation (simple smoothing)
   for (let i = 0; i < data.length - 1; i++) {
@@ -44,7 +44,6 @@ const generateSmoothPath = (points, width, height) => {
     d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
   }
 
-  d += ` L ${width} ${maxY} Z`;
   return d;
 };
 
@@ -74,6 +73,7 @@ const VideoControls = ({
   containerRef, // For fullscreen
   abeModeUnlocked = false, // Hidden Abe Mode unlock state
   commentDensity = [], // Array of normalized values (0-1)
+  onScrub, // New prop for optimized scrubbing (video relative time)
 }) => {
   const seekContainerRef = useRef(null);
 
@@ -121,7 +121,8 @@ const VideoControls = ({
       progressBarRef.current.style.width = `${percentage * 100}%`;
     }
     if (thumbRef.current) {
-      thumbRef.current.style.left = `${percentage * 100}%`;
+      const pct = percentage * 100;
+      thumbRef.current.style.left = `max(6px, min(calc(100% - 6px), ${pct}%))`;
     }
   };
 
@@ -130,6 +131,7 @@ const VideoControls = ({
     e.preventDefault(); // Prevent text selection
 
     isDraggingRef.current = true;
+    setIsDragging(true);
     handleSeekStart();
 
     const rect = seekContainerRef.current.getBoundingClientRect();
@@ -140,7 +142,11 @@ const VideoControls = ({
     updateUI(startPct);
 
     const newTime = startPct * totalDuration;
-    handleSeek({ target: { value: newTime } });
+    if (onScrub) {
+      onScrub(newTime);
+    } else {
+      handleSeek({ target: { value: newTime } });
+    }
     lastSeekTimeRef.current = performance.now();
 
     const onMouseMove = (moveEvent) => {
@@ -152,19 +158,25 @@ const VideoControls = ({
       // Immediate UI update (High Performance)
       updateUI(percentage);
 
-      // Throttle heavy state updates
-      // Using 30ms for standard, but for local blobs we can go faster/smoother (e.g. 16ms ~ 60fps)
-      const throttleTime = videoSrc && videoSrc.startsWith('blob:') ? 16 : 30;
-      const now = performance.now();
-      if (now - lastSeekTimeRef.current > throttleTime) {
-        const time = percentage * totalDuration;
-        handleSeek({ target: { value: time } });
-        lastSeekTimeRef.current = now;
+      const time = percentage * totalDuration;
+
+      if (onScrub) {
+        // High performance mode: No throttling here, rely on handler efficiency
+        onScrub(time);
+      } else {
+        // Legacy mode: Throttled
+        const throttleTime = 30;
+        const now = performance.now();
+        if (now - lastSeekTimeRef.current > throttleTime) {
+          handleSeek({ target: { value: time } });
+          lastSeekTimeRef.current = now;
+        }
       }
     };
 
     const onMouseUp = (upEvent) => {
       isDraggingRef.current = false;
+      setIsDragging(false);
 
       // Final update to ensure sync
       if (seekContainerRef.current) {
@@ -188,6 +200,7 @@ const VideoControls = ({
     if (!seekContainerRef.current) return;
 
     isDraggingRef.current = true;
+    setIsDragging(true);
     handleSeekStart();
 
     const touch = e.touches[0];
@@ -199,7 +212,11 @@ const VideoControls = ({
     updateUI(startPct);
 
     const newTime = startPct * totalDuration;
-    handleSeek({ target: { value: newTime } });
+    if (onScrub) {
+      onScrub(newTime);
+    } else {
+      handleSeek({ target: { value: newTime } });
+    }
     lastSeekTimeRef.current = performance.now();
 
     const onTouchMove = (moveEvent) => {
@@ -214,17 +231,22 @@ const VideoControls = ({
       // Immediate UI update
       updateUI(percentage);
 
-      // Throttle
-      const now = performance.now();
-      if (now - lastSeekTimeRef.current > 30) {
-        const time = percentage * totalDuration;
-        handleSeek({ target: { value: time } });
-        lastSeekTimeRef.current = now;
+      const time = percentage * totalDuration;
+
+      if (onScrub) {
+        onScrub(time);
+      } else {
+        const now = performance.now();
+        if (now - lastSeekTimeRef.current > 30) {
+          handleSeek({ target: { value: time } });
+          lastSeekTimeRef.current = now;
+        }
       }
     };
 
     const onTouchEnd = () => {
       isDraggingRef.current = false;
+      setIsDragging(false);
 
       // For touch end, we might not have coordinates if finger lifted.
       // But we can rely on the last throttled update or the last move event.
@@ -241,6 +263,7 @@ const VideoControls = ({
 
   const [hoverTime, setHoverTime] = React.useState(null);
   const [hoverPos, setHoverPos] = React.useState(0);
+  const [isDragging, setIsDragging] = React.useState(false);
   const previewVideoRef = useRef(null);
 
   const handleSeekMouseMove = (e) => {
@@ -252,13 +275,12 @@ const VideoControls = ({
 
     // Thumbnail Width (w-52 = 13rem = 208px approx)
     const halfThumbWidth = 104;
-    const padding = 16; // p-4 of parent container
 
     // Clamp position so thumbnail stays within video container
-    // Min: -16 (left edge of parent) + 104 (half thumb) = 88
-    // Max: rect.width + 16 (right edge of parent) - 104 = rect.width - 88
-    const minPos = halfThumbWidth - padding;
-    const maxPos = rect.width + padding - halfThumbWidth;
+    // Min: 0 (left edge) + 104 (half thumb) = 104
+    // Max: rect.width (right edge) - 104 = rect.width - 104
+    const minPos = halfThumbWidth;
+    const maxPos = rect.width - halfThumbWidth;
 
     // If seek bar is too narrow, center it
     let clampedX;
@@ -297,7 +319,7 @@ const VideoControls = ({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${
+      className={`absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-transparent transition-opacity duration-300 ${
         visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
       onClick={(e) => e.stopPropagation()} // Prevent click from bubbling to video container (which toggles play)
@@ -316,7 +338,11 @@ const VideoControls = ({
           {/* Comment Momentum Graph (Hover Only) */}
           {/* Comment Momentum Graph (Hover Only) */}
           {commentDensity.length > 0 && (
-            <div className="absolute bottom-5 left-0 right-0 h-16 pointer-events-none opacity-0 group-hover/seek:opacity-100 transition-opacity duration-300 flex items-end">
+            <div
+              className={`absolute bottom-5 left-0 right-0 h-16 pointer-events-none transition-opacity duration-300 flex items-end ${
+                isDragging ? 'opacity-100' : 'opacity-0 group-hover/seek:opacity-100'
+              }`}
+            >
               {/* Rectangular Fade Background (Top only) - Full Width */}
               <div
                 className="absolute inset-0 -left-4 -right-4 w-auto h-full bg-black/40"
@@ -338,21 +364,33 @@ const VideoControls = ({
                     <stop offset="100%" stopColor="#4ade80" stopOpacity="0.3" />
                   </linearGradient>
                 </defs>
-                <path
-                  d={generateSmoothPath(
-                    commentDensity,
-                    200, // Width (from viewBox)
-                    60 // Height (max graph height)
-                  )}
-                  transform="translate(0, 4)" // Shift down 4px to align with bottom (since height is 60 in 64 box)
-                  fill="url(#momentumGradient)"
-                  stroke="#4ade80"
-                  strokeWidth="1"
-                  vectorEffect="non-scaling-stroke"
-                  // style={{
-                  //   filter: "drop-shadow(0 -8px 24px rgba(74, 222, 128, 0.6))",
-                  // }}
-                />
+                {(() => {
+                  const width = 200;
+                  const height = 60;
+                  const curvePath = generateSmoothPath(commentDensity, width, height);
+                  const fillPath = `${curvePath} L ${width} ${height} L 0 ${height} Z`;
+
+                  return (
+                    <>
+                      <path
+                        d={fillPath}
+                        transform="translate(0, 4)"
+                        fill="url(#momentumGradient)"
+                        stroke="none"
+                      />
+                      <path
+                        d={curvePath}
+                        transform="translate(0, 4)"
+                        fill="none"
+                        stroke="#4ade80"
+                        strokeWidth="1"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </>
+                  );
+                })()}
               </svg>
             </div>
           )}
@@ -378,7 +416,11 @@ const VideoControls = ({
             </div>
           </div>
           {/* Background Track */}
-          <div className="relative w-full h-1 group-hover/seek:h-2 transition-all duration-200 bg-gray-600 rounded-lg overflow-hidden">
+          <div
+            className={`relative w-full transition-all duration-200 bg-gray-600 rounded-lg overflow-hidden ${
+              isDragging ? 'h-2' : 'h-1 group-hover/seek:h-2'
+            }`}
+          >
             {/* Layer 2: Unplayed CM Ranges (Yellow) */}
             {cmRanges.map((range, i) => {
               const start = range.logStart - timeOffset;
@@ -430,13 +472,25 @@ const VideoControls = ({
           {/* Thumb */}
           <div
             ref={thumbRef}
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow pointer-events-none transform -translate-x-1/2 scale-0 group-hover/seek:scale-100 transition-transform"
-            style={{ left: `${(currentTime / totalDuration) * 100}%` }}
+            className={`absolute top-1/2 -translate-y-1/2 bg-white rounded-full shadow pointer-events-none transform -translate-x-1/2 transition-transform ${
+              isDragging ? 'scale-100' : 'scale-0 group-hover/seek:scale-100'
+            }`}
+            style={{
+              width: '12px',
+              height: '12px',
+              left: (() => {
+                if (totalDuration <= 0) return '6px';
+                const ratio = currentTime / totalDuration;
+                const safePct = Number.isFinite(ratio) ? ratio * 100 : 0;
+                // Use max/min standard syntax for widest compatibility
+                return `max(6px, min(calc(100% - 6px), ${safePct}%))`;
+              })(),
+            }}
           />
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-4 pb-4 pt-2">
         <div className="flex items-center gap-4">
           <button onClick={togglePlay} className="hover:text-blue-400 transition text-white">
             {isPlaying ? <Pause size={24} /> : <Play size={24} />}

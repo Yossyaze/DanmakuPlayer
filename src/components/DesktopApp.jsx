@@ -104,6 +104,7 @@ const DesktopApp = () => {
     togglePlay,
     requestPlay,
     handleSeek,
+    handleScrub, // Optimized scrub handler
     handleSeekStart,
     handleSeekEnd,
     handleCmSkip,
@@ -589,6 +590,10 @@ const DesktopApp = () => {
       togglePlay={togglePlay}
       requestPlay={requestPlay}
       handleSeek={handleSeek}
+      onScrub={(videoRelativeTime) => {
+        const logTime = videoRelativeTime + (cmSystem?.timeOffset || 0);
+        handleScrub(logTime);
+      }}
       handleSeekStart={handleSeekStart}
       handleSeekEnd={handleSeekEnd}
       handleCommentClick={handleCommentClick}

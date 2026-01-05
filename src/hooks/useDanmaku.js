@@ -13,7 +13,7 @@ export const useDanmaku = (settings, isPlaying) => {
   const skipNextProcessRef = useRef(false); // Skip first process after resume
 
   const processDanmaku = useCallback(
-    (currentDisplayTime, comments, imageValidityMap = null) => {
+    (currentDisplayTime, comments, imageValidityMap = null, isScrubbing = false) => {
       if (!danmakuContainerRef.current) return;
 
       // Skip first frame after resume to prevent stale comments
@@ -29,7 +29,7 @@ export const useDanmaku = (settings, isPlaying) => {
 
       // Time jump detection (Seek)
       const timeDiff = currentDisplayTime - lastProcessedTimeRef.current;
-      const isSeek = Math.abs(timeDiff) > 1.0; // Jump forward or backward by more than 1 second
+      const isSeek = Math.abs(timeDiff) > 1.0 || isScrubbing;
 
       let commentsToProcess = [];
       let isRetroactive = false;
@@ -49,7 +49,7 @@ export const useDanmaku = (settings, isPlaying) => {
 
         // 2. Define lookback window
         // Ensure we don't look back before 0
-        const lookbackStart = Math.max(0, currentDisplayTime - settings.duration);
+        const lookbackStart = currentDisplayTime - settings.duration;
 
         // 3. Gather comments for the entire visible window
         commentsToProcess = comments.filter(
@@ -463,6 +463,13 @@ export const useDanmaku = (settings, isPlaying) => {
         if (isSeek) {
           // Atomic update for seek: replace entire list
           setActiveDanmaku(added);
+
+          // [Fix for Playback-Scrubbing Race Condition]
+          // If scrubbing, force the container to pause.
+          // Even if isPlaying is true (race condition), this overrides the CSS variable temporarily.
+          if (isScrubbing && danmakuContainerRef.current) {
+            danmakuContainerRef.current.style.setProperty('--play-state', 'paused');
+          }
         } else {
           // Normal update: append new comments
           setActiveDanmaku((prev) => [...prev, ...added]);
