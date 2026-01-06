@@ -1,11 +1,7 @@
 import { RotateCcw, X } from 'lucide-react';
 import React, { useMemo } from 'react';
 
-const EndCard = ({
-  settings,
-  onClose,
-  onReplay,
-}) => {
+const EndCard = ({ settings, onClose, onReplay }) => {
   const imageUrl = useMemo(() => {
     if (!settings || !settings.enabled) return null;
 
@@ -24,13 +20,13 @@ const EndCard = ({
   // if (!imageUrl) return null; // Logic changed to allow rendering without image
 
   return (
-    <div 
+    <div
       className="absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center animate-fade-in group"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Background with blur effect */}
       {imageUrl && (
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center opacity-30 blur-xl scale-110"
           style={{ backgroundImage: `url(${imageUrl})` }}
         />
@@ -39,11 +35,7 @@ const EndCard = ({
       {/* Main Image */}
       {imageUrl && (
         <div className="relative z-10 max-w-[90%] max-h-[80%] shadow-2xl rounded-lg overflow-hidden border border-white/10">
-          <img 
-            src={imageUrl} 
-            alt="End Card" 
-            className="max-w-full max-h-[70vh] object-contain"
-          />
+          <img src={imageUrl} alt="End Card" className="max-w-full max-h-[70vh] object-contain" />
         </div>
       )}
 

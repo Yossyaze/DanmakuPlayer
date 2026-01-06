@@ -76,7 +76,6 @@ export const useLogFilter = (filteredComments = [], unlockAbeMode = null) => {
     setShowFilterMenu(false);
   }, []);
 
-
   // Handle Enter key and Arrow keys for search
   const handleSearchKeyDown = useCallback(
     (e) => {
@@ -183,7 +182,7 @@ export const useLogFilter = (filteredComments = [], unlockAbeMode = null) => {
     searchQuery,
     setSearchQuery,
     activeFilter,
-    setActiveFilter,
+
     showResultsPopup,
     setShowResultsPopup,
     showSearchDropdown,

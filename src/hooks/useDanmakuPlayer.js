@@ -11,7 +11,9 @@ import { useLogSystem } from './useLogSystem';
 import { usePlayer } from './usePlayer';
 import { useTimeSync } from './useTimeSync';
 
-export const useDanmakuPlayer = (enableTreeView = false) => {
+// Main Hook
+// enableTreeView: boolean - Passed from UI settings to control tree processing
+export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => {
   // --- Custom Hooks ---
   const player = usePlayer();
   const cmSystem = useCMSystem(player.duration);
@@ -630,13 +632,27 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       prevDisplayTimeRef.current = displayTime;
 
       // Use danmakuComments for Danmaku display (Tree support)
-      processDanmaku(displayTime, danmakuComments, imageValidityMapRef.current, false, aaOverrideMap);
+      processDanmaku(
+        displayTime,
+        danmakuComments,
+        imageValidityMapRef.current,
+        false,
+        aaOverrideMap
+      );
 
       if (player.isPlaying || cmSystem.cmStateRef.current.isWaiting || showEndCard) {
         animationFrameRef.current = requestAnimationFrame(frameLoop);
       }
     },
-    [cmSystem, processDanmaku, danmakuComments, checkCmCollision, player, showEndCard, aaOverrideMap]
+    [
+      cmSystem,
+      processDanmaku,
+      danmakuComments,
+      checkCmCollision,
+      player,
+      showEndCard,
+      aaOverrideMap,
+    ]
   );
 
   // Track previous isPlaying state for detecting play start

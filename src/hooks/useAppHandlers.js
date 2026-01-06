@@ -285,7 +285,7 @@ export function useAppHandlers({
       if (data.loadedFiles) logSystem.loadProject(data.loadedFiles);
 
       if (data.aaOverrideMap) setAaOverrideMap(data.aaOverrideMap);
-      
+
       if (data.endCardSettings) {
         if (overwriteSettings || !endCardSettings?.enabled) {
           setEndCardSettings(data.endCardSettings);

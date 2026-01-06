@@ -85,7 +85,7 @@ const VideoControls = ({
       //   `[VideoControls] Graph Rendering: ${commentDensity.length} points, Max Density: ${maxVal}`
       // );
     } else {
-    //   console.log('[VideoControls] No comment density data available.');
+      //   console.log('[VideoControls] No comment density data available.');
     }
   }, [commentDensity]);
 

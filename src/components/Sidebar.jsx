@@ -110,7 +110,7 @@ const Sidebar = ({
   dmSettings, // Ensure dmSettings is destructured
   setDmSettings, // Ensure setDmSettings is destructured
   onOpenEndCardSettings,
-  setZoomedImage, 
+  setZoomedImage,
   onSetEndCardPreview, // New prop
 }) => {
   // console.log('Sidebar formatTime:', formatTime);
@@ -241,7 +241,7 @@ const Sidebar = ({
       // Collect all images from enrichedComments using identical logic to CommentContent
       const allImages = [];
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      
+
       enrichedComments.forEach((c) => {
         if (!c.text) return;
         const parts = c.text.split(urlRegex);
@@ -249,13 +249,13 @@ const Sidebar = ({
           if (!part.match(urlRegex)) return;
           const isImage = part.match(/\.(jpg|jpeg|png|gif|webp)$/i);
           if (isImage) {
-             allImages.push({ src: part, commentId: c.id });
+            allImages.push({ src: part, commentId: c.id });
           }
         });
       });
 
       const currentIndex = allImages.findIndex((img) => img.src === url);
-      
+
       if (setZoomedImage) {
         setZoomedImage({
           src: url,
@@ -1401,32 +1401,32 @@ const Sidebar = ({
         {/* User History Modal (Inside relative container) */}
         {userHistoryId && (
           <UserHistoryModal
-          userId={userHistoryId}
-          comments={allComments}
-          onClose={onCloseUserHistory}
-          onSeek={onSeekAndPlay}
-          onAddNgId={onAddNgId}
-          onAddNgComment={onAddNgComment}
-          onSetLogStart={handleSetLogStart}
-          onSetCmStart={handleSetCmStart}
-          onSetCmEnd={handleSetCmEnd}
-          formatTime={formatTime}
-          timeOffset={timeOffset}
-          totalComments={comments.length}
-          isSidebarMode={true}
-          className="h-full border-none"
-          setZoomedImage={handleSetZoomedImage}
-          onAnchorClick={handleAnchorClick}
-          onAnchorMouseEnter={() => {}} // Removed
-          onAnchorMouseLeave={() => {}} // Removed
-          onIdClick={onIdClick} // Allow recursive ID click
-          settings={{
-            fontSize: dmSettings.fontSize,
-            density: dmSettings.density,
-            showImages,
-          }}
-          currentLogicalTime={currentLogicalTime} // Pass currentLogicalTime
-        />
+            userId={userHistoryId}
+            comments={allComments}
+            onClose={onCloseUserHistory}
+            onSeek={onSeekAndPlay}
+            onAddNgId={onAddNgId}
+            onAddNgComment={onAddNgComment}
+            onSetLogStart={handleSetLogStart}
+            onSetCmStart={handleSetCmStart}
+            onSetCmEnd={handleSetCmEnd}
+            formatTime={formatTime}
+            timeOffset={timeOffset}
+            totalComments={comments.length}
+            isSidebarMode={true}
+            className="h-full border-none"
+            setZoomedImage={handleSetZoomedImage}
+            onAnchorClick={handleAnchorClick}
+            onAnchorMouseEnter={() => {}} // Removed
+            onAnchorMouseLeave={() => {}} // Removed
+            onIdClick={onIdClick} // Allow recursive ID click
+            settings={{
+              fontSize: dmSettings.fontSize,
+              density: dmSettings.density,
+              showImages,
+            }}
+            currentLogicalTime={currentLogicalTime} // Pass currentLogicalTime
+          />
         )}
 
         {/* Sync Button */}

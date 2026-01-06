@@ -1,3 +1,4 @@
+import { isProbablyAA } from './aaUtils';
 import { measureTextWidth } from './danmakuUtils';
 
 /**
@@ -35,12 +36,7 @@ export function parseCommentToNodes(comment, options) {
 
   // Check if this might be AA (Ascii Art)
   const lines = comment.text.split('\n');
-  const textWithoutTreeIndicators = comment.text.replace(/[└├│┌┐┘┬┴┼]/g, '');
-  const matchesAACriteria =
-    lines.length >= 3 &&
-    (comment.text.includes('　') || // Full-width space
-      /[─━┃┏┓┗┛┣┫┳┻╋]/.test(textWithoutTreeIndicators) || // Box drawing
-      /[○●◎◇◆□■△▲▽▼]/.test(comment.text)); // Geometric shapes
+  // Inline AA criteria removed in favor of Unified aaUtils.isProbablyAA
 
   // 0. Force AA Check (Priority 1)
   if (forceAA === true) {
@@ -140,7 +136,12 @@ export function parseCommentToNodes(comment, options) {
   // Priority: If images exist, it's NOT AA (render as image)
   // If no images BUT matches AA criteria, treat as AA
   // If forceAA is false, NEVER treat as AA
-  const isAA = forceAA === false ? false : imageCount === 0 && matchesAACriteria;
+  // use isKnownAA if available (pre-calculated), otherwise fallback to live check
+  const isAA =
+    forceAA === false
+      ? false
+      : imageCount === 0 &&
+        (comment.isKnownAA !== undefined ? comment.isKnownAA : isProbablyAA(comment.text));
 
   if (isAA) {
     // Re-calculate for AA specific layout (block text)

@@ -26,11 +26,6 @@ export const useTimeSync = ({ videoStartTimeStr, logSystem, cmSystem, setCurrent
     // Trigger only if settings changed, or first load.
     // IF user manually changed offset, timeSyncInitializedRef is true.
     // We should NOT overwrite unless videoStartTimeStr / logSystem.startTimeStr explicit change detected above.
-    if (timeSyncInitializedRef.current) {
-      // Already initialized and no config change.
-      return;
-    }
-
     // 1. Determine Log Reference Time (Absolute)
     const firstComment = logSystem.comments[0];
     let logRefTime = firstComment.rawTime;
@@ -46,35 +41,31 @@ export const useTimeSync = ({ videoStartTimeStr, logSystem, cmSystem, setCurrent
       }
     }
 
-    // 2. Determine Video Reference Time (Relative duration from 0:00)
-    let videoRefDuration = 0;
-    if (videoStartTimeStr) {
-      const parts = videoStartTimeStr.split(':').map(Number);
-      if (parts.length === 3) {
-        videoRefDuration = (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000;
-      } else if (parts.length === 2) {
-        videoRefDuration = (parts[0] * 60 + parts[1]) * 1000;
-      }
-    }
-
-    // 3. Calculate Video Start Timestamp (Absolute time when video is at 0:00)
-    const videoStartTimestamp = logRefTime - videoRefDuration;
-
-    // 4. Calculate Time Offset (Log Time at Video 0)
-    // If video starts 10 mins after log, offset is 600s.
-    // Video 0 -> Log 600.
-    const offset = (videoStartTimestamp - logRefTime) / 1000;
-    cmSystem.setTimeOffset(offset);
-
-    // Reset currentTime to offset (Video Time 0:00) ONLY on first initialization
-    // This prevents the seek bar from jumping to a non-zero video time when loading a project
-    // but avoids resetting currentTime during playback when comments update
+    // 2. Determine Video Reference Time & Calculate Offset (Only on init)
     if (!timeSyncInitializedRef.current) {
+      let videoRefDuration = 0;
+      if (videoStartTimeStr) {
+        const parts = videoStartTimeStr.split(':').map(Number);
+        if (parts.length === 3) {
+          videoRefDuration = (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000;
+        } else if (parts.length === 2) {
+          videoRefDuration = (parts[0] * 60 + parts[1]) * 1000;
+        }
+      }
+
+      // 3. Calculate Video Start Timestamp (Absolute time when video is at 0:00)
+      const videoStartTimestamp = logRefTime - videoRefDuration;
+
+      // 4. Calculate Time Offset (Log Time at Video 0)
+      const offset = (videoStartTimestamp - logRefTime) / 1000;
+      cmSystem.setTimeOffset(offset);
+
+      // Reset currentTime to offset (Video Time 0:00) ONLY on first initialization
       setCurrentTime(offset);
       timeSyncInitializedRef.current = true;
     }
 
-    // Check if we need to update to avoid infinite loop
+    // 5. Always check and update comment times
     let needsUpdate = false;
     const updatedComments = logSystem.comments.map((c) => {
       // Comment Time is relative to Log Start (logRefTime)

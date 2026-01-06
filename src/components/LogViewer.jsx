@@ -357,7 +357,7 @@ const LogViewer = ({
           if (!part.match(urlRegex)) return;
           const isImage = part.match(/\.(jpg|jpeg|png|gif|webp)$/i);
           if (isImage) {
-             allImages.push({ src: part, commentId: c.id });
+            allImages.push({ src: part, commentId: c.id });
           }
         });
       });

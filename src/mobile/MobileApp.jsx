@@ -152,7 +152,7 @@ const MobileApp = () => {
     unlockAbeMode,
     showAbeUnlockCelebration,
     closeAbeUnlockCelebration,
-  } = useDanmakuPlayer(enableTreeView);
+  } = useDanmakuPlayer(enableTreeView, aaOverrideMap);
 
   const { activeDanmaku, danmakuContainerRef, handleAnimationEnd, resetDanmaku } = danmaku;
 

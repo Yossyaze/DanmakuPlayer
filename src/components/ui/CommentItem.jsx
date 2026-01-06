@@ -56,8 +56,9 @@ const CommentItem = ({
     if (aaOverride === true) return true;
     if (aaOverride === false) return false;
     if (aaMode === 'off') return false;
-    return isProbablyAA(comment.text);
-  }, [comment.text, aaMode, aaOverride]);
+    // Use pre-calculated status if available
+    return comment.isKnownAA !== undefined ? comment.isKnownAA : isProbablyAA(comment.text);
+  }, [comment.text, comment.isKnownAA, aaMode, aaOverride]);
 
   return (
     <div

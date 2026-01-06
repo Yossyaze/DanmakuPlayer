@@ -4,13 +4,13 @@ import {
   FileInput,
   FilePen,
   FileVideo,
+  Image, // Import
   Link as LinkIcon,
   MessageSquare,
   PanelRight,
   RotateCcw, // Import
   Save,
   Tv,
-  Image, // Import
 } from 'lucide-react';
 import React from 'react';
 
@@ -142,7 +142,6 @@ const Header = ({
           >
             <RotateCcw size={18} />
           </button>
-
         </div>
 
         <div className="h-6 w-px bg-gray-700 mx-1"></div>

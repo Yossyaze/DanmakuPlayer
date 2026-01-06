@@ -5,21 +5,20 @@ import YouTube from 'react-youtube';
 import { isHlsUrl } from '../../utils/hlsUtils';
 import CmWaitOverlay from '../CmWaitOverlay';
 import DanmakuLayer from '../DanmakuLayer';
+import EndCard from '../EndCard';
+import EndCardPreview from '../EndCardPreview';
 import Header from '../Header';
 import HLSVideo from '../HLSVideo';
 import LogViewer from '../LogViewer';
 import ConfirmModal from '../modals/ConfirmModal';
+import EndCardSettingsModal from '../modals/EndCardSettingsModal';
 import HelpModal from '../modals/HelpModal';
+import ImageDisplayModal from '../modals/ImageDisplayModal';
 import UrlInputModal from '../modals/UrlInputModal';
 import VideoRequestModal from '../modals/VideoRequestModal';
 import Sidebar from '../Sidebar';
 import AbeModeUnlockCelebration from '../ui/AbeModeUnlockCelebration';
-
 import VideoControls from '../VideoControls';
-import EndCard from '../EndCard';
-import EndCardPreview from '../EndCardPreview';
-import EndCardSettingsModal from '../modals/EndCardSettingsModal';
-import ImageDisplayModal from '../modals/ImageDisplayModal';
 
 const DesktopLayout = ({
   // Refs
@@ -206,7 +205,7 @@ const DesktopLayout = ({
   // DEBUG: Monitor End Card Settings prop
   // DEBUG: Monitor End Card Settings prop
   // console.log('[EndCard] DesktopLayout Render settings:', endCardSettings);
-  
+
   return (
     <div
       className="flex flex-col h-screen text-white bg-black overflow-hidden select-none relative"
@@ -406,8 +405,8 @@ const DesktopLayout = ({
                       if (!player.isReady) player.setIsReady(true);
                     }}
                     onEnded={() => {
-                        player.setPlayingState(false);
-                        setShowEndCard(true);
+                      player.setPlayingState(false);
+                      setShowEndCard(true);
                     }}
                     onPause={() => {
                       console.log('HLSVideo: onPause triggered');
@@ -457,8 +456,8 @@ const DesktopLayout = ({
                       }
                     }}
                     onEnded={() => {
-                        player.setPlayingState(false);
-                        setShowEndCard(true);
+                      player.setPlayingState(false);
+                      setShowEndCard(true);
                     }}
                     onPause={() => {
                       console.log('NativeVideo: onPause triggered');
@@ -534,7 +533,6 @@ const DesktopLayout = ({
                           setShowEndCard(true);
                         }
                       }}
-
                       onError={(e) => {
                         console.error('YouTube Error:', e);
                         alert('YouTube Error: ' + e.data);
@@ -592,11 +590,11 @@ const DesktopLayout = ({
                   endCardSettings?.enabled &&
                   endCardSettings?.previewEnabled &&
                   currentTime >= endCardSettings.previewStartTime && (
-                  <EndCardPreview 
-                    settings={endCardSettings}
-                    onClick={(src) => setZoomedImage({ src })}
-                  />
-                )}
+                    <EndCardPreview
+                      settings={endCardSettings}
+                      onClick={(src) => setZoomedImage({ src })}
+                    />
+                  )}
 
                 {!logOnlyMode && (
                   <VideoControls
@@ -916,7 +914,7 @@ const DesktopLayout = ({
           imageList={typeof zoomedImage === 'object' ? zoomedImage?.list : []}
           onClose={() => setZoomedImage(null)}
           onJumpTo={(index) => {
-             if (zoomedImage && typeof zoomedImage === 'object' && zoomedImage.list) {
+            if (zoomedImage && typeof zoomedImage === 'object' && zoomedImage.list) {
               if (index >= 0 && index < zoomedImage.list.length) {
                 setZoomedImage({
                   ...zoomedImage,
@@ -924,7 +922,7 @@ const DesktopLayout = ({
                   index: index,
                 });
               }
-             }
+            }
           }}
           onSetEndCard={onSetEndCard}
           onNext={() => {

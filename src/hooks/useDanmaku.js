@@ -13,7 +13,13 @@ export const useDanmaku = (settings, isPlaying) => {
   const skipNextProcessRef = useRef(false); // Skip first process after resume
 
   const processDanmaku = useCallback(
-    (currentDisplayTime, comments, imageValidityMap = null, isScrubbing = false, aaOverrideMap = {}) => {
+    (
+      currentDisplayTime,
+      comments,
+      imageValidityMap = null,
+      isScrubbing = false,
+      aaOverrideMap = {}
+    ) => {
       if (!danmakuContainerRef.current) return;
 
       // Skip first frame after resume to prevent stale comments

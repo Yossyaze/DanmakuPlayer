@@ -124,7 +124,7 @@ const DesktopApp = () => {
     setShowEndCard,
     showAbeUnlockCelebration,
     closeAbeUnlockCelebration,
-  } = useDanmakuPlayer(enableTreeView);
+  } = useDanmakuPlayer(enableTreeView, aaOverrideMap);
 
   const { danmakuContainerRef, resetDanmaku, syncLastProcessedTime } = danmaku;
   // --- Local UI State (Purely View related) ---
@@ -137,7 +137,7 @@ const DesktopApp = () => {
   const [requestedVideoName, setRequestedVideoName] = useState('');
   const [requestedVideoPath, setRequestedVideoPath] = useState('');
   const [isResizing, setIsResizing] = useState(false);
-  
+
   // End Card Settings Modal State
   const [showEndCardSettingsModal, setShowEndCardSettingsModal] = useState(false);
 
@@ -146,7 +146,7 @@ const DesktopApp = () => {
     player.seekTo(0);
     // Use timeout to ensure state update propagates before playing (optional but safer)
     setTimeout(() => {
-        requestPlay();
+      requestPlay();
     }, 100);
   }, [player, requestPlay, setShowEndCard]);
 

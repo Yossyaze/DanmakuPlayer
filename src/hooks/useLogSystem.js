@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import { isProbablyAA } from '../utils/aaUtils';
 import { parseDatBuffer, parseLogFile } from '../utils/logParser';
 
 export const useLogSystem = () => {
@@ -242,6 +243,7 @@ export const useLogSystem = () => {
             ...c,
             sourceFileId: fileId,
             threadTitle: parsed.title || parsed.name, // Inject thread title
+            isKnownAA: isProbablyAA(c.text), // Pre-calculate AA status
           }));
 
           setComments((prev) => [...prev, ...newComments].sort((a, b) => a.rawTime - b.rawTime));
@@ -298,6 +300,7 @@ export const useLogSystem = () => {
         ...c,
         sourceFileId: file.id,
         threadTitle: file.title || file.name, // Inject thread title
+        isKnownAA: isProbablyAA(c.text), // Pre-calculate AA status
       }))
     );
 
@@ -318,6 +321,7 @@ export const useLogSystem = () => {
         ...c,
         sourceFileId: file.id,
         threadTitle: file.title || file.name, // Inject thread title
+        isKnownAA: isProbablyAA(c.text), // Pre-calculate AA status
       }))
     );
 
