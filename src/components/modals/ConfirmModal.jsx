@@ -50,7 +50,7 @@ const ConfirmModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fade-in">
+    <div className="fixed inset-0 z-10000 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fade-in">
       <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-gray-700 bg-gray-800/50">

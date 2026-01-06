@@ -40,6 +40,7 @@ const CommentList = forwardRef(
       onSetLogStart,
       onSetCmStart,
       onSetCmEnd,
+      onSetEndCardPreview, // New prop
       onAddNgId,
       onAddNgComment,
       onIdClick,
@@ -84,21 +85,21 @@ const CommentList = forwardRef(
     // Scroll to active comment
     useEffect(() => {
       // DEBUG: Auto-scroll investigation
-      console.log(`[CommentList:${debugId}]`, {
-        isAutoScroll,
-        activeCommentId,
-        treeRootsLength: treeRoots.length,
-        hasVirtuosoRef: !!virtuosoRef.current,
-      });
+      // console.log(`[CommentList:${debugId}]`, {
+      //   isAutoScroll,
+      //   activeCommentId,
+      //   treeRootsLength: treeRoots.length,
+      //   hasVirtuosoRef: !!virtuosoRef.current,
+      // });
 
       if (isAutoScroll && activeCommentId && virtuosoRef.current) {
         const index = treeRoots.findIndex((node) => node.id === activeCommentId);
-        console.log(
-          `[CommentList:${debugId}] Found index:`,
-          index,
-          'for activeCommentId:',
-          activeCommentId
-        );
+        // console.log(
+        //   `[CommentList:${debugId}] Found index:`,
+        //   index,
+        //   'for activeCommentId:',
+        //   activeCommentId
+        // );
         if (index !== -1) {
           // Update timestamp to ignore subsequent scroll events temporarily
           lastAutoScrollTimeRef.current = Date.now();
@@ -116,14 +117,14 @@ const CommentList = forwardRef(
             }
             const treeSize = treeEndIndex - index + 1;
 
-            console.log(
-              `[CommentList:${debugId}] Tree size:`,
-              treeSize,
-              'rootIndex:',
-              index,
-              'endIndex:',
-              treeEndIndex
-            );
+            // console.log(
+            //   `[CommentList:${debugId}] Tree size:`,
+            //   treeSize,
+            //   'rootIndex:',
+            //   index,
+            //   'endIndex:',
+            //   treeEndIndex
+            // );
 
             // Get approximate visible item count (estimate ~40px per item, viewport ~400px)
             // We'll use a threshold to decide: if tree fits, show tree end at bottom
@@ -149,7 +150,7 @@ const CommentList = forwardRef(
             }
           } else {
             // Non-tree mode: original behavior
-            console.log(`[CommentList:${debugId}] Calling scrollToIndex:`, index);
+            // console.log(`[CommentList:${debugId}] Calling scrollToIndex:`, index);
             virtuosoRef.current.scrollToIndex({
               index,
               align: 'end',
@@ -438,6 +439,10 @@ const CommentList = forwardRef(
             }}
             onSetCmEnd={(time) => {
               onSetCmEnd(time);
+              setContextMenu(null);
+            }}
+            onSetEndCardPreview={(time) => {
+              if (onSetEndCardPreview) onSetEndCardPreview(time);
               setContextMenu(null);
             }}
             onAddNgId={onAddNgId}

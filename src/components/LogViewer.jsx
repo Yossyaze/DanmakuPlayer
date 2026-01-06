@@ -101,6 +101,8 @@ const LogViewer = ({
   unlockAbeMode, // Hidden Abe Mode unlock callback
   onRemoveFile, // New prop for file deletion
   abeMode, // Abe Mode (Rainbow)
+  setZoomedImage,
+  onSetEndCardPreview, // New: Prop for Context Menu
 }) => {
   // --- Refs ---
   const internalActiveCommentRef = React.useRef(null);
@@ -130,7 +132,8 @@ const LogViewer = ({
     }
   }, [scrollToCommentId, comments, onScrollComplete]);
 
-  const [zoomedImage, setZoomedImage] = useState(null);
+  // local zoomedImage state removed
+  // const [zoomedImage, setZoomedImage] = useState(null);
   // UserHistoryModal state removed
   const [selectedFileId, setSelectedFileId] = React.useState('all');
   // showFileList removed, always visible
@@ -340,6 +343,37 @@ const LogViewer = ({
 
     return enrichedList;
   }, [comments, selectedFileId, ngSettings, files]);
+
+  // Image Navigation Helper
+  const handleSetZoomedImage = React.useCallback(
+    (url) => {
+      const allImages = [];
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+      filteredComments.forEach((c) => {
+        if (!c.text) return;
+        const parts = c.text.split(urlRegex);
+        parts.forEach((part) => {
+          if (!part.match(urlRegex)) return;
+          const isImage = part.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+          if (isImage) {
+             allImages.push({ src: part, commentId: c.id });
+          }
+        });
+      });
+
+      const currentIndex = allImages.findIndex((img) => img.src === url);
+
+      if (setZoomedImage) {
+        setZoomedImage({
+          src: url,
+          list: allImages,
+          index: currentIndex,
+        });
+      }
+    },
+    [filteredComments, setZoomedImage]
+  );
 
   // Popup & Context Menu Hook (uses filteredComments)
   const {
@@ -600,7 +634,7 @@ const LogViewer = ({
           onSetCmStart={onSetCmStart}
           onSetCmEnd={onSetCmEnd}
           formatTime={customFormatTime}
-          setZoomedImage={setZoomedImage}
+          setZoomedImage={handleSetZoomedImage}
           activeCommentRef={refToUse}
           isAutoScroll={false}
           setIsAutoScroll={() => {}}
@@ -649,7 +683,7 @@ const LogViewer = ({
             handleAnchorClick(e, resNum, sourceFileId, false)
           }
           onReplyCountClick={handleReplyCountClick}
-          setZoomedImage={setZoomedImage}
+          setZoomedImage={handleSetZoomedImage}
         />
       </div>
 
@@ -670,7 +704,7 @@ const LogViewer = ({
         onAnchorClick={handleAnchorClick}
         onReplyCountClick={handleReplyCountClick}
         onIdClick={handleIdClick}
-        setZoomedImage={setZoomedImage}
+        setZoomedImage={handleSetZoomedImage}
       />
 
       {/* Context Menu (for Popup/Log) */}
@@ -694,25 +728,14 @@ const LogViewer = ({
           aaMode={logSettings.aaMode}
           aaOverride={aaOverrideMap[logContextMenu.comment.id]}
           onToggleAA={onToggleAA}
+          onSetEndCardPreview={onSetEndCardPreview}
         />
       )}
 
       {/* Reuse UserHistoryModal if needed - REMOVED for LogViewer, integrated into SearchResults */}
 
       {/* Center Filter/Search Results Popup */}
-      {/* Image Zoom Modal */}
-      {zoomedImage && (
-        <div
-          className="fixed inset-0 z-200 bg-black/90 flex items-center justify-center p-4 cursor-zoom-out animate-fade-in"
-          onClick={() => setZoomedImage(null)}
-        >
-          <img
-            src={zoomedImage}
-            alt="Zoomed"
-            className="max-w-full max-h-full rounded shadow-2xl object-contain"
-          />
-        </div>
-      )}
+      {/* Image Zoom Modal removed - now global */}
     </div>
   );
 };

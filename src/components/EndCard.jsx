@@ -7,7 +7,7 @@ const EndCard = ({
   onReplay,
 }) => {
   const imageUrl = useMemo(() => {
-    if (!settings) return null;
+    if (!settings || !settings.enabled) return null;
 
     if (settings.type === 'file' && settings.file) {
       return URL.createObjectURL(settings.file);
@@ -21,7 +21,7 @@ const EndCard = ({
     return null;
   }, [settings]);
 
-  if (!imageUrl) return null;
+  // if (!imageUrl) return null; // Logic changed to allow rendering without image
 
   return (
     <div 
@@ -29,19 +29,23 @@ const EndCard = ({
       onClick={(e) => e.stopPropagation()}
     >
       {/* Background with blur effect */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center opacity-30 blur-xl scale-110"
-        style={{ backgroundImage: `url(${imageUrl})` }}
-      />
+      {imageUrl && (
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-30 blur-xl scale-110"
+          style={{ backgroundImage: `url(${imageUrl})` }}
+        />
+      )}
 
       {/* Main Image */}
-      <div className="relative z-10 max-w-[90%] max-h-[80%] shadow-2xl rounded-lg overflow-hidden border border-white/10">
-        <img 
-          src={imageUrl} 
-          alt="End Card" 
-          className="max-w-full max-h-[70vh] object-contain"
-        />
-      </div>
+      {imageUrl && (
+        <div className="relative z-10 max-w-[90%] max-h-[80%] shadow-2xl rounded-lg overflow-hidden border border-white/10">
+          <img 
+            src={imageUrl} 
+            alt="End Card" 
+            className="max-w-full max-h-[70vh] object-contain"
+          />
+        </div>
+      )}
 
       {/* Actions */}
       <div className="relative z-10 flex gap-4 mt-8">

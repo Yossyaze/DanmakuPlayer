@@ -81,7 +81,7 @@ const CommentItem = ({
       <div className="flex gap-2">
         {/* Time & Date (Left Column) - 3 rows: video time, date, log time */}
         <div className="flex flex-col items-end shrink-0 w-12">
-          <span className="text-blue-400 font-mono text-[10px] whitespace-nowrap">
+          <span className="text-blue-400 font-mono text-[9px] whitespace-nowrap">
             {formatTime(comment.time - timeOffset)}
           </span>
           <span className="text-gray-600 font-mono text-[9px] whitespace-nowrap">
@@ -92,7 +92,7 @@ const CommentItem = ({
               return '';
             })()}
           </span>
-          <span className="text-gray-500 font-mono text-[10px] whitespace-nowrap">
+          <span className="text-gray-500 font-mono text-[9px] whitespace-nowrap">
             {comment.dateDisplay?.split(' ')[1]?.split('.')[0] || ''}
           </span>
         </div>

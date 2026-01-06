@@ -81,11 +81,11 @@ const VideoControls = ({
   useEffect(() => {
     if (commentDensity.length > 0) {
       const maxVal = Math.max(...commentDensity);
-      console.log(
-        `[VideoControls] Graph Rendering: ${commentDensity.length} points, Max Density: ${maxVal}`
-      );
+      // console.log(
+      //   `[VideoControls] Graph Rendering: ${commentDensity.length} points, Max Density: ${maxVal}`
+      // );
     } else {
-      console.log('[VideoControls] No comment density data available.');
+    //   console.log('[VideoControls] No comment density data available.');
     }
   }, [commentDensity]);
 
@@ -518,7 +518,10 @@ const VideoControls = ({
             />
           </div>
           <span className="text-sm font-mono text-white">
-            {formatTime(currentTime)} / {formatTime(totalDuration)}
+            {currentTime > totalDuration
+              ? `${formatTime(totalDuration)}+${formatTime(currentTime - totalDuration)}`
+              : formatTime(currentTime)}{' '}
+            / {formatTime(totalDuration)}
           </span>
         </div>
         {/* Settings Section */}

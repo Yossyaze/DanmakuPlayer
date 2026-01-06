@@ -13,7 +13,7 @@ export const useDanmaku = (settings, isPlaying) => {
   const skipNextProcessRef = useRef(false); // Skip first process after resume
 
   const processDanmaku = useCallback(
-    (currentDisplayTime, comments, imageValidityMap = null, isScrubbing = false) => {
+    (currentDisplayTime, comments, imageValidityMap = null, isScrubbing = false, aaOverrideMap = {}) => {
       if (!danmakuContainerRef.current) return;
 
       // Skip first frame after resume to prevent stale comments
@@ -91,6 +91,13 @@ export const useDanmaku = (settings, isPlaying) => {
         // ===== Helper: Parse comment into nodes and calculate width =====
         // isChild: if true, use childFontScale for height calculations
         const processCommentData = (c, isChild = false) => {
+          // Determine forceAA status from override map
+          // true: Force AA, false: Force Normal, undefined/null: Auto
+          let forceAA = null;
+          if (aaOverrideMap && typeof aaOverrideMap[c.id] === 'boolean') {
+            forceAA = aaOverrideMap[c.id];
+          }
+
           return parseCommentToNodes(c, {
             fontSize: settings.fontSize,
             imageMode: settings.imageMode,
@@ -98,6 +105,7 @@ export const useDanmaku = (settings, isPlaying) => {
             isChild,
             childFontScale,
             imageValidityMap,
+            forceAA, // Pass forceAA option
           });
         };
 

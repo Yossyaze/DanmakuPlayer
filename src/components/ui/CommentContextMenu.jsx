@@ -4,6 +4,7 @@ import {
   Ban,
   Clock,
   Copy,
+  FileImage,
   Play,
   Trash2,
   Type,
@@ -21,6 +22,7 @@ const CommentContextMenu = ({
   onSetLogStart,
   onSetCmStart,
   onSetCmEnd,
+  onSetEndCardPreview,
   onAddNgId,
   onAddNgComment,
   onCopyId,
@@ -161,6 +163,16 @@ const CommentContextMenu = ({
           >
             <ArrowLeftToLine size={16} className="text-red-500" />
             <span>CM終了時間に設定</span>
+          </button>
+          <button
+            className="w-full text-left px-4 py-1.5 text-sm text-gray-200 hover:bg-gray-700 hover:text-white flex items-center gap-3 transition-colors active:bg-gray-600"
+            onClick={() => {
+              if (onSetEndCardPreview) onSetEndCardPreview(comment.time);
+              onClose();
+            }}
+          >
+            <FileImage size={16} className="text-purple-500" />
+            <span>予告開始時間に設定</span>
           </button>
           <div className="h-px bg-gray-700 mx-2 my-1" />
           <button

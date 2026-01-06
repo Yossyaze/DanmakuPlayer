@@ -56,8 +56,8 @@ const DesktopApp = () => {
   const [imageLayout, setImageLayout] = useState(uiSettings.imageLayout || 'inline');
   const [aaMode, setAaMode] = useState(uiSettings.aaMode || 'auto');
 
-  // State for expanded danmaku image modal
-  const [expandedDanmakuImage, setExpandedDanmakuImage] = useState(null);
+  // Global Zoomed Image State
+  const [zoomedImage, setZoomedImage] = useState(null);
 
   // AA Override State (Shared between Sidebar and Overlay)
   const [aaOverrideMap, setAaOverrideMap] = useState({}); // { [commentId]: boolean }
@@ -573,8 +573,8 @@ const DesktopApp = () => {
       setAaMode={setAaMode}
       aaOverrideMap={aaOverrideMap}
       handleToggleAA={handleToggleAA}
-      expandedDanmakuImage={expandedDanmakuImage}
-      setExpandedDanmakuImage={setExpandedDanmakuImage}
+      zoomedImage={zoomedImage}
+      setZoomedImage={setZoomedImage}
       showExportModal={showExportModal}
       setShowExportModal={setShowExportModal}
       exportFileName={exportFileName}
@@ -642,6 +642,26 @@ const DesktopApp = () => {
       setShowEndCardSettingsModal={setShowEndCardSettingsModal}
       handleSettingsChange={setEndCardSettings}
       handleEndCardReplay={handleEndCardReplay}
+      onSetEndCard={(src) => {
+        setConfirmModalState({
+          isOpen: true,
+          title: 'エンドカード設定',
+          message: '表示中の画像をエンドカード（終了画面）に設定しますか？',
+          confirmText: '設定する',
+          type: 'info', // or 'success' visual
+          onConfirm: () => {
+            setEndCardSettings((prev) => ({
+              ...prev,
+              enabled: true,
+              type: 'url',
+              value: src,
+              file: null,
+            }));
+            closeConfirmModal();
+          },
+          onCancel: closeConfirmModal,
+        });
+      }}
     />
   );
 };

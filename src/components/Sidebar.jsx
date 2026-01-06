@@ -110,6 +110,8 @@ const Sidebar = ({
   dmSettings, // Ensure dmSettings is destructured
   setDmSettings, // Ensure setDmSettings is destructured
   onOpenEndCardSettings,
+  setZoomedImage, 
+  onSetEndCardPreview, // New prop
 }) => {
   // console.log('Sidebar formatTime:', formatTime);
   // danmakuContainerRef no longer needed for duration-based setting
@@ -122,8 +124,7 @@ const Sidebar = ({
   const isAutoScrollRef = useRef(isAutoScroll);
   const [localIsAutoScroll, setLocalIsAutoScroll] = useState(isAutoScroll);
   const [editingCmIndex, setEditingCmIndex] = useState(null);
-
-  const [zoomedImage, setZoomedImage] = useState(null);
+  // local zoomedImage state removed
   const commentListRef = useRef(null);
   const sidebarContainerRef = useRef(null); // Ref for sidebar container
   const [containerLeft, setContainerLeft] = useState(0); // Left position of sidebar
@@ -233,6 +234,38 @@ const Sidebar = ({
 
     return enrichedList;
   }, [comments]);
+
+  // Image Navigation Helper
+  const handleSetZoomedImage = React.useCallback(
+    (url) => {
+      // Collect all images from enrichedComments using identical logic to CommentContent
+      const allImages = [];
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      
+      enrichedComments.forEach((c) => {
+        if (!c.text) return;
+        const parts = c.text.split(urlRegex);
+        parts.forEach((part) => {
+          if (!part.match(urlRegex)) return;
+          const isImage = part.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+          if (isImage) {
+             allImages.push({ src: part, commentId: c.id });
+          }
+        });
+      });
+
+      const currentIndex = allImages.findIndex((img) => img.src === url);
+      
+      if (setZoomedImage) {
+        setZoomedImage({
+          src: url,
+          list: allImages,
+          index: currentIndex,
+        });
+      }
+    },
+    [enrichedComments, setZoomedImage]
+  );
 
   // Measure container left position for popup minX
   useEffect(() => {
@@ -1352,8 +1385,9 @@ const Sidebar = ({
           onSetLogStart={handleSetLogStart}
           onSetCmStart={handleSetCmStart}
           onSetCmEnd={handleSetCmEnd}
+          onSetEndCardPreview={onSetEndCardPreview}
           onIdClick={onIdClick}
-          setZoomedImage={setZoomedImage}
+          setZoomedImage={handleSetZoomedImage}
           extraRowProps={{
             // Pass additional props to CommentRow
             onReplyCountClick: handleReplyCountClick,
@@ -1367,24 +1401,32 @@ const Sidebar = ({
         {/* User History Modal (Inside relative container) */}
         {userHistoryId && (
           <UserHistoryModal
-            userId={userHistoryId}
-            comments={allComments || comments}
-            onClose={onCloseUserHistory}
-            onSeek={onSeekAndPlay}
-            onAddNgId={onAddNgId}
-            onAddNgComment={onAddNgComment}
-            onSetLogStart={handleSetLogStart}
-            onSetCmStart={handleSetCmStart}
-            onSetCmEnd={handleSetCmEnd}
-            formatTime={formatTime}
-            timeOffset={timeOffset}
-            totalComments={(allComments || comments).length}
-            isSidebarMode={true}
-            className="absolute inset-x-2 bottom-0 top-10 z-20 animate-slide-up shadow-2xl border-2 border-gray-600 rounded-t-lg bg-gray-900"
-            activeCommentId={activeCommentId}
-            setZoomedImage={setZoomedImage}
-            onAnchorClick={(e, resNum) => handleAnchorClick(e, resNum, false)}
-          />
+          userId={userHistoryId}
+          comments={allComments}
+          onClose={onCloseUserHistory}
+          onSeek={onSeekAndPlay}
+          onAddNgId={onAddNgId}
+          onAddNgComment={onAddNgComment}
+          onSetLogStart={handleSetLogStart}
+          onSetCmStart={handleSetCmStart}
+          onSetCmEnd={handleSetCmEnd}
+          formatTime={formatTime}
+          timeOffset={timeOffset}
+          totalComments={comments.length}
+          isSidebarMode={true}
+          className="h-full border-none"
+          setZoomedImage={handleSetZoomedImage}
+          onAnchorClick={handleAnchorClick}
+          onAnchorMouseEnter={() => {}} // Removed
+          onAnchorMouseLeave={() => {}} // Removed
+          onIdClick={onIdClick} // Allow recursive ID click
+          settings={{
+            fontSize: dmSettings.fontSize,
+            density: dmSettings.density,
+            showImages,
+          }}
+          currentLogicalTime={currentLogicalTime} // Pass currentLogicalTime
+        />
         )}
 
         {/* Sync Button */}
@@ -1436,7 +1478,7 @@ const Sidebar = ({
                   density: 'compact',
                   showImages: showImages,
                 }}
-                setZoomedImage={setZoomedImage}
+                setZoomedImage={handleSetZoomedImage}
                 onAnchorClick={(e, resNum) => handleAnchorClick(e, resNum, true)}
                 onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
                 onIdClick={onIdClick}
@@ -1464,7 +1506,7 @@ const Sidebar = ({
                   density: 'compact',
                   showImages: showImages,
                 }}
-                setZoomedImage={setZoomedImage}
+                setZoomedImage={handleSetZoomedImage}
                 onAnchorClick={(e, resNum) => handleAnchorClick(e, resNum, true)}
                 onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
                 onIdClick={onIdClick}
@@ -1519,6 +1561,7 @@ const Sidebar = ({
           onCopyComment={(text) => {
             navigator.clipboard.writeText(text);
           }}
+          onSetEndCardPreview={onSetEndCardPreview}
           formatTime={formatTime}
           timeOffset={timeOffset}
           aaMode={aaMode}
@@ -1527,25 +1570,7 @@ const Sidebar = ({
         />
       )}
 
-      {/* Image Zoom Modal */}
-      {zoomedImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-zoom-out animate-fade-in"
-          onClick={() => setZoomedImage(null)}
-        >
-          <img
-            src={zoomedImage}
-            alt="Zoomed"
-            className="max-w-full max-h-full rounded shadow-2xl object-contain"
-          />
-          <button
-            className="absolute top-4 right-4 text-white/70 hover:text-white bg-black/50 rounded-full p-2"
-            onClick={() => setZoomedImage(null)}
-          >
-            <X size={24} />
-          </button>
-        </div>
-      )}
+      {/* Image Zoom Modal removed - now global */}
     </div>
   );
 };

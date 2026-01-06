@@ -67,6 +67,8 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     type: 'file', // 'file' | 'url' | 'log'
     value: '',
     file: null,
+    previewEnabled: false,
+    previewStartTime: 0,
   });
 
   const [showEndCard, setShowEndCard] = useState(false);
@@ -267,11 +269,12 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
           targetLogTime,
           danmakuComments,
           imageValidityMapRef.current,
-          true // isScrubbing: Force replace and simulate animation
+          true, // isScrubbing: Force replace and simulate animation
+          aaOverrideMap // Pass override map
         );
       }
     },
-    [cmSystem, player, processDanmaku, danmakuComments]
+    [cmSystem, player, processDanmaku, danmakuComments, aaOverrideMap]
   );
 
   const handleSeek = useCallback(
@@ -309,7 +312,8 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
         targetLogTime,
         danmakuComments,
         imageValidityMapRef.current,
-        true // isScrubbing: Force replace and simulate animation
+        true, // isScrubbing: Force replace and simulate animation
+        aaOverrideMap // Pass override map
       );
 
       // 3. Throttled UI State Update (Sidebar scroll, etc.)
@@ -320,7 +324,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
         lastScrubStateUpdateRef.current = now;
       }
     },
-    [cmSystem, player, processDanmaku, danmakuComments]
+    [cmSystem, player, processDanmaku, danmakuComments, aaOverrideMap]
   );
 
   const handleSeekStart = useCallback(() => {
@@ -626,13 +630,13 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       prevDisplayTimeRef.current = displayTime;
 
       // Use danmakuComments for Danmaku display (Tree support)
-      processDanmaku(displayTime, danmakuComments, imageValidityMapRef.current);
+      processDanmaku(displayTime, danmakuComments, imageValidityMapRef.current, false, aaOverrideMap);
 
       if (player.isPlaying || cmSystem.cmStateRef.current.isWaiting || showEndCard) {
         animationFrameRef.current = requestAnimationFrame(frameLoop);
       }
     },
-    [cmSystem, processDanmaku, danmakuComments, checkCmCollision, player, showEndCard]
+    [cmSystem, processDanmaku, danmakuComments, checkCmCollision, player, showEndCard, aaOverrideMap]
   );
 
   // Track previous isPlaying state for detecting play start
@@ -646,7 +650,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     if (!wasPlaying && nowPlaying) {
       // Playback just started - skip first processDanmaku to prevent stale comments
       // This handles the case where user paused, browsed log, then resumed
-      console.log('[PlayStart] Skipping next process frame');
+      // console.log('[PlayStart] Skipping next process frame');
       skipNextProcess();
     }
 

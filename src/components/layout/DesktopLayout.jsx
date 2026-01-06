@@ -17,7 +17,9 @@ import AbeModeUnlockCelebration from '../ui/AbeModeUnlockCelebration';
 
 import VideoControls from '../VideoControls';
 import EndCard from '../EndCard';
+import EndCardPreview from '../EndCardPreview';
 import EndCardSettingsModal from '../modals/EndCardSettingsModal';
+import ImageDisplayModal from '../modals/ImageDisplayModal';
 
 const DesktopLayout = ({
   // Refs
@@ -82,8 +84,8 @@ const DesktopLayout = ({
   handleToggleAA,
 
   // Modals State
-  expandedDanmakuImage,
-  setExpandedDanmakuImage,
+  zoomedImage,
+  setZoomedImage,
 
   showExportModal,
   setShowExportModal,
@@ -162,8 +164,30 @@ const DesktopLayout = ({
   showEndCardSettingsModal,
   setShowEndCardSettingsModal,
   handleSettingsChange, // For EndCard settings
+
   handleEndCardReplay,
+  onSetEndCard,
 }) => {
+  const handleSetEndCardPreview = React.useCallback(
+    (logTime) => {
+      // Use Log Time directly as requested
+      // const { videoTime } = cmSystem.logTimeToVideoTime(logTime);
+      console.log('[EndCard] handleSetEndCardPreview called', { logTime });
+
+      handleSettingsChange((prev) => {
+        const newState = {
+          ...prev,
+          previewEnabled: true,
+          previewStartTime: Math.floor(logTime * 10) / 10, // Round to 1 decimal place, Log Time
+        };
+        console.log('[EndCard] handleSetEndCardPreview updating state', { prev, newState });
+        return newState;
+      });
+      // Optional: Show toast or confirmation?
+    },
+    [handleSettingsChange] // Removed cmSystem dependency for this function
+  );
+
   const {
     playerRef,
     videoSrc,
@@ -178,6 +202,11 @@ const DesktopLayout = ({
     loadVideoFromFile,
     videoRef,
   } = player;
+
+  // DEBUG: Monitor End Card Settings prop
+  // DEBUG: Monitor End Card Settings prop
+  // console.log('[EndCard] DesktopLayout Render settings:', endCardSettings);
+  
   return (
     <div
       className="flex flex-col h-screen text-white bg-black overflow-hidden select-none relative"
@@ -378,9 +407,7 @@ const DesktopLayout = ({
                     }}
                     onEnded={() => {
                         player.setPlayingState(false);
-                        if (endCardSettings?.enabled) {
-                            setShowEndCard(true);
-                        }
+                        setShowEndCard(true);
                     }}
                     onPause={() => {
                       console.log('HLSVideo: onPause triggered');
@@ -431,9 +458,7 @@ const DesktopLayout = ({
                     }}
                     onEnded={() => {
                         player.setPlayingState(false);
-                         if (endCardSettings?.enabled) {
-                            setShowEndCard(true);
-                        }
+                        setShowEndCard(true);
                     }}
                     onPause={() => {
                       console.log('NativeVideo: onPause triggered');
@@ -506,9 +531,7 @@ const DesktopLayout = ({
                         } else if (event.data === 0) {
                           // Ended
                           player.setPlayingState(false);
-                           if (endCardSettings?.enabled) {
-                            setShowEndCard(true);
-                        }
+                          setShowEndCard(true);
                         }
                       }}
 
@@ -534,7 +557,7 @@ const DesktopLayout = ({
                     onAnimationEnd={handleAnimationEnd}
                     aaMode={aaMode}
                     aaOverrideMap={aaOverrideMap}
-                    onImageClick={(url) => setExpandedDanmakuImage(url)}
+                    onImageClick={(url) => setZoomedImage(url)}
                     onTruncationClick={handleTruncationIndicatorClick}
                     isEnabled={dmSettings.enabled && showDanmaku && !logOnlyMode}
                     isPlaying={playerIsPlaying || showEndCard}
@@ -542,26 +565,8 @@ const DesktopLayout = ({
                   />
                 </div>
 
-                {/* Expanded Danmaku Image Modal */}
-                {expandedDanmakuImage && (
-                  <div
-                    className="fixed inset-0 z-9999 bg-black/90 flex items-center justify-center cursor-pointer animate-fade-in"
-                    onClick={() => setExpandedDanmakuImage(null)}
-                  >
-                    <img
-                      src={expandedDanmakuImage}
-                      alt="expanded"
-                      className="max-w-[90vw] max-h-[90vh] object-contain rounded shadow-2xl"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <button
-                      className="absolute top-4 right-4 text-white/70 hover:text-white text-3xl"
-                      onClick={() => setExpandedDanmakuImage(null)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
+                {/* Global Image Display Modal is rendered at root level */}
+                {/* Removed local inline Expanded Danmaku Image Modal */}
 
                 {/* CM Wait Overlay */}
                 {cmSystem.isWaitingCm && (
@@ -582,16 +587,23 @@ const DesktopLayout = ({
                   />
                 )}
 
+                {/* End Card Preview */}
+                {!showEndCard &&
+                  endCardSettings?.enabled &&
+                  endCardSettings?.previewEnabled &&
+                  currentTime >= endCardSettings.previewStartTime && (
+                  <EndCardPreview 
+                    settings={endCardSettings}
+                    onClick={(src) => setZoomedImage({ src })}
+                  />
+                )}
+
                 {!logOnlyMode && (
                   <VideoControls
                     visible={showControls}
                     isPlaying={playerIsPlaying}
                     togglePlay={togglePlay}
-                    currentTime={
-                      showEndCard
-                        ? cmSystem.getTotalDuration
-                        : currentTime - cmSystem.timeOffset
-                    }
+                    currentTime={currentTime - cmSystem.timeOffset}
                     totalDuration={cmSystem.getTotalDuration} // Use Total Duration (Video + CM)
                     handleSeek={handleSeek}
                     // onSync={handleSyncButton} // VideoControls doesn't support generic onSync yet, irrelevant
@@ -649,7 +661,8 @@ const DesktopLayout = ({
                 onToggleAA={handleToggleAA}
                 scrollToCommentId={scrollToCommentId}
                 onScrollComplete={() => setScrollToCommentId(null)}
-                // I need scrollToCommentId and setScrollToCommentId prop.
+                // setZoomedImage passed for LogViewer image handling
+                setZoomedImage={setZoomedImage}
                 onSetCmStart={logSystem.handleSetCmStart}
                 // Wait, handlers in App.jsx:
                 // onSetCmStart={handleSetCmStart}
@@ -673,6 +686,7 @@ const DesktopLayout = ({
                 onToggleSidebar={() => setShowSidebar(!showSidebar)}
                 unlockAbeMode={unlockAbeMode}
                 abeMode={abeModeUnlocked && dmSettings.abeMode}
+                onSetEndCardPreview={handleSetEndCardPreview}
               />
             )}
           </div>
@@ -790,6 +804,11 @@ const DesktopLayout = ({
           settings={endCardSettings}
           onSettingsChange={handleSettingsChange}
           logComments={logSystem.visibleComments} // Use visible comments for finding images
+          currentTime={currentTime - cmSystem.timeOffset}
+          timeOffset={cmSystem.timeOffset}
+          videoTimeToLogTime={cmSystem.videoTimeToLogTime}
+          logTimeToVideoTime={cmSystem.logTimeToVideoTime}
+          logStartTime={logSystem.startTimeStr}
         />
 
         {/* --- Sidebar (Right) --- */}
@@ -847,6 +866,7 @@ const DesktopLayout = ({
             aaMode={aaMode}
             setAaMode={setAaMode}
             onOpenEndCardSettings={() => setShowEndCardSettingsModal(true)}
+            setZoomedImage={setZoomedImage}
             loadedFiles={logSystem.loadedFiles}
             handleToggleFileVisibility={logSystem.handleToggleFileVisibility}
             handleRemoveFile={logSystem.handleRemoveFile}
@@ -867,6 +887,7 @@ const DesktopLayout = ({
             aaOverrideMap={aaOverrideMap}
             onToggleAA={handleToggleAA}
             abeModeUnlocked={abeModeUnlocked}
+            onSetEndCardPreview={handleSetEndCardPreview}
           />
         )}
 
@@ -886,6 +907,62 @@ const DesktopLayout = ({
         <AbeModeUnlockCelebration
           isVisible={showAbeUnlockCelebration}
           onClose={closeAbeUnlockCelebration}
+        />
+
+        {/* --- Global Image Display Modal --- */}
+        <ImageDisplayModal
+          src={typeof zoomedImage === 'string' ? zoomedImage : zoomedImage?.src}
+          currentIndex={typeof zoomedImage === 'object' ? zoomedImage?.index : 0}
+          imageList={typeof zoomedImage === 'object' ? zoomedImage?.list : []}
+          onClose={() => setZoomedImage(null)}
+          onJumpTo={(index) => {
+             if (zoomedImage && typeof zoomedImage === 'object' && zoomedImage.list) {
+              if (index >= 0 && index < zoomedImage.list.length) {
+                setZoomedImage({
+                  ...zoomedImage,
+                  src: zoomedImage.list[index].src,
+                  index: index,
+                });
+              }
+             }
+          }}
+          onSetEndCard={onSetEndCard}
+          onNext={() => {
+            if (zoomedImage && typeof zoomedImage === 'object' && zoomedImage.list) {
+              const nextIndex = zoomedImage.index + 1;
+              if (nextIndex < zoomedImage.list.length) {
+                setZoomedImage({
+                  ...zoomedImage,
+                  src: zoomedImage.list[nextIndex].src,
+                  index: nextIndex,
+                });
+              }
+            }
+          }}
+          onPrev={() => {
+            if (zoomedImage && typeof zoomedImage === 'object' && zoomedImage.list) {
+              const prevIndex = zoomedImage.index - 1;
+              if (prevIndex >= 0) {
+                setZoomedImage({
+                  ...zoomedImage,
+                  src: zoomedImage.list[prevIndex].src,
+                  index: prevIndex,
+                });
+              }
+            }
+          }}
+          hasNext={
+            zoomedImage &&
+            typeof zoomedImage === 'object' &&
+            zoomedImage.list &&
+            zoomedImage.index < zoomedImage.list.length - 1
+          }
+          hasPrev={
+            zoomedImage &&
+            typeof zoomedImage === 'object' &&
+            zoomedImage.list &&
+            zoomedImage.index > 0
+          }
         />
       </div>
     </div>
