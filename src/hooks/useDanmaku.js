@@ -20,10 +20,10 @@ export const useDanmaku = (settings, isPlaying) => {
       if (skipNextProcessRef.current) {
         skipNextProcessRef.current = false;
         lastProcessedTimeRef.current = currentDisplayTime;
-        console.log(
-          '[ProcessDanmaku] Skipped first frame after resume, synced to:',
-          currentDisplayTime
-        );
+        // console.log(
+        //   '[ProcessDanmaku] Skipped first frame after resume, synced to:',
+        //   currentDisplayTime
+        // );
         return;
       }
 
@@ -35,10 +35,10 @@ export const useDanmaku = (settings, isPlaying) => {
       let isRetroactive = false;
 
       if (isSeek) {
-        console.log('[ProcessDanmaku] Seek detected:', {
-          currentDisplayTime,
-          lastProcessed: lastProcessedTimeRef.current,
-        });
+        // console.log('[ProcessDanmaku] Seek detected:', {
+        //   currentDisplayTime,
+        //   lastProcessed: lastProcessedTimeRef.current,
+        // });
 
         // 1. Reset current state
         // 1. Reset current state
@@ -69,11 +69,11 @@ export const useDanmaku = (settings, isPlaying) => {
 
       if (commentsToProcess.length > 0) {
         if (!isRetroactive) {
-          console.log('[ProcessDanmaku] Adding new comments:', {
-            count: commentsToProcess.length,
-            searchStart: lastProcessedTimeRef.current,
-            currentDisplayTime,
-          });
+          // console.log('[ProcessDanmaku] Adding new comments:', {
+          //   count: commentsToProcess.length,
+          //   searchStart: lastProcessedTimeRef.current,
+          //   currentDisplayTime,
+          // });
         }
 
         const containerWidth = danmakuContainerRef.current.clientWidth;
@@ -226,6 +226,7 @@ export const useDanmaku = (settings, isPlaying) => {
                 maxWidth = Math.max(maxWidth, childData.totalWidth);
                 childrenIncluded++;
               } else {
+                // console.log(`[DanmakuLayout] Truncating child in root ${root.id} due to size limit.`);
                 truncatedCount++;
               }
             });
@@ -302,8 +303,14 @@ export const useDanmaku = (settings, isPlaying) => {
             const childHeight = actualPixelHeight;
 
             if (currentChildCount >= MAX_CHILDREN_DISPLAY) {
+              console.log(
+                `[DanmakuLayout] Skipping child ${c.id} (root ${c.rootId}): Max children count reached`
+              );
               skip = true;
             } else if (childTop + childHeight > displayLimit) {
+              console.log(
+                `[DanmakuLayout] Skipping child ${c.id} (root ${c.rootId}): Exceeds display area`
+              );
               skip = true;
             } else {
               // Check MAX_TREE_ROWS equivalent (relative to parent)
@@ -492,7 +499,7 @@ export const useDanmaku = (settings, isPlaying) => {
     if (danmakuContainerRef.current) {
       const state = isPlaying ? 'running' : 'paused';
       danmakuContainerRef.current.style.setProperty('--play-state', state);
-      console.log('[Danmaku] Setting --play-state:', state);
+      // console.log('[Danmaku] Setting --play-state:', state);
     }
   }, [isPlaying]);
 

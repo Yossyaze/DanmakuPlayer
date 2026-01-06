@@ -26,7 +26,7 @@ const DanmakuLayer = ({
     if (containerRef.current) {
       const state = isPlaying ? 'running' : 'paused';
       containerRef.current.style.setProperty('--play-state', state);
-      console.log('[DanmakuLayer] Setting --play-state:', state);
+      // console.log('[DanmakuLayer] Setting --play-state:', state);
     }
   }, [containerRef, isPlaying]);
 
@@ -245,6 +245,7 @@ const DanmakuItem = React.memo(
                     alt="danmaku"
                     className="h-full object-contain"
                     onError={(e) => {
+                      console.log('[DanmakuLayer] Image load error:', node.content);
                       // Replace with compact error placeholder
                       const container = e.target.parentElement;
                       container.style.height = 'auto';

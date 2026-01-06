@@ -32,34 +32,16 @@ export function parseCommentToNodes(comment, options) {
   let imageHeight = 0; // Track image height for rowSpan calculation
   const effectiveLineHeight = isChild ? lineHeight * childFontScale : lineHeight;
 
-  // Check if this is AA (simple heuristic: contains multiple lines and special chars)
+  // Check if this might be AA (Ascii Art)
   const lines = comment.text.split('\n');
-
-  // Remove tree indicators (└├│) from AA check - they're used for comment trees, not AA
   const textWithoutTreeIndicators = comment.text.replace(/[└├│┌┐┘┬┴┼]/g, '');
-
-  const isAA =
+  const matchesAACriteria =
     lines.length >= 3 &&
     (comment.text.includes('　') || // Full-width space
-      /[─━┃┏┓┗┛┣┫┳┻╋]/.test(textWithoutTreeIndicators) || // Box drawing (excluding tree chars)
+      /[─━┃┏┓┗┛┣┫┳┻╋]/.test(textWithoutTreeIndicators) || // Box drawing
       /[○●◎◇◆□■△▲▽▼]/.test(comment.text)); // Geometric shapes
 
-  // For AA: calculate width as max line width, rowSpan as number of lines
-  // AA font is 0.8em, so adjust fontSize
-  const aaFontSize = fontSize * 0.8;
-
-  if (isAA) {
-    let maxLineWidth = 0;
-    lines.forEach((line) => {
-      const w = measureTextWidth(line, aaFontSize);
-      if (w > maxLineWidth) maxLineWidth = w;
-    });
-    nodes.push({ type: 'text', text: comment.text, width: maxLineWidth });
-    rowSpan = lines.length;
-    const totalWidth = maxLineWidth;
-    return { nodes, totalWidth, rowSpan, isAA: true };
-  }
-
+  // 1. Try to parse as Image/URL content first
   const parts = comment.text.split(/(https?:\/\/[^\s]+)/g);
 
   parts.forEach((part) => {
@@ -80,6 +62,7 @@ export function parseCommentToNodes(comment, options) {
             const imageRows = 4;
             imageHeight = effectiveLineHeight * imageRows;
             const w = imageHeight * (16 / 9);
+            // Check for duplicate keys in object (fixed)
             nodes.push({
               type: 'image',
               content: url,
@@ -87,6 +70,11 @@ export function parseCommentToNodes(comment, options) {
               height: imageHeight,
               valid: cachedValidity !== false,
             });
+            console.log(
+              `[DanmakuProcessor] Added image node: ${url} (${w}x${imageHeight}) Valid: ${
+                cachedValidity !== false
+              }`
+            );
             imageWidth += w + 4; // 4px gap between images
           } else {
             // Image is known to be invalid, treat as error placeholder
@@ -98,6 +86,7 @@ export function parseCommentToNodes(comment, options) {
               text: errorText,
               width: w,
             });
+            console.log(`[DanmakuProcessor] Image error placeholder for ${url}`);
             textWidth += w;
           }
         }
@@ -125,6 +114,32 @@ export function parseCommentToNodes(comment, options) {
     }
   });
 
+  // 2. Decide if we should treat this as AA
+  // Priority: If images exist, it's NOT AA (render as image)
+  // If no images BUT matches AA criteria, treat as AA
+  const isAA = imageCount === 0 && matchesAACriteria;
+
+  if (isAA) {
+    // Re-calculate for AA specific layout (block text)
+    const aaFontSize = fontSize * 0.8;
+    let maxLineWidth = 0;
+    lines.forEach((line) => {
+      const w = measureTextWidth(line, aaFontSize);
+      if (w > maxLineWidth) maxLineWidth = w;
+    });
+    // Clear nodes and replace with single AA text node
+    const aaNodes = [{ type: 'text', text: comment.text, width: maxLineWidth }];
+    const actualPixelHeight = lines.length * aaFontSize;
+    return {
+      nodes: aaNodes,
+      totalWidth: maxLineWidth,
+      rowSpan: lines.length,
+      isAA: true,
+      actualPixelHeight,
+    };
+  }
+
+  // 3. Finish processing for normal/image comments
   // Add placeholder for images in placeholder mode
   if (imageMode === 'placeholder' && imageCount > 0) {
     const text = imageCount === 1 ? '[画像]' : `[画像x${imageCount}]`;

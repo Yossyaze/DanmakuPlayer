@@ -141,6 +141,17 @@ export function useDanmakuTree(sourceComments, enableTreeView) {
       return finalNode;
     });
 
+    // 4. Debug Logging
+    const rootCount = processed.filter(
+      (n) => !n.rootId || n.id === n.rootId || n.layoutIndex === 0
+    ).length;
+    const childCount = processed.length - rootCount;
+    const orphanCount = nodes.filter((n) => n.parentId && !nodeMap.has(n.parentId)).length;
+
+    console.log(
+      `[DanmakuTree] Built tree with ${rootCount} roots, ${childCount} children. Orphans: ${orphanCount}`
+    );
+
     // 時間でソート
     return processed.sort((a, b) => a.time - b.time);
   }, [sourceComments, enableTreeView]);
