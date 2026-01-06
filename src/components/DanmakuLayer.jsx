@@ -35,7 +35,7 @@ const DanmakuLayer = ({
   return (
     <div
       ref={containerRef}
-      className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden"
+      className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-[51]"
       // Note: --play-state is now managed within this component
     >
       {activeDanmaku.map((dm) => (

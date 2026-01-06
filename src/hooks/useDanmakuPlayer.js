@@ -60,6 +60,16 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       abeMode: false, // 安倍晋三モード
     };
   });
+  // End Card Settings State
+  // End Card Settings State (Project-specific, not persistent globally)
+  const [endCardSettings, setEndCardSettings] = useState({
+    enabled: false,
+    type: 'file', // 'file' | 'url' | 'log'
+    value: '',
+    file: null,
+  });
+
+  const [showEndCard, setShowEndCard] = useState(false);
 
   // Save settings to localStorage whenever they change
   useEffect(() => {
@@ -96,14 +106,16 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
   }, [player.videoSrc, player.isPlaying]);
   const animationFrameRef = useRef(null);
   const lastTimeUpdateRef = useRef(0);
+  const prevDisplayTimeRef = useRef(0); // Added for strict time tracking
   const lastProcessedTimeRef = useRef(0);
+  const lastFrameTimeRef = useRef(0); // Added for EndCard delta timing
   const progressBarRef = useRef(null);
   const thumbRef = useRef(null);
   const wasPlayingRef = useRef(false);
   const isDraggingRef = useRef(false);
 
   // --- Danmaku Hook ---
-  const danmaku = useDanmaku(dmSettings, player.isPlaying);
+  const danmaku = useDanmaku(dmSettings, player.isPlaying || showEndCard);
   const { processDanmaku, resetDanmaku, danmakuContainerRef, skipNextProcess } = danmaku;
 
   // --- Image Validity Checking ---
@@ -153,6 +165,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     resetDanmaku();
     lastProcessedTimeRef.current = cmSystem.timeOffset;
     cmSystem.resetCmState();
+    setShowEndCard(false);
   }, [player, resetDanmaku, cmSystem]);
 
   // Expose function to reset all settings (Logs, CMs, Offsets)
@@ -472,7 +485,17 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
 
       let displayTime = 0;
 
-      if (cmSystem.cmStateRef.current.isWaiting) {
+      if (showEndCard) {
+        // [END CARD MODE] - Synthetic Time Progression
+        const now = performance.now();
+        // Calculate delta since last frame (cap at 100ms to prevent jumps)
+        const delta = Math.min((now - lastFrameTimeRef.current) / 1000, 0.1);
+        lastFrameTimeRef.current = now;
+
+        // Increment time based on last known time
+        // Use prevDisplayTimeRef for smooth accumulation
+        displayTime = prevDisplayTimeRef.current + delta;
+      } else if (cmSystem.cmStateRef.current.isWaiting) {
         // [CM MODE]
         const activeRange = cmSystem.cmRanges.find(
           (r) => r.id === cmSystem.cmStateRef.current.cmRangeId
@@ -578,17 +601,20 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       }
 
       // DOM Updates
-      if (progressBarRef.current && cmSystem.getTotalDuration > 0 && !isDraggingRef.current) {
-        // Display Time is Log Time. We want to show progress relative to Video Start (which is at Log Time = timeOffset).
-        // So relative time = displayTime - timeOffset.
-        const relativeTime = displayTime - cmSystem.timeOffset;
-        const percent = (relativeTime / cmSystem.getTotalDuration) * 100;
-        progressBarRef.current.style.width = `${Math.max(0, Math.min(100, percent))}%`;
-      }
-      if (thumbRef.current && cmSystem.getTotalDuration > 0 && !isDraggingRef.current) {
-        const relativeTime = displayTime - cmSystem.timeOffset;
-        const percent = (relativeTime / cmSystem.getTotalDuration) * 100;
-        thumbRef.current.style.left = `${Math.max(0, Math.min(100, percent))}%`;
+      // Only update UI if NOT showing end card (freeze UI at end)
+      if (!showEndCard) {
+        if (progressBarRef.current && cmSystem.getTotalDuration > 0 && !isDraggingRef.current) {
+          // Display Time is Log Time. We want to show progress relative to Video Start (which is at Log Time = timeOffset).
+          // So relative time = displayTime - timeOffset.
+          const relativeTime = displayTime - cmSystem.timeOffset;
+          const percent = (relativeTime / cmSystem.getTotalDuration) * 100;
+          progressBarRef.current.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+        }
+        if (thumbRef.current && cmSystem.getTotalDuration > 0 && !isDraggingRef.current) {
+          const relativeTime = displayTime - cmSystem.timeOffset;
+          const percent = (relativeTime / cmSystem.getTotalDuration) * 100;
+          thumbRef.current.style.left = `${Math.max(0, Math.min(100, percent))}%`;
+        }
       }
 
       if (Math.abs(displayTime - lastTimeUpdateRef.current) > 0.5) {
@@ -596,14 +622,17 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
         lastTimeUpdateRef.current = displayTime;
       }
 
+      // Update exact previous time for next frame accumulation
+      prevDisplayTimeRef.current = displayTime;
+
       // Use danmakuComments for Danmaku display (Tree support)
       processDanmaku(displayTime, danmakuComments, imageValidityMapRef.current);
 
-      if (player.isPlaying || cmSystem.cmStateRef.current.isWaiting) {
+      if (player.isPlaying || cmSystem.cmStateRef.current.isWaiting || showEndCard) {
         animationFrameRef.current = requestAnimationFrame(frameLoop);
       }
     },
-    [cmSystem, processDanmaku, danmakuComments, checkCmCollision, player]
+    [cmSystem, processDanmaku, danmakuComments, checkCmCollision, player, showEndCard]
   );
 
   // Track previous isPlaying state for detecting play start
@@ -612,6 +641,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
   useEffect(() => {
     const wasPlaying = prevIsPlayingRef.current;
     const nowPlaying = player.isPlaying;
+    const shouldRun = nowPlaying || showEndCard;
 
     if (!wasPlaying && nowPlaying) {
       // Playback just started - skip first processDanmaku to prevent stale comments
@@ -620,7 +650,8 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
       skipNextProcess();
     }
 
-    if (nowPlaying) {
+    if (shouldRun) {
+      lastFrameTimeRef.current = performance.now(); // Reset time base
       animationFrameRef.current = requestAnimationFrame(processDanmakuFrame);
     } else {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
@@ -631,7 +662,7 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     return () => {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [player.isPlaying, processDanmakuFrame, skipNextProcess]);
+  }, [player.isPlaying, showEndCard, processDanmakuFrame, skipNextProcess]);
 
   // --- Derived State for Active Comment ID ---
   // Use visibleComments (time-sorted) instead of danmakuComments (tree-sorted)
@@ -798,6 +829,10 @@ export const useDanmakuPlayer = (enableTreeView = false) => {
     setDmSettings,
     abeModeUnlocked,
     unlockAbeMode,
+    endCardSettings,
+    setEndCardSettings,
+    showEndCard,
+    setShowEndCard,
     showAbeUnlockCelebration,
     closeAbeUnlockCelebration,
     isAutoScroll,

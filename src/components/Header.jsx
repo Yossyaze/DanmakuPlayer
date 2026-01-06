@@ -10,6 +10,7 @@ import {
   RotateCcw, // Import
   Save,
   Tv,
+  Image, // Import
 } from 'lucide-react';
 import React from 'react';
 
@@ -29,6 +30,7 @@ const Header = ({
   onOpenUrlModal,
   onOpenHelp,
   onReset, // New prop
+  onOpenEndCardSettings, // New prop
 }) => {
   return (
     <div className="bg-gray-800 py-1 px-2 flex items-center shrink-0 z-20 relative shadow-md gap-4 overflow-x-auto">
@@ -140,6 +142,7 @@ const Header = ({
           >
             <RotateCcw size={18} />
           </button>
+
         </div>
 
         <div className="h-6 w-px bg-gray-700 mx-1"></div>

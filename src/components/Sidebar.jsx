@@ -23,6 +23,7 @@ import {
   FileText,
   GripVertical,
   Hash,
+  Image,
   Link as LinkIcon,
   Pipette,
   Plus,
@@ -108,6 +109,7 @@ const Sidebar = ({
   abeModeUnlocked,
   dmSettings, // Ensure dmSettings is destructured
   setDmSettings, // Ensure setDmSettings is destructured
+  onOpenEndCardSettings,
 }) => {
   // console.log('Sidebar formatTime:', formatTime);
   // danmakuContainerRef no longer needed for duration-based setting
@@ -963,6 +965,21 @@ const Sidebar = ({
                   </button>
                 </div>
               )}
+
+              {/* End Card Setting */}
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700">
+                <div className="flex items-center gap-2">
+                  <Image size={16} className="text-purple-400" />
+                  <span className="text-gray-400 text-xs">エンドカード</span>
+                </div>
+                <button
+                  onClick={onOpenEndCardSettings}
+                  className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 text-[10px] rounded transition-colors shadow-sm flex items-center gap-1"
+                >
+                  <Settings size={12} />
+                  設定を開く
+                </button>
+              </div>
 
               <div className="h-px bg-gray-700 my-2" />
 

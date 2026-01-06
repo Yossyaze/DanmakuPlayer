@@ -41,6 +41,8 @@ export function useAppHandlers({
   setProjectDirPath,
   unlockAbeMode,
   setIsAutoScroll,
+  endCardSettings,
+  setEndCardSettings,
 }) {
   const autoPlayRequestedRef = useRef(false);
 
@@ -165,6 +167,7 @@ export function useAppHandlers({
       videoFilePath: player.videoFilePath, // Full absolute path for auto-loading
       ngSettings: logSystem.ngSettings,
       aaOverrideMap: aaOverrideMap,
+      endCardSettings: { ...endCardSettings, file: null },
     }),
     [
       videoStartTimeStr,
@@ -176,6 +179,7 @@ export function useAppHandlers({
       player.videoFilePath,
       logSystem.ngSettings,
       aaOverrideMap,
+      endCardSettings,
     ]
   );
 
@@ -281,6 +285,12 @@ export function useAppHandlers({
       if (data.loadedFiles) logSystem.loadProject(data.loadedFiles);
 
       if (data.aaOverrideMap) setAaOverrideMap(data.aaOverrideMap);
+      
+      if (data.endCardSettings) {
+        if (overwriteSettings || !endCardSettings?.enabled) {
+          setEndCardSettings(data.endCardSettings);
+        }
+      }
 
       // Force enable auto-scroll on project load to ensure sidebar aligns with initial time
       if (setIsAutoScroll) setIsAutoScroll(true);
@@ -320,6 +330,8 @@ export function useAppHandlers({
       setRequestedVideoPath,
       setShowVideoRequestModal,
       setProjectDirPath,
+      endCardSettings,
+      setEndCardSettings,
     ]
   );
 

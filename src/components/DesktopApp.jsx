@@ -117,6 +117,11 @@ const DesktopApp = () => {
     danmakuComments,
     abeModeUnlocked,
     unlockAbeMode,
+    // End Card
+    endCardSettings,
+    setEndCardSettings,
+    showEndCard,
+    setShowEndCard,
     showAbeUnlockCelebration,
     closeAbeUnlockCelebration,
   } = useDanmakuPlayer(enableTreeView);
@@ -132,6 +137,18 @@ const DesktopApp = () => {
   const [requestedVideoName, setRequestedVideoName] = useState('');
   const [requestedVideoPath, setRequestedVideoPath] = useState('');
   const [isResizing, setIsResizing] = useState(false);
+  
+  // End Card Settings Modal State
+  const [showEndCardSettingsModal, setShowEndCardSettingsModal] = useState(false);
+
+  const handleEndCardReplay = useCallback(() => {
+    setShowEndCard(false);
+    player.seekTo(0);
+    // Use timeout to ensure state update propagates before playing (optional but safer)
+    setTimeout(() => {
+        requestPlay();
+    }, 100);
+  }, [player, requestPlay, setShowEndCard]);
 
   // Confirm Modal State
   const [confirmModalState, setConfirmModalState] = useState({
@@ -170,12 +187,13 @@ const DesktopApp = () => {
         // Switch to log-only mode
         setLogOnlyMode(true);
         // Set scroll target
+        // setShowEndCard(false); // Ensure end card is closed if jumping from it? (End card is overlay, might block view)
         setScrollToCommentId(rootId);
         // Jump to that time
         handleCommentClick(rootComment.time);
       }
     },
-    [danmakuComments, handleCommentClick]
+    [danmakuComments, handleCommentClick] // Added dependencies
   );
 
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -230,6 +248,8 @@ const DesktopApp = () => {
     setRequestedVideoPath,
     unlockAbeMode,
     setIsAutoScroll,
+    endCardSettings,
+    setEndCardSettings,
   });
 
   // Video URL Input State via Hook (Moved after useAppHandlers to resolve dependency)
@@ -614,6 +634,14 @@ const DesktopApp = () => {
       handleMouseMove={handleMouseMove}
       handleMouseLeave={handleMouseLeave}
       logo={logo}
+      // End Card
+      endCardSettings={endCardSettings}
+      showEndCard={showEndCard}
+      setShowEndCard={setShowEndCard}
+      showEndCardSettingsModal={showEndCardSettingsModal}
+      setShowEndCardSettingsModal={setShowEndCardSettingsModal}
+      handleSettingsChange={setEndCardSettings}
+      handleEndCardReplay={handleEndCardReplay}
     />
   );
 };

@@ -14,7 +14,10 @@ import UrlInputModal from '../modals/UrlInputModal';
 import VideoRequestModal from '../modals/VideoRequestModal';
 import Sidebar from '../Sidebar';
 import AbeModeUnlockCelebration from '../ui/AbeModeUnlockCelebration';
+
 import VideoControls from '../VideoControls';
+import EndCard from '../EndCard';
+import EndCardSettingsModal from '../modals/EndCardSettingsModal';
 
 const DesktopLayout = ({
   // Refs
@@ -150,7 +153,16 @@ const DesktopLayout = ({
   handleDragOver,
   handleDragLeave,
   handleDrop,
+
   onScrub, // New prop
+  // End Card
+  endCardSettings,
+  showEndCard,
+  setShowEndCard,
+  showEndCardSettingsModal,
+  setShowEndCardSettingsModal,
+  handleSettingsChange, // For EndCard settings
+  handleEndCardReplay,
 }) => {
   const {
     playerRef,
@@ -202,6 +214,7 @@ const DesktopLayout = ({
         onOpenHelp={() => setShowHelpModal(true)}
         unlockAbeMode={unlockAbeMode}
         onReset={onReset}
+        onOpenEndCardSettings={() => setShowEndCardSettingsModal(true)}
       />
 
       <ConfirmModal
@@ -363,7 +376,12 @@ const DesktopLayout = ({
                       console.log('HLSVideo: onCanPlay');
                       if (!player.isReady) player.setIsReady(true);
                     }}
-                    onEnded={() => player.setPlayingState(false)}
+                    onEnded={() => {
+                        player.setPlayingState(false);
+                        if (endCardSettings?.enabled) {
+                            setShowEndCard(true);
+                        }
+                    }}
                     onPause={() => {
                       console.log('HLSVideo: onPause triggered');
                       const isWaiting = cmSystem.cmStateRef.current.isWaiting;
@@ -411,7 +429,12 @@ const DesktopLayout = ({
                         requestPlay();
                       }
                     }}
-                    onEnded={() => player.setPlayingState(false)}
+                    onEnded={() => {
+                        player.setPlayingState(false);
+                         if (endCardSettings?.enabled) {
+                            setShowEndCard(true);
+                        }
+                    }}
                     onPause={() => {
                       console.log('NativeVideo: onPause triggered');
                       const isWaiting = cmSystem.cmStateRef.current.isWaiting;
@@ -483,8 +506,12 @@ const DesktopLayout = ({
                         } else if (event.data === 0) {
                           // Ended
                           player.setPlayingState(false);
+                           if (endCardSettings?.enabled) {
+                            setShowEndCard(true);
+                        }
                         }
                       }}
+
                       onError={(e) => {
                         console.error('YouTube Error:', e);
                         alert('YouTube Error: ' + e.data);
@@ -510,7 +537,7 @@ const DesktopLayout = ({
                     onImageClick={(url) => setExpandedDanmakuImage(url)}
                     onTruncationClick={handleTruncationIndicatorClick}
                     isEnabled={dmSettings.enabled && showDanmaku && !logOnlyMode}
-                    isPlaying={playerIsPlaying}
+                    isPlaying={playerIsPlaying || showEndCard}
                     abeMode={dmSettings.abeMode}
                   />
                 </div>
@@ -546,12 +573,25 @@ const DesktopLayout = ({
                   />
                 )}
 
+                {/* End Card Overlay */}
+                {showEndCard && (
+                  <EndCard
+                    settings={endCardSettings}
+                    onClose={() => setShowEndCard(false)}
+                    onReplay={handleEndCardReplay}
+                  />
+                )}
+
                 {!logOnlyMode && (
                   <VideoControls
                     visible={showControls}
                     isPlaying={playerIsPlaying}
                     togglePlay={togglePlay}
-                    currentTime={currentTime - cmSystem.timeOffset}
+                    currentTime={
+                      showEndCard
+                        ? cmSystem.getTotalDuration
+                        : currentTime - cmSystem.timeOffset
+                    }
                     totalDuration={cmSystem.getTotalDuration} // Use Total Duration (Video + CM)
                     handleSeek={handleSeek}
                     // onSync={handleSyncButton} // VideoControls doesn't support generic onSync yet, irrelevant
@@ -744,6 +784,16 @@ const DesktopLayout = ({
           projectDirPath={projectDirPath}
         />
 
+        <EndCardSettingsModal
+          isOpen={showEndCardSettingsModal}
+          onClose={() => setShowEndCardSettingsModal(false)}
+          settings={endCardSettings}
+          onSettingsChange={handleSettingsChange}
+          logComments={logSystem.visibleComments} // Use visible comments for finding images
+        />
+
+        {/* --- Sidebar (Right) --- */}
+
         {/* --- Sidebar (Right) --- */}
         {/* Show Sidebar when showSidebar is true and not in logOnlyMode */}
         {showSidebar && !logOnlyMode && (
@@ -796,6 +846,7 @@ const DesktopLayout = ({
             setImageLayout={setImageLayout}
             aaMode={aaMode}
             setAaMode={setAaMode}
+            onOpenEndCardSettings={() => setShowEndCardSettingsModal(true)}
             loadedFiles={logSystem.loadedFiles}
             handleToggleFileVisibility={logSystem.handleToggleFileVisibility}
             handleRemoveFile={logSystem.handleRemoveFile}
