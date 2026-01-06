@@ -21,6 +21,7 @@ export function parseCommentToNodes(comment, options) {
     isChild = false,
     childFontScale = 0.9,
     imageValidityMap = null,
+    forceAA = null, // true: FORCE AA, false: FORCE NORMAL (ignore AA check), null: AUTO
   } = options;
 
   const nodes = [];
@@ -40,6 +41,27 @@ export function parseCommentToNodes(comment, options) {
     (comment.text.includes('　') || // Full-width space
       /[─━┃┏┓┗┛┣┫┳┻╋]/.test(textWithoutTreeIndicators) || // Box drawing
       /[○●◎◇◆□■△▲▽▼]/.test(comment.text)); // Geometric shapes
+
+  // 0. Force AA Check (Priority 1)
+  if (forceAA === true) {
+    // Re-calculate for AA specific layout (block text)
+    const aaFontSize = fontSize * 0.8;
+    let maxLineWidth = 0;
+    lines.forEach((line) => {
+      const w = measureTextWidth(line, aaFontSize);
+      if (w > maxLineWidth) maxLineWidth = w;
+    });
+    // Clear nodes and replace with single AA text node
+    const aaNodes = [{ type: 'text', text: comment.text, width: maxLineWidth }];
+    const actualPixelHeight = lines.length * aaFontSize;
+    return {
+      nodes: aaNodes,
+      totalWidth: maxLineWidth,
+      rowSpan: lines.length,
+      isAA: true,
+      actualPixelHeight,
+    };
+  }
 
   // 1. Try to parse as Image/URL content first
   const parts = comment.text.split(/(https?:\/\/[^\s]+)/g);
@@ -117,7 +139,8 @@ export function parseCommentToNodes(comment, options) {
   // 2. Decide if we should treat this as AA
   // Priority: If images exist, it's NOT AA (render as image)
   // If no images BUT matches AA criteria, treat as AA
-  const isAA = imageCount === 0 && matchesAACriteria;
+  // If forceAA is false, NEVER treat as AA
+  const isAA = forceAA === false ? false : imageCount === 0 && matchesAACriteria;
 
   if (isAA) {
     // Re-calculate for AA specific layout (block text)
