@@ -605,7 +605,7 @@ const Sidebar = ({
   };
 
   // Helper to render time input based on mode
-  const renderTimeInput = (mode, value, setValue, placeholder) => {
+  const renderTimeInput = (mode, value, setValue, placeholder, dateValue, setDateValue) => {
     const handleGetCurrent = () => {
       if (mode === 'video') {
         // Use seekbar time (logical time = log time - timeOffset)
@@ -628,29 +628,64 @@ const Sidebar = ({
         const startSec = h * 3600 + m * 60 + s;
         const currentSec = startSec + currentLogicalTime;
 
-        const hh = Math.floor(currentSec / 3600);
-        const mm = Math.floor((currentSec % 3600) / 60);
-        const ss = Math.floor(currentSec % 60);
+        // Handle day overflow
+        let days = Math.floor(currentSec / 86400);
+        let remainingSec = currentSec % 86400;
+        if (remainingSec < 0) {
+          days -= 1;
+          remainingSec += 86400;
+        }
+
+        const hh = Math.floor(remainingSec / 3600);
+        const mm = Math.floor((remainingSec % 3600) / 60);
+        const ss = Math.floor(remainingSec % 60);
 
         const formatted = `${hh}:${mm.toString().padStart(2, '0')}:${ss
           .toString()
           .padStart(2, '0')}`;
         setValue(formatted);
+
+        // Update date if needed
+        if (startDateStr && days !== 0 && setDateValue) {
+          const baseDate = new Date(startDateStr);
+          baseDate.setDate(baseDate.getDate() + days);
+          const newDateStr = `${baseDate.getFullYear()}-${String(baseDate.getMonth() + 1).padStart(2, '0')}-${String(baseDate.getDate()).padStart(2, '0')}`;
+          setDateValue(newDateStr);
+        } else if (startDateStr && !dateValue && setDateValue) {
+          setDateValue(startDateStr);
+        }
       }
     };
 
-    if (mode === 'log' || mode === 'video' || mode === 'duration') {
-      const showHours = mode === 'log';
+    if (mode === 'log') {
+      return (
+        <div className="flex items-center gap-1">
+          <DateInput value={dateValue || ''} onChange={setDateValue} />
+          <TimeInput value={value} onChange={setValue} showHours={true} placeholder={placeholder} />
+          <button
+            onClick={handleGetCurrent}
+            title="現在の時間を取得"
+            className="text-gray-400 hover:text-white"
+          >
+            <Pipette size={12} />
+          </button>
+        </div>
+      );
+    } else if (mode === 'video' || mode === 'duration') {
       return (
         <div className="flex items-center gap-1">
           <TimeInput
             value={value}
             onChange={setValue}
-            showHours={showHours}
+            showHours={false}
             placeholder={placeholder}
           />
-          {(mode === 'video' || mode === 'log') && (
-            <button onClick={handleGetCurrent} title="現在の時間を取得">
+          {mode === 'video' && (
+            <button
+              onClick={handleGetCurrent}
+              title="現在の時間を取得"
+              className="text-gray-400 hover:text-white"
+            >
               <Pipette size={12} />
             </button>
           )}
@@ -1185,7 +1220,9 @@ const Sidebar = ({
                         cmStartMode,
                         cmStartInput,
                         setCmStartInput,
-                        cmStartMode === 'log' ? '00:00:00' : '00:00'
+                        cmStartMode === 'log' ? '00:00:00' : '00:00',
+                        cmStartDateInput,
+                        setCmStartDateInput
                       )}
                     </div>
 
@@ -1204,7 +1241,9 @@ const Sidebar = ({
                         cmEndMode,
                         cmEndInput,
                         setCmEndInput,
-                        cmEndMode === 'log' ? '00:00:00' : '00:00'
+                        cmEndMode === 'log' ? '00:00:00' : '00:00',
+                        cmEndDateInput,
+                        setCmEndDateInput
                       )}
                     </div>
 
