@@ -1098,6 +1098,44 @@ const Sidebar = ({
                           onChange={setStartTimeStr}
                           showHours={true}
                         />
+                        <button
+                          onClick={() => {
+                            const timeStr = startTimeStr || '00:00:00';
+                            const [h, m, s] = timeStr.split(':').map((v) => parseInt(v) || 0);
+
+                            const startSec = h * 3600 + m * 60 + s;
+                            const currentSec = startSec + currentLogicalTime;
+
+                            // Handle day overflow
+                            let days = Math.floor(currentSec / 86400);
+                            let remainingSec = currentSec % 86400;
+                            if (remainingSec < 0) {
+                              days -= 1;
+                              remainingSec += 86400;
+                            }
+
+                            const hh = Math.floor(remainingSec / 3600);
+                            const mm = Math.floor((remainingSec % 3600) / 60);
+                            const ss = Math.floor(remainingSec % 60);
+
+                            const formatted = `${hh}:${mm.toString().padStart(2, '0')}:${ss
+                              .toString()
+                              .padStart(2, '0')}`;
+                            setStartTimeStr(formatted);
+
+                            // Always update date
+                            if (startDateStr) {
+                              const baseDate = new Date(startDateStr);
+                              baseDate.setDate(baseDate.getDate() + days);
+                              const newDateStr = `${baseDate.getFullYear()}-${String(baseDate.getMonth() + 1).padStart(2, '0')}-${String(baseDate.getDate()).padStart(2, '0')}`;
+                              setStartDateStr(newDateStr);
+                            }
+                          }}
+                          title="現在の時間を取得"
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <Pipette size={12} />
+                        </button>
                       </div>
                     </div>
                     <div className="flex justify-center text-gray-500 transform rotate-90 text-lg leading-none">
