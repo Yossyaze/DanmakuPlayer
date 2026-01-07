@@ -1112,6 +1112,23 @@ const Sidebar = ({
                           showHours={true}
                           placeholder="00:00"
                         />
+                        <button
+                          onClick={() => {
+                            const totalSec = Math.floor(currentLogicalTime - timeOffset);
+                            const h = Math.floor(totalSec / 3600);
+                            const m = Math.floor((totalSec % 3600) / 60);
+                            const s = Math.floor(totalSec % 60);
+                            const val =
+                              h > 0
+                                ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+                                : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                            setVideoStartTimeStr(val);
+                          }}
+                          title="現在の時間を取得"
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <Pipette size={12} />
+                        </button>
                       </div>
                     </div>
                   </div>
