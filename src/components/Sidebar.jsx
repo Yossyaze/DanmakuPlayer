@@ -645,14 +645,12 @@ const Sidebar = ({
           .padStart(2, '0')}`;
         setValue(formatted);
 
-        // Update date if needed
-        if (startDateStr && days !== 0 && setDateValue) {
+        // Always update date based on current time
+        if (startDateStr && setDateValue) {
           const baseDate = new Date(startDateStr);
           baseDate.setDate(baseDate.getDate() + days);
           const newDateStr = `${baseDate.getFullYear()}-${String(baseDate.getMonth() + 1).padStart(2, '0')}-${String(baseDate.getDate()).padStart(2, '0')}`;
           setDateValue(newDateStr);
-        } else if (startDateStr && !dateValue && setDateValue) {
-          setDateValue(startDateStr);
         }
       }
     };
