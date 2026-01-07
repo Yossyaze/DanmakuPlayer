@@ -179,7 +179,6 @@ const LogCommentItem = ({
           showImages={safeSettings.showImages}
           setZoomedImage={setZoomedImage}
           thumbnailMode={safeSettings.showThumbnails}
-          imageLayout={safeSettings.imageLayout || 'inline'}
           onAnchorMouseEnter={onAnchorMouseEnter}
           onAnchorMouseLeave={onAnchorMouseLeave}
           abeMode={safeSettings.abeMode}

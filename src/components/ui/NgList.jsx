@@ -1,7 +1,14 @@
 import { X } from 'lucide-react';
 import React from 'react';
 
-const NgList = ({ ngSettings, removeNgId, removeNgComment, allComments, onIdClick }) => {
+const NgList = ({
+  ngSettings,
+  removeNgId,
+  removeNgComment,
+  removeNgWord, // Add prop
+  allComments,
+  onIdClick,
+}) => {
   return (
     <div className="space-y-5">
       {/* NG IDs */}
@@ -148,6 +155,50 @@ const NgList = ({ ngSettings, removeNgId, removeNgComment, allComments, onIdClic
         ) : (
           <div className="text-xs text-gray-600 text-center py-4 bg-gray-950/50 rounded border border-dashed border-gray-800">
             単発NGはありません
+          </div>
+        )}
+      </div>
+
+      {/* NG Words */}
+      <div className="space-y-1">
+        <div className="flex justify-between text-[10px] text-gray-500">
+          <span>NGワード ({ngSettings?.words?.length || 0})</span>
+        </div>
+        {ngSettings?.words?.length > 0 ? (
+          <div className="bg-gray-950 border border-gray-800 rounded max-h-48 overflow-y-auto scrollbar-thin p-1 space-y-1">
+            {ngSettings.words.map((wordEntry, index) => {
+              const isRegex = typeof wordEntry === 'object' && wordEntry.isRegex;
+              const text = typeof wordEntry === 'string' ? wordEntry : wordEntry.text;
+
+              return (
+                <div
+                  key={`${text}-${index}`}
+                  className="flex items-center justify-between text-xs bg-gray-900 p-2 rounded border border-gray-800/50 text-gray-300"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    {isRegex && (
+                      <span className="text-[10px] bg-blue-900/50 text-blue-300 px-1 rounded border border-blue-800/50 font-mono">
+                        .*
+                      </span>
+                    )}
+                    <span className="font-mono truncate" title={text}>
+                      {text}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => removeNgWord && removeNgWord(wordEntry)}
+                    className="text-gray-500 hover:text-red-400 transition-colors p-0.5"
+                    title="解除"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-xs text-gray-600 text-center py-4 bg-gray-950/50 rounded border border-dashed border-gray-800">
+            NGワードはありません
           </div>
         )}
       </div>

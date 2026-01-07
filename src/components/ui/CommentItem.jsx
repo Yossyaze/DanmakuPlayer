@@ -23,7 +23,6 @@ const CommentItem = ({
   depth = 0,
   rootTime, // Time of the root comment in tree view
   showImages = true,
-  imageLayout = 'inline', // 'inline' | 'grouped'
   setZoomedImage,
   className = '',
   isLogMode = false,
@@ -151,7 +150,6 @@ const CommentItem = ({
               onAnchorMouseLeave={onAnchorMouseLeave}
               onUrlLoad={onUrlLoad}
               showImages={showImages}
-              imageLayout={imageLayout}
               setZoomedImage={setZoomedImage}
               abeMode={abeMode}
             />

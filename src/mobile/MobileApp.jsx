@@ -1223,6 +1223,17 @@ const MobileApp = () => {
                         <div className="flex items-center gap-3">
                           <span className="text-gray-500">{file.rawComments.length}件</span>
                           <button
+                            onClick={() => {
+                              const newName = prompt('新しい名前を入力:', file.title || file.name);
+                              if (newName && newName.trim()) {
+                                logSystem.handleRenameFile(file.id, newName);
+                              }
+                            }}
+                            className="text-gray-500 hover:text-blue-400 p-1"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button
                             onClick={() => logSystem.handleRemoveFile(file.id)}
                             className="text-gray-500 hover:text-red-400 p-1"
                           >
@@ -1270,15 +1281,23 @@ const MobileApp = () => {
 
                 {/* Time Settings */}
                 <div className="bg-gray-800 p-3 rounded border border-gray-700 space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="space-y-1">
                     <span className="text-xs text-gray-400">ログ開始時間</span>
-                    <input
-                      type="text"
-                      value={logSystem.startTimeStr}
-                      onChange={(e) => logSystem.setStartTimeStr(e.target.value)}
-                      placeholder="00:00:00"
-                      className="w-24 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white text-center"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={logSystem.startDateStr}
+                        onChange={(e) => logSystem.setStartDateStr(e.target.value)}
+                        className="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
+                      />
+                      <input
+                        type="text"
+                        value={logSystem.startTimeStr}
+                        onChange={(e) => logSystem.setStartTimeStr(e.target.value)}
+                        placeholder="00:00:00"
+                        className="w-24 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white text-center"
+                      />
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-400">動画時間</span>

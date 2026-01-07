@@ -1,26 +1,27 @@
-import { X } from 'lucide-react';
+import { Calendar, X } from 'lucide-react';
 import React, { useState, useRef } from 'react';
 
-// Helper Component for Calculator-Style Time Input with Segment Editing
-const TimeInput = ({ value, onChange, showHours = false, placeholder = '00:00' }) => {
+// DateInput component with segment-based editing (similar to TimeInput)
+// Supports both manual digit input and calendar picker
+const DateInput = ({ value, onChange, placeholder = 'YYYY/MM/DD' }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [editDigits, setEditDigits] = useState('');
   const [hasStartedTyping, setHasStartedTyping] = useState(false);
-  // Segment editing: 'h', 'm', 's', or null
+  // Segment editing: 'y', 'm', 'd', or null
   const [editingSegment, setEditingSegment] = useState(null);
   const [segmentInput, setSegmentInput] = useState('');
   const inputRef = useRef(null);
+  const calendarRef = useRef(null);
 
-  // Parse value into segments
+  // Parse value into segments (YYYY-MM-DD)
   const parseValue = (val) => {
-    if (!val) return { h: '0', m: '00', s: '00' };
-    const parts = val.split(':');
+    if (!val) return { y: '----', m: '--', d: '--' };
+    // Support both - and / separators
+    const parts = val.split(/[-/]/);
     if (parts.length === 3) {
-      return { h: parts[0], m: parts[1], s: parts[2] };
-    } else if (parts.length === 2) {
-      return { h: '0', m: parts[0], s: parts[1] };
+      return { y: parts[0], m: parts[1], d: parts[2] };
     }
-    return { h: '0', m: '00', s: '00' };
+    return { y: '----', m: '--', d: '--' };
   };
 
   const getDigits = (val) => {
@@ -29,30 +30,20 @@ const TimeInput = ({ value, onChange, showHours = false, placeholder = '00:00' }
   };
 
   const formatForCommit = (rawDigits) => {
-    if (!rawDigits) return '';
-    if (showHours || rawDigits.length > 4) {
-      const padded = rawDigits.padStart(6, '0');
-      const s = padded.slice(-2);
-      const m = padded.slice(-4, -2);
-      const h = padded.slice(0, -4) || '0';
-      return `${parseInt(h)}:${m}:${s}`;
-    } else {
-      const padded = rawDigits.padStart(4, '0');
-      const s = padded.slice(-2);
-      const m = padded.slice(-4, -2);
-      return `${m}:${s}`;
-    }
+    if (!rawDigits || rawDigits.length < 4) return '';
+    const padded = rawDigits.padStart(8, '0');
+    const y = padded.slice(0, -4) || new Date().getFullYear().toString();
+    const m = padded.slice(-4, -2);
+    const d = padded.slice(-2);
+    return `${y.padStart(4, '0')}-${m}-${d}`;
   };
 
   const formatForDisplay = (rawDigits) => {
-    const useHours = showHours || rawDigits.length > 4;
-    const totalDigits = useHours ? 6 : 4;
-    const padded = rawDigits.padStart(totalDigits, '-');
-    if (useHours) {
-      return `${padded.slice(0, -4)}:${padded.slice(-4, -2)}:${padded.slice(-2)}`;
-    } else {
-      return `${padded.slice(0, -2)}:${padded.slice(-2)}`;
-    }
+    const padded = rawDigits.padStart(8, '-');
+    const y = padded.slice(0, -4);
+    const m = padded.slice(-4, -2);
+    const d = padded.slice(-2);
+    return `${y}/${m}/${d}`;
   };
 
   // Commit segment edit to value
@@ -60,22 +51,22 @@ const TimeInput = ({ value, onChange, showHours = false, placeholder = '00:00' }
     if (!editingSegment) return;
 
     const segments = parseValue(value);
-    const newVal = (segmentInput || '0').padStart(2, '0');
 
-    if (editingSegment === 'h') {
-      segments.h = String(parseInt(segmentInput) || 0);
+    if (editingSegment === 'y') {
+      segments.y = (segmentInput || new Date().getFullYear().toString()).padStart(4, '0');
     } else if (editingSegment === 'm') {
-      segments.m = newVal.slice(-2);
-    } else if (editingSegment === 's') {
-      segments.s = newVal.slice(-2);
+      const monthNum = Math.min(12, Math.max(1, parseInt(segmentInput) || 1));
+      segments.m = String(monthNum).padStart(2, '0');
+    } else if (editingSegment === 'd') {
+      const dayNum = Math.min(31, Math.max(1, parseInt(segmentInput) || 1));
+      segments.d = String(dayNum).padStart(2, '0');
     }
 
-    const hasH = showHours || parseInt(segments.h) > 0;
-    const formatted = hasH
-      ? `${segments.h}:${String(segments.m).padStart(2, '0')}:${String(segments.s).padStart(2, '0')}`
-      : `${String(segments.m).padStart(2, '0')}:${String(segments.s).padStart(2, '0')}`;
+    // Only commit if we have a valid year
+    if (segments.y && segments.y !== '----') {
+      onChange(`${segments.y}-${segments.m}-${segments.d}`);
+    }
 
-    onChange(formatted);
     setEditingSegment(null);
     setSegmentInput('');
   };
@@ -86,7 +77,12 @@ const TimeInput = ({ value, onChange, showHours = false, placeholder = '00:00' }
     setEditDigits(getDigits(value));
   };
 
-  const handleBlur = () => {
+  const handleBlur = (e) => {
+    // Don't blur if clicking calendar button
+    if (calendarRef.current && calendarRef.current.contains(e.relatedTarget)) {
+      return;
+    }
+
     if (editingSegment) {
       commitSegment();
     } else if (hasStartedTyping) {
@@ -100,17 +96,15 @@ const TimeInput = ({ value, onChange, showHours = false, placeholder = '00:00' }
   const handleSegmentClick = (seg) => (e) => {
     e.stopPropagation();
 
-    // Commit current segment if different
     if (editingSegment && editingSegment !== seg) {
       commitSegment();
     }
 
     setEditingSegment(seg);
     const segments = parseValue(value);
-    setSegmentInput(segments[seg]);
+    setSegmentInput(segments[seg].replace(/-/g, ''));
     setHasStartedTyping(false);
 
-    // Ensure input is focused
     inputRef.current?.focus();
   };
 
@@ -132,15 +126,16 @@ const TimeInput = ({ value, onChange, showHours = false, placeholder = '00:00' }
     if (editingSegment) {
       // Segment editing mode
       let newVal = segmentInput;
+      const maxLen = editingSegment === 'y' ? 4 : 2;
+
       if (isDigit) {
         if (!hasStartedTyping) {
           setHasStartedTyping(true);
           newVal = e.key;
         } else {
           newVal = segmentInput + e.key;
-          // Limit to 2-3 digits
-          if (newVal.length > (editingSegment === 'h' ? 3 : 2)) {
-            newVal = newVal.slice(-2);
+          if (newVal.length > maxLen) {
+            newVal = newVal.slice(-maxLen);
           }
         }
       } else if (isBackspace) {
@@ -161,10 +156,17 @@ const TimeInput = ({ value, onChange, showHours = false, placeholder = '00:00' }
         newDigits = editDigits.slice(0, -1);
         setHasStartedTyping(true);
       }
-      if (newDigits.length <= 9) {
+      if (newDigits.length <= 8) {
         setEditDigits(newDigits);
       }
     }
+  };
+
+  const handleCalendarChange = (e) => {
+    onChange(e.target.value);
+    setEditingSegment(null);
+    setSegmentInput('');
+    setHasStartedTyping(false);
   };
 
   const handleClear = (e) => {
@@ -177,21 +179,17 @@ const TimeInput = ({ value, onChange, showHours = false, placeholder = '00:00' }
 
   // Render
   const segments = parseValue(value);
-  const hasH = showHours || parseInt(segments.h) > 0;
 
-  const renderSeg = (seg) => {
+  const renderSeg = (seg, width) => {
     const isEditing = editingSegment === seg;
-    const display = isEditing
-      ? (segmentInput || '-').padStart(seg === 'h' ? 1 : 2, '-')
-      : seg === 'h'
-        ? segments.h
-        : segments[seg];
+    const maxLen = seg === 'y' ? 4 : 2;
+    const display = isEditing ? (segmentInput || '').padStart(maxLen, '-') : segments[seg];
 
     return (
       <span
         key={seg}
         onClick={handleSegmentClick(seg)}
-        className={`cursor-pointer rounded px-0.5 ${
+        className={`cursor-pointer rounded px-0.5 ${width} text-center ${
           isEditing
             ? 'bg-blue-500 text-white'
             : isFocused
@@ -211,6 +209,7 @@ const TimeInput = ({ value, onChange, showHours = false, placeholder = '00:00' }
       }`}
       onClick={() => inputRef.current?.focus()}
     >
+      {/* Hidden input for keyboard capture */}
       <input
         ref={inputRef}
         type="text"
@@ -222,30 +221,43 @@ const TimeInput = ({ value, onChange, showHours = false, placeholder = '00:00' }
         inputMode="numeric"
       />
 
-      <div className="font-mono text-sm text-center w-24 select-none">
+      {/* Display area */}
+      <div className="font-mono text-sm select-none flex-1">
         {!value && !isFocused ? (
           <span className="text-gray-500">{placeholder}</span>
         ) : isFocused && hasStartedTyping && !editingSegment ? (
           <span className="text-blue-400">{formatForDisplay(editDigits)}</span>
         ) : (
-          <span className="flex items-center justify-center gap-0">
-            {hasH && (
-              <>
-                {renderSeg('h')}
-                <span className={isFocused ? 'text-blue-400' : 'text-white'}>:</span>
-              </>
-            )}
-            {renderSeg('m')}
-            <span className={isFocused ? 'text-blue-400' : 'text-white'}>:</span>
-            {renderSeg('s')}
+          <span className="flex items-center gap-0">
+            {renderSeg('y', 'w-10')}
+            <span className={isFocused ? 'text-blue-400' : 'text-white'}>/</span>
+            {renderSeg('m', 'w-6')}
+            <span className={isFocused ? 'text-blue-400' : 'text-white'}>/</span>
+            {renderSeg('d', 'w-6')}
           </span>
         )}
       </div>
 
-      {(value || isFocused) && (
+      {/* Calendar button */}
+      <div ref={calendarRef} className="relative ml-1">
+        <input
+          type="date"
+          value={value || ''}
+          onChange={handleCalendarChange}
+          className="absolute inset-0 opacity-0 w-6 h-6 cursor-pointer"
+          tabIndex={-1}
+        />
+        <Calendar
+          size={14}
+          className="text-gray-400 hover:text-white transition-colors pointer-events-none"
+        />
+      </div>
+
+      {/* Clear button */}
+      {value && (
         <button
           onClick={handleClear}
-          className="absolute right-1 text-gray-400 hover:text-white p-0.5 rounded-full hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="ml-1 text-gray-400 hover:text-white p-0.5 rounded-full hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
           tabIndex={-1}
         >
           <X size={10} />
@@ -255,4 +267,4 @@ const TimeInput = ({ value, onChange, showHours = false, placeholder = '00:00' }
   );
 };
 
-export default TimeInput;
+export default DateInput;

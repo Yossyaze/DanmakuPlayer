@@ -18,6 +18,7 @@ import UrlInputModal from '../modals/UrlInputModal';
 import VideoRequestModal from '../modals/VideoRequestModal';
 import Sidebar from '../Sidebar';
 import AbeModeUnlockCelebration from '../ui/AbeModeUnlockCelebration';
+import DanmakuSettingsPopover from '../ui/DanmakuSettingsPopover';
 import VideoControls from '../VideoControls';
 
 const DesktopLayout = ({
@@ -167,6 +168,7 @@ const DesktopLayout = ({
   handleEndCardReplay,
   onSetEndCard,
 }) => {
+  const [showDanmakuSettings, setShowDanmakuSettings] = React.useState(false);
   const handleSetEndCardPreview = React.useCallback(
     (logTime) => {
       // Use Log Time directly as requested
@@ -597,49 +599,72 @@ const DesktopLayout = ({
                   )}
 
                 {!logOnlyMode && (
-                  <VideoControls
-                    visible={showControls}
-                    isPlaying={playerIsPlaying}
-                    togglePlay={togglePlay}
-                    currentTime={currentTime - cmSystem.timeOffset}
-                    totalDuration={cmSystem.getTotalDuration} // Use Total Duration (Video + CM)
-                    handleSeek={handleSeek}
-                    // onSync={handleSyncButton} // VideoControls doesn't support generic onSync yet, irrelevant
-                    handleSeekStart={handleSeekStart}
-                    handleSeekEnd={handleSeekEnd}
-                    volume={volume}
-                    onVolumeChange={handleVolumeChange}
-                    isMuted={player.isMuted}
-                    toggleMute={toggleMute}
-                    dmSettings={dmSettings}
-                    setDmSettings={setDmSettings}
-                    logTimeToVideoTime={cmSystem.logTimeToVideoTime}
-                    progressBarRef={progressBarRef}
-                    thumbRef={thumbRef}
-                    skipSeconds={skipSeconds}
-                    setSkipSeconds={setSkipSeconds}
-                    showExportModal={showExportModal}
-                    setShowExportModal={setShowExportModal}
-                    exportFileName={exportFileName}
-                    setExportFileName={setExportFileName}
-                    showVideoRequestModal={showVideoRequestModal}
-                    setShowVideoRequestModal={setShowVideoRequestModal}
-                    requestedVideoName={requestedVideoName}
-                    setRequestedVideoName={setRequestedVideoName}
-                    videoRef={videoRef}
-                    cmRanges={cmSystem.cmRanges}
-                    videoSrc={videoSrc}
-                    timeOffset={cmSystem.timeOffset}
-                    showDanmaku={showDanmaku}
-                    setShowDanmaku={setShowDanmaku}
-                    containerRef={containerRef}
-                    abeModeUnlocked={abeModeUnlocked}
-                    commentDensity={logSystem.commentDensity} // Was it passed?
-                    // Line 1027 in App.jsx: commentDensity={commentDensity}
-                    // logSystem hook returns commentDensity.
-                    // So logSystem.commentDensity is the way.
-                    onScrub={onScrub}
-                  />
+                  <>
+                    {/* Danmaku Settings Popover (Lifted up for Z-Index Control) */}
+                    {showDanmakuSettings && (
+                      <div className="absolute inset-0 z-[70] pointer-events-none">
+                        {/* Wrap in a container to match positioning context if needed, 
+                            but the popover itself positions absolute bottom-12 right-0
+                            relative to this container (video area).
+                             pointer-events-none on wrapper so it doesn't block video, 
+                             popover will have pointer-events-auto via its own CSS or we add it. 
+                             Actually DanmakuSettingsPopover has a backdrop that captures clicks.
+                             So we need pointer-events-auto on the popover elements.
+                        */}
+                        <DanmakuSettingsPopover
+                          dmSettings={dmSettings}
+                          setDmSettings={setDmSettings}
+                          abeModeUnlocked={abeModeUnlocked}
+                          onClose={() => setShowDanmakuSettings(false)}
+                        />
+                      </div>
+                    )}
+
+                    <VideoControls
+                      visible={showControls}
+                      isPlaying={playerIsPlaying}
+                      togglePlay={togglePlay}
+                      currentTime={currentTime - cmSystem.timeOffset}
+                      totalDuration={cmSystem.getTotalDuration} // Use Total Duration (Video + CM)
+                      handleSeek={handleSeek}
+                      // onSync={handleSyncButton} // VideoControls doesn't support generic onSync yet, irrelevant
+                      handleSeekStart={handleSeekStart}
+                      handleSeekEnd={handleSeekEnd}
+                      volume={volume}
+                      onVolumeChange={handleVolumeChange}
+                      isMuted={player.isMuted}
+                      toggleMute={toggleMute}
+                      dmSettings={dmSettings}
+                      setDmSettings={setDmSettings}
+                      logTimeToVideoTime={cmSystem.logTimeToVideoTime}
+                      progressBarRef={progressBarRef}
+                      thumbRef={thumbRef}
+                      skipSeconds={skipSeconds}
+                      setSkipSeconds={setSkipSeconds}
+                      showExportModal={showExportModal}
+                      setShowExportModal={setShowExportModal}
+                      exportFileName={exportFileName}
+                      setExportFileName={setExportFileName}
+                      showVideoRequestModal={showVideoRequestModal}
+                      setShowVideoRequestModal={setShowVideoRequestModal}
+                      requestedVideoName={requestedVideoName}
+                      setRequestedVideoName={setRequestedVideoName}
+                      videoRef={videoRef}
+                      cmRanges={cmSystem.cmRanges}
+                      videoSrc={videoSrc}
+                      timeOffset={cmSystem.timeOffset}
+                      showDanmaku={showDanmaku}
+                      setShowDanmaku={setShowDanmaku}
+                      containerRef={containerRef}
+                      abeModeUnlocked={abeModeUnlocked}
+                      commentDensity={logSystem.commentDensity} // Was it passed?
+                      // Line 1027 in App.jsx: commentDensity={commentDensity}
+                      // logSystem hook returns commentDensity.
+                      // So logSystem.commentDensity is the way.
+                      onScrub={onScrub}
+                      onToggleSettings={() => setShowDanmakuSettings((prev) => !prev)}
+                    />
+                  </>
                 )}
               </div>
             </div>
@@ -673,9 +698,11 @@ const DesktopLayout = ({
                 onSetLogStart={logSystem.handleSetLogStart}
                 onAddNgId={logSystem.handleAddNgId}
                 onAddNgComment={logSystem.handleAddNgComment}
+                onAddNgWord={logSystem.addNgWord} // Add prop
                 ngSettings={logSystem.ngSettings}
                 removeNgId={logSystem.removeNgId}
                 removeNgComment={logSystem.removeNgComment}
+                removeNgWord={logSystem.removeNgWord} // Add prop
                 allComments={logSystem.comments}
                 formatTime={formatTime}
                 totalDuration={cmSystem.getTotalDuration}
@@ -829,6 +856,8 @@ const DesktopLayout = ({
             handleUrlLoad={handleLogUrlLoadWrapper}
             startTimeStr={logSystem.startTimeStr}
             setStartTimeStr={logSystem.setStartTimeStr}
+            startDateStr={logSystem.startDateStr}
+            setStartDateStr={logSystem.setStartDateStr}
             videoStartTimeStr={videoStartTimeStr}
             setVideoStartTimeStr={setVideoStartTimeStr}
             totalDuration={cmSystem.getTotalDuration} // Use Total Duration (Video + CM)
@@ -874,10 +903,21 @@ const DesktopLayout = ({
             skipSeconds={skipSeconds}
             setSkipSeconds={setSkipSeconds}
             timeOffset={cmSystem.timeOffset}
-            onAddNgId={logSystem.addNgId}
+            onAddNgId={logSystem.addNgId} // Wait, use handlers or direct? LogViewer used handlers.
+            // Sidebar props are onAddNgId. LogViewer props are onAddNgId.
+            // LogViewer used logSystem.handleAddNgId (wrapper from useAppHandlers?)
+            // No, logSystem is passed as prop.
+            // In DesktopLayout, logSystem prop comes from App.
+            // Let's check App.jsx later, but here we use logSystem object.
+            // logSystem.addNgId is from useLogSystem directly?
+            // Re-check useLogSystem.
+            // useLogSystem returns { addNgId, ... }
+            // So logSystem.addNgId is correct.
             onAddNgComment={logSystem.addNgComment}
+            onAddNgWord={logSystem.addNgWord} // Add prop
             removeNgId={logSystem.removeNgId}
             removeNgComment={logSystem.removeNgComment}
+            removeNgWord={logSystem.removeNgWord} // Add prop
             ngSettings={logSystem.ngSettings}
             onIdClick={setUserHistoryId}
             userHistoryId={userHistoryId}

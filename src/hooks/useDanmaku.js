@@ -112,6 +112,7 @@ export const useDanmaku = (settings, isPlaying) => {
             childFontScale,
             imageValidityMap,
             forceAA, // Pass forceAA option
+            imageHeightLines: settings.imageHeightLines || 4,
           });
         };
 
@@ -484,13 +485,6 @@ export const useDanmaku = (settings, isPlaying) => {
         if (isSeek) {
           // Atomic update for seek: replace entire list
           setActiveDanmaku(added);
-
-          // [Fix for Playback-Scrubbing Race Condition]
-          // If scrubbing, force the container to pause.
-          // Even if isPlaying is true (race condition), this overrides the CSS variable temporarily.
-          if (isScrubbing && danmakuContainerRef.current) {
-            danmakuContainerRef.current.style.setProperty('--play-state', 'paused');
-          }
         } else {
           // Normal update: append new comments
           setActiveDanmaku((prev) => [...prev, ...added]);

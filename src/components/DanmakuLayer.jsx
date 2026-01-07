@@ -236,7 +236,8 @@ const DanmakuItem = React.memo(
                       : 'pointer-events-none'
                   }`}
                   style={{
-                    height: node.height || `${settings.fontSize * 4}px`,
+                    height:
+                      node.height || `${settings.fontSize * (settings.imageHeightLines || 4)}px`,
                   }}
                   onClick={onImageClick ? () => onImageClick(node.content) : undefined}
                 >

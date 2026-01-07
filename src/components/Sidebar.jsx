@@ -38,13 +38,15 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { playRandomAbeVoice } from '../utils/abeMode';
 import { padTime } from '../utils/sidebarUtils';
 import CommentList from './CommentList';
-import SidebarFileRow from './SidebarFileRow';
+import SidebarNGPanel from './sidebar/SidebarNGPanel'; // Import
+import SidebarFileRow from './SidebarFileRow'; // Restore
 import AnchorPopup from './ui/AnchorPopup';
 import CommentContextMenu from './ui/CommentContextMenu';
 import CommentItem from './ui/CommentItem';
 import NgList from './ui/NgList';
 import ReplyListPopup from './ui/ReplyListPopup';
 import TimeInput from './ui/TimeInput';
+import DateInput from './ui/DateInput';
 import UserHistoryModal from './UserHistoryModal';
 
 const Sidebar = ({
@@ -54,8 +56,11 @@ const Sidebar = ({
   loadedFiles,
   handleLogFileChange,
   handleRemoveFile,
+  handleRenameFile,
   startTimeStr,
   setStartTimeStr,
+  startDateStr,
+  setStartDateStr,
   videoStartTimeStr,
   setVideoStartTimeStr,
   totalDuration,
@@ -65,8 +70,6 @@ const Sidebar = ({
   setEnableTreeView,
   showImages,
   setShowImages,
-  imageLayout,
-  setImageLayout,
   cmStartInput,
   setCmStartInput,
   cmEndInput,
@@ -97,9 +100,11 @@ const Sidebar = ({
   timeOffset = 0,
   onAddNgId,
   onAddNgComment,
+  onAddNgWord, // New Prop
   ngSettings,
   removeNgId,
   removeNgComment,
+  removeNgWord, // New Prop
   onIdClick,
   allComments,
   userHistoryId,
@@ -510,20 +515,43 @@ const Sidebar = ({
 
   // Context Menu Handlers
   const handleSetLogStart = (comment) => {
-    // Try to parse comment.date
+    // Try to parse comment.date or rawTime
     let timeStr = null;
-    if (comment.date && typeof comment.date === 'number') {
-      const date = new Date(comment.date);
-      timeStr = date.toLocaleTimeString('ja-JP', { hour12: false });
-    } else if (comment.dateDisplay) {
+    let dateStr = null;
+
+    // Use rawTime if available (timestamp)
+    if (comment.rawTime && comment.rawTime > 0) {
+      const date = new Date(comment.rawTime);
+      if (date.getFullYear() >= 2000) {
+        // Absolute timestamp - extract date and time
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        dateStr = `${year}-${month}-${day}`;
+        timeStr = date.toLocaleTimeString('ja-JP', { hour12: false });
+      }
+    }
+
+    // Fallback to dateDisplay parsing
+    if (!timeStr && comment.dateDisplay) {
       const match = comment.dateDisplay.match(/(\d{1,2}):(\d{2}):(\d{2})/);
       if (match) {
         timeStr = `${match[1]}:${match[2]}:${match[3]}`;
+      }
+      // Try to extract date from dateDisplay (format: 2025/01/07(火))
+      const dateMatch = comment.dateDisplay.match(/(\d{4})\/(\d{2})\/(\d{2})/);
+      if (dateMatch) {
+        dateStr = `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`;
       }
     }
 
     if (timeStr) {
       setStartTimeStr(timeStr);
+    }
+    if (dateStr) {
+      setStartDateStr(dateStr);
+    }
+    if (timeStr || dateStr) {
       setShowSettingsPanel(true);
     }
   };
@@ -898,6 +926,7 @@ const Sidebar = ({
                           index={index}
                           handleToggleFileVisibility={handleToggleFileVisibility}
                           handleRemoveFile={handleRemoveFile}
+                          handleRenameFile={handleRenameFile}
                         />
                       ))}
                       {loadedFiles.length === 0 && (
@@ -1022,11 +1051,11 @@ const Sidebar = ({
                   同期設定
                 </h4>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between bg-gray-800 p-2 rounded border border-gray-700">
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-[10px] text-gray-400">ログ開始時間</span>
+                  <div className="flex flex-col gap-1 bg-gray-800 p-2 rounded border border-gray-700 items-center">
+                    <div className="flex flex-col gap-0.5 items-center">
+                      <span className="text-[10px] text-gray-400">ログ開始日時</span>
                       <div className="flex items-center gap-1">
-                        <Clock size={14} className="text-blue-400" />
+                        <DateInput value={startDateStr} onChange={setStartDateStr} />
                         <TimeInput
                           value={startTimeStr}
                           onChange={setStartTimeStr}
@@ -1034,15 +1063,19 @@ const Sidebar = ({
                         />
                       </div>
                     </div>
-                    <span className="text-xs text-gray-500 mt-4">=</span>
-                    <div className="flex flex-col items-center gap-1">
+                    <div className="flex justify-center text-gray-500 transform rotate-90 text-lg leading-none">
+                      =
+                    </div>
+                    <div className="flex flex-col gap-0.5 items-center">
                       <span className="text-[10px] text-gray-400">動画時間</span>
-                      <TimeInput
-                        value={videoStartTimeStr}
-                        onChange={setVideoStartTimeStr}
-                        showHours={true}
-                        placeholder="00:00"
-                      />
+                      <div className="flex items-center gap-2">
+                        <TimeInput
+                          value={videoStartTimeStr}
+                          onChange={setVideoStartTimeStr}
+                          showHours={true}
+                          placeholder="00:00"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-1">
@@ -1074,29 +1107,7 @@ const Sidebar = ({
                       画像URLをインライン表示
                     </label>
                     {showImages && (
-                      <div className="flex items-center gap-2 text-sm text-gray-400 ml-5">
-                        <span>レイアウト:</span>
-                        <button
-                          onClick={() => setImageLayout('inline')}
-                          className={`px-2 py-0.5 rounded text-xs ${
-                            imageLayout === 'inline'
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-700 text-gray-300'
-                          }`}
-                        >
-                          インライン
-                        </button>
-                        <button
-                          onClick={() => setImageLayout('grouped')}
-                          className={`px-2 py-0.5 rounded text-xs ${
-                            imageLayout === 'grouped'
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-700 text-gray-300'
-                          }`}
-                        >
-                          まとめて
-                        </button>
-                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-400 ml-5"></div>
                     )}
                   </div>
                 </div>
@@ -1314,37 +1325,16 @@ const Sidebar = ({
 
       {/* NG Panel */}
       {showNgPanel && (
-        <>
-          <div className="bg-gray-800 border-b border-gray-700 overflow-y-auto max-h-[85vh] scrollbar-thin shrink-0">
-            <div className="p-4 space-y-6">
-              {/* NG Management */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">NG管理</h4>
-
-                {/* NG IDs */}
-                <div className="flex-1 overflow-y-auto scrollbar-thin p-4">
-                  <NgList
-                    ngSettings={ngSettings}
-                    removeNgId={removeNgId}
-                    removeNgComment={removeNgComment}
-                    allComments={allComments}
-                    onIdClick={onIdClick}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Close NG Panel Button */}
-          <div className="relative h-0 z-20 flex justify-center">
-            <button
-              onClick={() => setShowNgPanel(false)}
-              className="bg-gray-700 border-b border-r border-l border-gray-600 rounded-b-md px-24 py-4 shadow-md hover:bg-gray-600 transition-colors flex items-center justify-center group"
-              title="NG管理を閉じる"
-            >
-              <ChevronUp size={18} className="text-gray-400 group-hover:text-white" />
-            </button>
-          </div>
-        </>
+        <SidebarNGPanel
+          ngSettings={ngSettings}
+          removeNgId={removeNgId}
+          removeNgComment={removeNgComment}
+          addNgWord={onAddNgWord} // New Prop
+          removeNgWord={removeNgWord} // New Prop
+          allComments={allComments}
+          onIdClick={onIdClick}
+          onClose={() => setShowNgPanel(false)}
+        />
       )}
 
       {/* CommentList (ALL comments) */}
@@ -1369,7 +1359,6 @@ const Sidebar = ({
           currentLogicalTime={currentLogicalTime}
           enableTreeView={enableTreeView}
           showImages={showImages}
-          imageLayout={imageLayout}
           showThreadTitle={showThreadTitle}
           onCommentClick={(time) => onCommentClick && onCommentClick(time)}
           onSeekAndPlay={onSeekAndPlay}

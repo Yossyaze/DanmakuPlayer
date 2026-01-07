@@ -74,6 +74,7 @@ const VideoControls = ({
   abeModeUnlocked = false, // Hidden Abe Mode unlock state
   commentDensity = [], // Array of normalized values (0-1)
   onScrub, // New prop for optimized scrubbing (video relative time)
+  onToggleSettings, // New prop
 }) => {
   const seekContainerRef = useRef(null);
 
@@ -92,7 +93,7 @@ const VideoControls = ({
   const settingsBtnRef = useRef(null);
   const lastSeekTimeRef = useRef(0);
   const isDraggingRef = useRef(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Removed internal state
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Watch for fullscreen changes (e.g. user presses Escape)
@@ -327,7 +328,7 @@ const VideoControls = ({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-transparent transition-opacity duration-300 ${
+      className={`absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-transparent transition-opacity duration-300 z-[40] ${
         visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
       onClick={(e) => e.stopPropagation()} // Prevent click from bubbling to video container (which toggles play)
@@ -544,23 +545,13 @@ const VideoControls = ({
             <div className="relative">
               <button
                 ref={settingsBtnRef}
-                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                className={`transition p-1 rounded-full ${
-                  isSettingsOpen ? 'text-white bg-white/20' : 'text-white hover:bg-white/10'
-                }`}
+                onClick={onToggleSettings}
+                className={`transition p-1 rounded-full text-white hover:bg-white/10`}
                 title="弾幕設定"
               >
                 <Settings size={20} />
               </button>
-              {isSettingsOpen && (
-                <DanmakuSettingsPopover
-                  dmSettings={dmSettings}
-                  setDmSettings={setDmSettings}
-                  abeModeUnlocked={abeModeUnlocked}
-                  onClose={() => setIsSettingsOpen(false)}
-                  triggerRef={settingsBtnRef}
-                />
-              )}
+              {/* Popover Removed - Lifted to DesktopLayout */}
             </div>
           )}
 

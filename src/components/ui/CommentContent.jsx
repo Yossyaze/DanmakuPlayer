@@ -10,7 +10,6 @@ const CommentContent = ({
   showImages = true,
   setZoomedImage,
   thumbnailMode = false,
-  imageLayout = 'inline', // 'inline' | 'grouped'
   onAnchorMouseEnter, // New prop
   onAnchorMouseLeave, // New prop
   abeMode = false, // 安倍晋三モード
@@ -50,53 +49,20 @@ const CommentContent = ({
         const isThreadUrl = part.match(/bbs\.eddibb\.cc\/|kyodemo\.net\//);
 
         if (isImage && showImages) {
-          // Collect image for grouped mode
-          if (imageLayout === 'grouped') {
-            collectedImages.push(part);
-            // Still show the URL as text
-            return (
-              <a
-                key={i}
-                href={part}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:underline break-all text-xs"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {part}
-              </a>
-            );
-          }
-
-          // Inline mode: show URL + image together
-          const imgClass = thumbnailMode
-            ? 'max-h-16 max-w-xs rounded mt-1 border border-gray-700 cursor-zoom-in hover:opacity-90 transition-opacity' // Compact
-            : 'max-w-full max-h-40 rounded mt-1 border border-gray-700 cursor-zoom-in hover:opacity-90 transition-opacity'; // Default
-
+          // Always collect image for grouped mode
+          collectedImages.push(part);
+          // Still show the URL as text
           return (
-            <span key={i} className="block mt-1">
-              <a
-                href={part}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:underline break-all text-xs"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {part}
-              </a>
-              {setZoomedImage && (
-                <img
-                  src={part}
-                  alt="comment attachment"
-                  loading="lazy"
-                  className={imgClass}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setZoomedImage(part);
-                  }}
-                />
-              )}
-            </span>
+            <a
+              key={i}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline break-all text-xs"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {part}
+            </a>
           );
         }
 
@@ -176,9 +142,6 @@ const CommentContent = ({
     onAnchorClick,
     onUrlLoad,
     showImages,
-    setZoomedImage,
-    thumbnailMode,
-    imageLayout,
     onAnchorMouseEnter,
     onAnchorMouseLeave,
     abeMode,
@@ -191,8 +154,8 @@ const CommentContent = ({
   return (
     <>
       {textContent}
-      {/* Grouped images at the end */}
-      {imageLayout === 'grouped' && imageUrls.length > 0 && setZoomedImage && (
+      {/* Grouped images always displayed if present */}
+      {imageUrls.length > 0 && setZoomedImage && (
         <div className="flex flex-wrap gap-2 mt-2">
           {imageUrls.map((url, idx) => (
             <img

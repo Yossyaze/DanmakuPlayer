@@ -278,7 +278,13 @@ export function useAppHandlers({
       // Always append/merge these or overwrite?
       // For NGs and overrides, merging is safer, but "Project Load" implies state restoration.
       // Let's overwrite NGs if they exist in file to match "Project Load" semantic.
-      if (data.ngSettings) logSystem.setNgSettings(data.ngSettings);
+      if (data.ngSettings) {
+        logSystem.setNgSettings({
+          ids: data.ngSettings.ids || [],
+          comments: data.ngSettings.comments || [],
+          words: data.ngSettings.words || [],
+        });
+      }
 
       // Load Files (Always append or replace? Usually project load implies the workspace state)
       // Let's assume we ADD files from project.
@@ -473,5 +479,9 @@ export function useAppHandlers({
     handleSetLogStart,
     handleAddNgId,
     handleAddNgComment,
+    handleAddNgWord: logSystem.addNgWord, // Expose
+    handleRemoveNgId: logSystem.removeNgId, // Expose (if needed by context menu etc)
+    handleRemoveNgComment: logSystem.removeNgComment, // Expose
+    handleRemoveNgWord: logSystem.removeNgWord, // Expose
   };
 }

@@ -53,7 +53,7 @@ const DesktopApp = () => {
   const [enableTreeView, setEnableTreeView] = useState(uiSettings.enableTreeView);
   const [showThreadTitle, setShowThreadTitle] = useState(uiSettings.showThreadTitle);
   const [showImages, setShowImages] = useState(uiSettings.showImages);
-  const [imageLayout, setImageLayout] = useState(uiSettings.imageLayout || 'inline');
+
   const [aaMode, setAaMode] = useState(uiSettings.aaMode || 'auto');
 
   // Global Zoomed Image State
@@ -76,11 +76,10 @@ const DesktopApp = () => {
       showThreadTitle,
       enableTreeView,
       showImages,
-      imageLayout,
       aaMode,
     };
     localStorage.setItem('danmaku_ui_settings', JSON.stringify(newSettings));
-  }, [showThreadTitle, enableTreeView, showImages, imageLayout, aaMode]);
+  }, [showThreadTitle, enableTreeView, showImages, aaMode]);
 
   // --- Use DanmakuPlayer Hook ---
   const {
@@ -567,8 +566,6 @@ const DesktopApp = () => {
       setEnableTreeView={setEnableTreeView}
       showImages={showImages}
       setShowImages={setShowImages}
-      imageLayout={imageLayout}
-      setImageLayout={setImageLayout}
       aaMode={aaMode}
       setAaMode={setAaMode}
       aaOverrideMap={aaOverrideMap}

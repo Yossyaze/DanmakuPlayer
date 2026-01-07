@@ -14,6 +14,46 @@ const LOG_REGEX =
 const SIMPLE_LOG_REGEX = /^(\d{1,2}:\d{2}:\d{2})\s*[:\s]\s*(.*)$/;
 
 /**
+ * Helper to parse JSON log format (Abema style)
+ * Format: Array of { "time": number, "formattedTime": string, "comment": string }
+ */
+const parseJson = (text, fileId) => {
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch (e) {
+    console.error('Failed to parse JSON', e);
+    return { parsed: [], title: 'Invalid JSON', startDate: 0 };
+  }
+
+  if (!Array.isArray(json)) {
+    return { parsed: [], title: 'Invalid JSON Log', startDate: 0 };
+  }
+
+  const parsed = json.map((item, index) => {
+    // time is in seconds, convert to ms for rawTime
+    const rawTime = Math.round(item.time * 1000);
+
+    return {
+      id: `${fileId}-${index}`,
+      originalResNum: index + 1,
+      name: 'Abema User', // Generic name since it's not in the log
+      userId: '', // No ID in this format
+      rawTime: rawTime,
+      dateDisplay: item.formattedTime,
+      text: item.comment,
+      color: '#ffffff',
+      type: 'scroll',
+      sourceFileId: fileId,
+    };
+  });
+
+  // For this relative time format, we set startDate to 0 so that rawTime (offset from 0)
+  // matches the video timestamp directly.
+  return { parsed, title: 'Abema Log', startDate: 0 };
+};
+
+/**
  * Helper to decode HTML entities (from datParser.js)
  */
 const decodeEntities = (str) => {
@@ -280,6 +320,8 @@ export const parseLogFile = async (input, forcedId = null) => {
   // Check if input is File object
   if (typeof input === 'object' && input.name) {
     const isDat = input.name.endsWith('.dat');
+    const isJson = input.name.endsWith('.json');
+
     if (isDat) {
       const buffer = await input.arrayBuffer();
       const { parsed, title, startDate } = parseDat(buffer, fileId);
@@ -290,9 +332,37 @@ export const parseLogFile = async (input, forcedId = null) => {
         startDate: startDate,
         rawComments: parsed,
       };
+    } else if (isJson) {
+      const text = await input.text();
+      const { parsed, title, startDate } = parseJson(text, fileId);
+      return {
+        id: fileId,
+        name: input.name,
+        title: title,
+        startDate: startDate,
+        rawComments: parsed,
+      };
     } else {
       // Assume text/utf-8
       const text = await input.text();
+      // Start of fallback logic for JSON content in .txt file or similar
+      try {
+        const jsonCheck = JSON.parse(text);
+        if (Array.isArray(jsonCheck)) {
+          const { parsed, title, startDate } = parseJson(text, fileId);
+          return {
+            id: fileId,
+            name: input.name,
+            title: title,
+            startDate: startDate,
+            rawComments: parsed,
+          };
+        }
+      } catch {
+        // Not JSON, continue to parse as text
+      }
+      // End fallback
+
       const { parsed, title, startDate } = parseTxt(text, fileId);
       return {
         id: fileId,

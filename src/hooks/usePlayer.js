@@ -11,6 +11,8 @@ export const usePlayer = () => {
   const [videoFilePath, setVideoFilePath] = useState(''); // Full absolute path (for compatibility with Desktop version)
   const [isReady, setIsReady] = useState(false); // New: Track player readiness
 
+  const isPlayingRef = useRef(false);
+
   // Sync isPlaying state with native video element
   useEffect(() => {
     const video = playerRef.current;
@@ -25,6 +27,7 @@ export const usePlayer = () => {
 
   const setPlayingState = useCallback((playing) => {
     setIsPlaying(playing);
+    isPlayingRef.current = playing;
   }, []);
 
   const setPlayerInstance = useCallback((instance) => {
@@ -138,5 +141,6 @@ export const usePlayer = () => {
     isReady,
     setIsReady,
     setPlayerInstance,
+    isPlayingRef, // Expose ref
   };
 };

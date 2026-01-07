@@ -150,26 +150,7 @@ const LogViewerSettings = ({ settings, onSettingsChange, onClose, style }) => {
               </button>
             ))}
 
-            {/* Image Layout Selector */}
-            {settings.showImages && (
-              <div className="w-full flex items-center justify-between px-3 py-2 rounded text-sm hover:bg-gray-800 transition-colors pl-9">
-                <span className="text-gray-400">画像レイアウト</span>
-                <div className="flex bg-gray-700 rounded p-0.5">
-                  <button
-                    onClick={() => update('imageLayout', 'inline')}
-                    className={`px-2 py-0.5 rounded text-[10px] transition-colors ${settings.imageLayout === 'inline' || !settings.imageLayout ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
-                  >
-                    インライン
-                  </button>
-                  <button
-                    onClick={() => update('imageLayout', 'grouped')}
-                    className={`px-2 py-0.5 rounded text-[10px] transition-colors ${settings.imageLayout === 'grouped' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
-                  >
-                    まとめて
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Image Layout Selector Removed */}
 
             {/* AA Mode Selector (Custom) */}
             <div className="w-full flex items-center justify-between px-3 py-2 rounded text-sm hover:bg-gray-800 transition-colors">

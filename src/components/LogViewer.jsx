@@ -63,7 +63,6 @@ const DEFAULT_SETTINGS = {
   fontSize: 'medium', // small, medium, large, xlarge
   density: 'comfortable', // compact, comfortable, spacious
   showImages: true,
-  imageLayout: 'inline', // 'inline' | 'grouped'
   showThumbnails: false,
   showIds: true,
   enableTreeView: true,

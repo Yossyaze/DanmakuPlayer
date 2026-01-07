@@ -23,6 +23,7 @@ export function parseCommentToNodes(comment, options) {
     childFontScale = 0.9,
     imageValidityMap = null,
     forceAA = null, // true: FORCE AA, false: FORCE NORMAL (ignore AA check), null: AUTO
+    imageHeightLines = 4, // Default image height in lines
   } = options;
 
   const nodes = [];
@@ -77,7 +78,7 @@ export function parseCommentToNodes(comment, options) {
           const isValid = cachedValidity !== false; // null means not checked yet, treat as valid
 
           if (isValid) {
-            const imageRows = 4;
+            const imageRows = imageHeightLines;
             imageHeight = effectiveLineHeight * imageRows;
             const w = imageHeight * (16 / 9);
             // Check for duplicate keys in object (fixed)

@@ -2,6 +2,7 @@ import { Edit2, Pipette, Plus, RefreshCw, X } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { padTime } from '../../utils/sidebarUtils';
+import DateInput from '../ui/DateInput';
 import TimeInput from '../ui/TimeInput';
 
 /**
@@ -13,11 +14,16 @@ const SidebarCMSettings = ({
   setCmStartInput,
   cmEndInput,
   setCmEndInput,
+  cmStartDateInput,
+  setCmStartDateInput,
+  cmEndDateInput,
+  setCmEndDateInput,
   addCmRangeSmart,
   updateCmRange,
   removeCmRange,
   cmRanges,
   startTimeStr,
+  startDateStr,
   currentLogicalTime,
   timeOffset = 0,
   formatTime,
@@ -26,8 +32,18 @@ const SidebarCMSettings = ({
   const [cmStartMode, setCmStartMode] = useState('log');
   const [cmEndMode, setCmEndMode] = useState('log');
 
+  // Helper to get current date from log reference
+  const getCurrentDate = () => {
+    if (startDateStr) {
+      return startDateStr;
+    }
+    // Fallback to today's date
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  };
+
   // Helper to render time input based on mode
-  const renderTimeInput = (mode, value, setValue, placeholder) => {
+  const renderTimeInput = (mode, value, setValue, dateValue, setDateValue, placeholder) => {
     const handleGetCurrent = () => {
       if (mode === 'video') {
         // Use seekbar time (logical time = log time - timeOffset)
@@ -49,27 +65,62 @@ const SidebarCMSettings = ({
         const startSec = h * 3600 + m * 60 + s;
         const currentSec = startSec + currentLogicalTime;
 
-        const hh = Math.floor(currentSec / 3600);
-        const mm = Math.floor((currentSec % 3600) / 60);
-        const ss = Math.floor(currentSec % 60);
+        // Handle day overflow
+        let days = Math.floor(currentSec / 86400);
+        let remainingSec = currentSec % 86400;
+        if (remainingSec < 0) {
+          days -= 1;
+          remainingSec += 86400;
+        }
+
+        const hh = Math.floor(remainingSec / 3600);
+        const mm = Math.floor((remainingSec % 3600) / 60);
+        const ss = Math.floor(remainingSec % 60);
 
         const formatted = `${hh}:${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
         setValue(formatted);
+
+        // Update date if needed
+        if (startDateStr && days !== 0) {
+          const baseDate = new Date(startDateStr);
+          baseDate.setDate(baseDate.getDate() + days);
+          const newDateStr = `${baseDate.getFullYear()}-${String(baseDate.getMonth() + 1).padStart(2, '0')}-${String(baseDate.getDate()).padStart(2, '0')}`;
+          setDateValue(newDateStr);
+        } else if (startDateStr && !dateValue) {
+          setDateValue(startDateStr);
+        }
       }
     };
 
-    if (mode === 'log' || mode === 'video' || mode === 'duration') {
-      const showHours = mode === 'log';
+    if (mode === 'log') {
+      return (
+        <div className="flex items-center gap-1">
+          <DateInput value={dateValue} onChange={setDateValue} placeholder="日付" />
+          <TimeInput value={value} onChange={setValue} showHours={true} placeholder={placeholder} />
+          <button
+            onClick={handleGetCurrent}
+            title="現在の時間を取得"
+            className="text-gray-400 hover:text-white"
+          >
+            <Pipette size={12} />
+          </button>
+        </div>
+      );
+    } else if (mode === 'video' || mode === 'duration') {
       return (
         <div className="flex items-center gap-1">
           <TimeInput
             value={value}
             onChange={setValue}
-            showHours={showHours}
+            showHours={false}
             placeholder={placeholder}
           />
-          {(mode === 'video' || mode === 'log') && (
-            <button onClick={handleGetCurrent} title="現在の時間を取得">
+          {mode === 'video' && (
+            <button
+              onClick={handleGetCurrent}
+              title="現在の時間を取得"
+              className="text-gray-400 hover:text-white"
+            >
               <Pipette size={12} />
             </button>
           )}
@@ -84,41 +135,53 @@ const SidebarCMSettings = ({
       <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">CM設定</h4>
       <div className="space-y-2">
         {/* Start Time Row */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400 w-8 shrink-0">開始</span>
-          <select
-            value={cmStartMode}
-            onChange={(e) => setCmStartMode(e.target.value)}
-            className="bg-gray-700 text-white text-[10px] p-1 rounded border border-gray-600 outline-none"
-          >
-            <option value="log">ログ時間</option>
-            <option value="video">動画時間</option>
-          </select>
-          {renderTimeInput(
-            cmStartMode,
-            cmStartInput,
-            setCmStartInput,
-            cmStartMode === 'log' ? '00:00:00' : '00:00'
-          )}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400 w-8 shrink-0">開始</span>
+            <select
+              value={cmStartMode}
+              onChange={(e) => setCmStartMode(e.target.value)}
+              className="bg-gray-700 text-white text-[10px] p-1 rounded border border-gray-600 outline-none"
+            >
+              <option value="log">ログ時間</option>
+              <option value="video">動画時間</option>
+            </select>
+          </div>
+          <div className="ml-10">
+            {renderTimeInput(
+              cmStartMode,
+              cmStartInput,
+              setCmStartInput,
+              cmStartDateInput,
+              setCmStartDateInput,
+              cmStartMode === 'log' ? '00:00:00' : '00:00'
+            )}
+          </div>
         </div>
 
         {/* End Time Row */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400 w-8 shrink-0">終了</span>
-          <select
-            value={cmEndMode}
-            onChange={(e) => setCmEndMode(e.target.value)}
-            className="bg-gray-700 text-white text-[10px] p-1 rounded border border-gray-600 outline-none"
-          >
-            <option value="log">ログ時間</option>
-            <option value="duration">長さ</option>
-          </select>
-          {renderTimeInput(
-            cmEndMode,
-            cmEndInput,
-            setCmEndInput,
-            cmEndMode === 'log' ? '00:00:00' : '00:00'
-          )}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400 w-8 shrink-0">終了</span>
+            <select
+              value={cmEndMode}
+              onChange={(e) => setCmEndMode(e.target.value)}
+              className="bg-gray-700 text-white text-[10px] p-1 rounded border border-gray-600 outline-none"
+            >
+              <option value="log">ログ時間</option>
+              <option value="duration">長さ</option>
+            </select>
+          </div>
+          <div className="ml-10">
+            {renderTimeInput(
+              cmEndMode,
+              cmEndInput,
+              setCmEndInput,
+              cmEndDateInput,
+              setCmEndDateInput,
+              cmEndMode === 'log' ? '00:00:00' : '00:00'
+            )}
+          </div>
         </div>
 
         {editingCmIndex !== null ? (
@@ -131,11 +194,16 @@ const SidebarCMSettings = ({
                   cmStartInput,
                   cmEndMode,
                   cmEndInput,
-                  startTimeStr
+                  startTimeStr,
+                  cmStartDateInput,
+                  cmEndDateInput,
+                  startDateStr
                 );
                 setEditingCmIndex(null);
                 setCmStartInput('');
                 setCmEndInput('');
+                setCmStartDateInput('');
+                setCmEndDateInput('');
               }}
               className="flex-1 bg-green-600 hover:bg-green-500 text-white p-1.5 rounded text-xs flex items-center justify-center gap-1"
             >
@@ -146,6 +214,8 @@ const SidebarCMSettings = ({
                 setEditingCmIndex(null);
                 setCmStartInput('');
                 setCmEndInput('');
+                setCmStartDateInput('');
+                setCmEndDateInput('');
               }}
               className="bg-gray-600 hover:bg-gray-500 text-white p-1.5 rounded text-xs flex items-center justify-center"
             >
@@ -155,7 +225,16 @@ const SidebarCMSettings = ({
         ) : (
           <button
             onClick={() =>
-              addCmRangeSmart(cmStartMode, cmStartInput, cmEndMode, cmEndInput, startTimeStr)
+              addCmRangeSmart(
+                cmStartMode,
+                cmStartInput,
+                cmEndMode,
+                cmEndInput,
+                startTimeStr,
+                cmStartDateInput,
+                cmEndDateInput,
+                startDateStr
+              )
             }
             className="bg-blue-600 hover:bg-blue-500 text-white p-1.5 rounded text-xs flex items-center justify-center gap-1 mt-1"
           >
@@ -178,13 +257,21 @@ const SidebarCMSettings = ({
             const logicalStart = vStart + accumulatedCmTime;
             const logicalEnd = logicalStart + cmDuration;
 
+            // Format label with date if available
+            const startLabel = range.startDateStr
+              ? `${range.startDateStr.slice(5)} ${range.labelStart}`
+              : range.labelStart;
+            const endLabel = range.endDateStr
+              ? `${range.endDateStr.slice(5)} ${range.labelEnd}`
+              : range.labelEnd;
+
             return (
               <div
                 key={i}
                 className={`flex flex-col bg-gray-900 p-1.5 rounded text-xs text-gray-400 gap-1 ${editingCmIndex === i ? 'border border-blue-500' : ''}`}
               >
                 <div className="flex items-center justify-between">
-                  <span>{`ログ: ${range.labelStart} ~ ${range.labelEnd}`}</span>
+                  <span>{`ログ: ${startLabel} ~ ${endLabel}`}</span>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => {
@@ -193,6 +280,8 @@ const SidebarCMSettings = ({
                         setCmEndMode('log');
                         setCmStartInput(padTime(range.labelStart));
                         setCmEndInput(padTime(range.labelEnd));
+                        setCmStartDateInput(range.startDateStr || startDateStr || '');
+                        setCmEndDateInput(range.endDateStr || startDateStr || '');
                       }}
                       className="hover:text-blue-400"
                     >

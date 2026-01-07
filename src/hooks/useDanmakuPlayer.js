@@ -116,7 +116,9 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
   const progressBarRef = useRef(null);
   const thumbRef = useRef(null);
   const wasPlayingRef = useRef(false);
+
   const isDraggingRef = useRef(false);
+  const scrubCountRef = useRef(0); // Count seek events to distinguish click vs drag
 
   // --- Danmaku Hook ---
   const danmaku = useDanmaku(dmSettings, player.isPlaying || showEndCard);
@@ -200,7 +202,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
   const danmakuComments = useDanmakuTree(logSystem.visibleComments, enableTreeView);
 
   const performSeek = useCallback(
-    (targetLogTime, isScrubbing = false) => {
+    (targetLogTime) => {
       // if (!player.videoRef.current) return; // Allow seek without video (for Log Mode)
 
       // Video Time Calculation
@@ -265,29 +267,66 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
         }
       }
 
-      // Manually trigger danmaku processing if paused OR if scrubbing (to handle playback seek race condition)
-      if (!player.isPlaying || isScrubbing) {
-        processDanmaku(
-          targetLogTime,
-          danmakuComments,
-          imageValidityMapRef.current,
-          true, // isScrubbing: Force replace and simulate animation
-          aaOverrideMap // Pass override map
-        );
-      }
+      // ALWAYS manually trigger danmaku processing on seek to prevent freeze.
+      processDanmaku(
+        targetLogTime,
+        danmakuComments,
+        imageValidityMapRef.current,
+        true, // isScrubbing: Force replace and simulate animation
+        aaOverrideMap // Pass override map
+      );
     },
     [cmSystem, player, processDanmaku, danmakuComments, aaOverrideMap]
   );
 
+  // --- Settings Change Effect (Immediate Reflow) ---
+  // When layout-affecting settings change, force re-calculation of current frame
+  useEffect(() => {
+    // Only trigger if we have comments to process
+    if (logSystem.visibleComments.length > 0) {
+      // console.log('[useDanmakuPlayer] Layout settings changed, forcing reflow');
+      processDanmaku(
+        currentTime,
+        danmakuComments,
+        imageValidityMapRef.current,
+        true, // force refresh (treat as seek/scrub)
+        aaOverrideMap
+      );
+    }
+  }, [
+    // Depend on specific layout properties to avoid unnecessary re-renders
+    dmSettings.fontSize,
+    dmSettings.imageHeightLines,
+    dmSettings.area,
+    dmSettings.imageMode,
+    dmSettings.opacity,
+    // Other dependencies
+    processDanmaku,
+    // currentTime, // REMOVED: Preventing re-calc on every frame
+    danmakuComments,
+    aaOverrideMap,
+    // logSystem.visibleComments.length // REMOVED: Focus on settings changes
+  ]);
+
   const handleSeek = useCallback(
     (e) => {
       const targetVideoRelativeTime = parseFloat(e.target.value);
+
+      // Increment scrub count
+      scrubCountRef.current++;
+
+      // If this is the 2nd event (or more), it's a drag.
+      // Pause if we were playing and haven't paused yet.
+      if (scrubCountRef.current > 1 && wasPlayingRef.current && player.isPlayingRef.current) {
+        player.setPlayingState(false);
+      }
+
       // Convert Video Relative Time to Log Time
       const targetLogTime = targetVideoRelativeTime + cmSystem.timeOffset;
       setCurrentTime(targetLogTime);
-      performSeek(targetLogTime, false);
+      performSeek(targetLogTime);
     },
-    [cmSystem.timeOffset, performSeek]
+    [cmSystem.timeOffset, performSeek, player]
   );
 
   const lastScrubStateUpdateRef = useRef(0);
@@ -330,18 +369,30 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
   );
 
   const handleSeekStart = useCallback(() => {
-    wasPlayingRef.current = player.isPlaying;
+    // Reset scrub count
+    scrubCountRef.current = 0;
+
+    // Use synchronous ref to get the TRUE intent of playback state
+    wasPlayingRef.current = player.isPlayingRef.current;
     isDraggingRef.current = true;
-    player.setPlayingState(false);
+
+    // DO NOT PAUSE HERE for single clicks.
+    // Pause will happen in handleSeek if it turns into a drag.
   }, [player]);
 
   const handleSeekEnd = useCallback(() => {
     isDraggingRef.current = false;
+
+    // If we were playing originally...
     if (wasPlayingRef.current) {
-      player.setPlayingState(true);
-      if (!cmSystem.cmStateRef.current.isWaiting && player.videoRef.current) {
-        player.safePlay();
+      // And we are currently paused (meaning we dragged and paused)...
+      if (!player.isPlayingRef.current) {
+        player.setPlayingState(true);
+        if (!cmSystem.cmStateRef.current.isWaiting && player.videoRef.current) {
+          player.safePlay();
+        }
       }
+      // If we are still playing (clicked only), do nothing -> play continues seamlessly.
     }
   }, [player, cmSystem]);
 
@@ -388,7 +439,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
     // If already waiting in CM, resume waiting
     if (cmSystem.cmStateRef.current.isWaiting) {
       if (!player.isPlaying) {
-        player.setIsPlaying(true);
+        player.setPlayingState(true);
         cmSystem.updateCmState({ waitStartTime: performance.now() });
       }
       return;
@@ -438,7 +489,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
       cmSystem.setCurrentCmWaitTime(0);
 
       // Allow logical playback (App loop) to run, but Video will be paused by App.jsx
-      player.setIsPlaying(true);
+      player.setPlayingState(true);
       return;
     }
 
@@ -446,7 +497,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
     if (danmakuContainerRef.current) {
       danmakuContainerRef.current.style.setProperty('--play-state', 'running');
     }
-    player.setIsPlaying(true);
+    player.setPlayingState(true);
   }, [player, cmSystem, checkCmCollision, danmakuContainerRef]);
 
   // --- Play/Pause Toggle with CM Support ---
@@ -454,7 +505,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
     if (player.isPlaying) {
       // PAUSE Logic
       if (cmSystem.cmStateRef.current.isWaiting) {
-        player.setIsPlaying(false);
+        player.setPlayingState(false);
         const elapsed = (performance.now() - cmSystem.cmStateRef.current.waitStartTime) / 1000;
         const newAccumulated = cmSystem.cmStateRef.current.accumulatedWaitTime + elapsed;
 
@@ -467,7 +518,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
         if (danmakuContainerRef.current) {
           danmakuContainerRef.current.style.setProperty('--play-state', 'paused');
         }
-        player.setIsPlaying(false);
+        player.setPlayingState(false);
       }
     } else {
       // PLAY Logic -> Delegate to requestPlay

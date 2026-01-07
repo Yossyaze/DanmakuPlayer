@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import React from 'react';
 
+import pkg from '../../package.json'; // Import package.json
+
 const Header = ({
   showDanmaku,
   setShowDanmaku,
@@ -38,7 +40,7 @@ const Header = ({
       <div className="flex items-center gap-4 shrink-0">
         <h1 className="text-white font-bold text-lg tracking-wider flex items-baseline gap-2 select-none">
           DanmakuPlayer
-          <span className="text-xs text-blue-400 mt-1 font-mono">v5.1.0</span>
+          <span className="text-xs text-blue-400 mt-1 font-mono">v{pkg.version}</span>
         </h1>
         {projectName && (
           <span

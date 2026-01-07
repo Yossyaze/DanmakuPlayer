@@ -8,6 +8,7 @@ export const useLogSystem = () => {
   const [comments, setComments] = useState([]);
   const [urlInput, setUrlInput] = useState('');
   const [startTimeStr, setStartTimeStr] = useState('');
+  const [startDateStr, setStartDateStr] = useState('');
 
   const [ngSettings, setNgSettings] = useState({ ids: [], comments: [] });
 
@@ -26,6 +27,24 @@ export const useLogSystem = () => {
     });
   }, []);
 
+  const addNgWord = useCallback((word, isRegex = false) => {
+    setNgSettings((prev) => {
+      const currentWords = prev.words || [];
+
+      // Check for duplicates
+      const exists = currentWords.some((w) => {
+        if (typeof w === 'string') return w === word && !isRegex;
+        return w.text === word && w.isRegex === isRegex;
+      });
+
+      if (exists) return prev;
+
+      const newEntry = isRegex ? { text: word, isRegex: true } : word;
+
+      return { ...prev, words: [...currentWords, newEntry] };
+    });
+  }, []);
+
   const removeNgId = useCallback((userId) => {
     setNgSettings((prev) => ({
       ...prev,
@@ -37,6 +56,22 @@ export const useLogSystem = () => {
     setNgSettings((prev) => ({
       ...prev,
       comments: prev.comments.filter((id) => id !== commentId),
+    }));
+  }, []);
+
+  const removeNgWord = useCallback((wordEntry) => {
+    setNgSettings((prev) => ({
+      ...prev,
+      words: (prev.words || []).filter((w) => {
+        if (typeof wordEntry === 'string') {
+          // If removing a string, filter out exact string matches
+          return w !== wordEntry;
+        } else {
+          // If removing an object (e.g. from NgList), compare text and regex flag
+          if (typeof w === 'string') return true; // Keep strings if removing object
+          return !(w.text === wordEntry.text && w.isRegex === wordEntry.isRegex);
+        }
+      }),
     }));
   }, []);
 
@@ -289,6 +324,20 @@ export const useLogSystem = () => {
     });
   }, []);
 
+  const handleRenameFile = useCallback((fileId, newName) => {
+    if (!newName || !newName.trim()) return;
+
+    // 1. Update loadedFiles
+    setLoadedFiles((prev) =>
+      prev.map((f) => (f.id === fileId ? { ...f, title: newName, name: newName } : f))
+    );
+
+    // 2. Update comments threadTitle
+    setComments((prev) =>
+      prev.map((c) => (c.sourceFileId === fileId ? { ...c, threadTitle: newName } : c))
+    );
+  }, []);
+
   const addLoadedFiles = useCallback((newFiles) => {
     const processedFiles = newFiles.map((f) => ({
       ...f,
@@ -313,6 +362,10 @@ export const useLogSystem = () => {
     const processedFiles = projectLoadedFiles.map((f) => ({
       ...f,
       isVisible: true,
+      // For older projects, rawComments may not have isKnownAA
+      // but AA check is somewhat expensive, so maybe ok to do on fly if missing?
+      // Or just re-calc here if we want to be safe.
+      // But re-calc is done in newComments logic below anyway for comments array.
     }));
 
     // Reconstruct comments from the files
@@ -344,7 +397,7 @@ export const useLogSystem = () => {
     // 1. Filter by File Visibility
     let filtered = comments.filter((c) => visibleFileIds.has(c.sourceFileId));
 
-    // 2. Filter by NG Settings (ID and Comment ID)
+    // 2. Filter by NG Settings (ID and Comment ID and Words)
     if (ngSettings.ids.length > 0) {
       const ngIds = new Set(ngSettings.ids);
       filtered = filtered.filter((c) => !ngIds.has(c.userId));
@@ -352,6 +405,38 @@ export const useLogSystem = () => {
     if (ngSettings.comments.length > 0) {
       const ngComments = new Set(ngSettings.comments);
       filtered = filtered.filter((c) => !ngComments.has(c.id));
+    }
+    if (ngSettings.words && ngSettings.words.length > 0) {
+      const ngWords = ngSettings.words;
+
+      // Pre-compile regexes to avoid compiling for every comment
+      const compiledRegexes = ngWords
+        .filter((w) => typeof w === 'object' && w.isRegex)
+        .map((w) => {
+          try {
+            return new RegExp(w.text);
+          } catch (e) {
+            console.warn('Invalid NG Regex:', w.text, e);
+            return null;
+          }
+        })
+        .filter((r) => r !== null);
+
+      const normalWords = ngWords
+        .filter((w) => typeof w === 'string' || !w.isRegex)
+        .map((w) => (typeof w === 'string' ? w : w.text));
+
+      filtered = filtered.filter((c) => {
+        const text = c.text;
+
+        // 1. Check Normal Words (Partial Match)
+        if (normalWords.some((word) => text.includes(word))) return false;
+
+        // 2. Check Regexes
+        if (compiledRegexes.some((regex) => regex.test(text))) return false;
+
+        return true;
+      });
     }
 
     // Calculate user comment counts (index / total)
@@ -400,15 +485,20 @@ export const useLogSystem = () => {
     setUrlInput,
     startTimeStr,
     setStartTimeStr,
+    startDateStr,
+    setStartDateStr,
     ngSettings,
     setNgSettings,
     addNgId,
     addNgComment,
+    addNgWord,
     removeNgId,
     removeNgComment,
+    removeNgWord,
     handleUrlLoad,
     handleToggleFileVisibility,
     handleRemoveFile,
+    handleRenameFile,
     handleReorderFiles,
     addLoadedFiles,
     loadProject,

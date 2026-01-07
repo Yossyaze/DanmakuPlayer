@@ -4,6 +4,8 @@ export const useCMSystem = (videoDuration) => {
   const [cmRanges, setCmRanges] = useState([]);
   const [cmStartInput, setCmStartInput] = useState('');
   const [cmEndInput, setCmEndInput] = useState('');
+  const [cmStartDateInput, setCmStartDateInput] = useState('');
+  const [cmEndDateInput, setCmEndDateInput] = useState('');
 
   // CM Wait State
   const [isWaitingCm, setIsWaitingCm] = useState(false);
@@ -97,6 +99,30 @@ export const useCMSystem = (videoDuration) => {
     return inputSec - startSec;
   };
 
+  // Parse date+time to absolute seconds from a reference date
+  // Returns seconds relative to (startDateStr + startTimeStr)
+  const parseDateTimeInput = (dateStr, timeStr, startDateStr, startTimeStr) => {
+    // If no date provided, fall back to time-only parsing
+    if (!dateStr || !startDateStr) {
+      return parseLogTimeInput(timeStr, startTimeStr);
+    }
+
+    // Parse input date+time to timestamp
+    const inputTime = parseTimeStr(timeStr);
+    const inputDate = new Date(dateStr);
+    inputDate.setHours(0, 0, 0, 0);
+    const inputTimestamp = inputDate.getTime() / 1000 + inputTime;
+
+    // Parse start date+time to timestamp
+    const startTime = parseTimeStr(startTimeStr || '00:00:00');
+    const startDate = new Date(startDateStr);
+    startDate.setHours(0, 0, 0, 0);
+    const startTimestamp = startDate.getTime() / 1000 + startTime;
+
+    // Return relative seconds
+    return inputTimestamp - startTimestamp;
+  };
+
   const getTotalDuration = useMemo(() => {
     const totalCmDuration = cmRanges.reduce((acc, r) => acc + (r.logEnd - r.logStart), 0);
     return (videoDuration || 0) + totalCmDuration;
@@ -188,15 +214,23 @@ export const useCMSystem = (videoDuration) => {
   };
 
   const addCmRangeSmart = useCallback(
-    (startMode, startInput, endMode, endInput, startTimeStr) => {
+    (
+      startMode,
+      startInput,
+      endMode,
+      endInput,
+      startTimeStr,
+      startDateInput,
+      endDateInput,
+      startDateStr
+    ) => {
       let logStart = 0;
       let logEnd = 0;
 
       // 1. Calculate Log Start
       if (startMode === 'log') {
-        logStart = parseLogTimeInput(startInput, startTimeStr);
+        logStart = parseDateTimeInput(startDateInput, startInput, startDateStr, startTimeStr);
       } else if (startMode === 'video') {
-        // User inputs logical time (seekbar time), convert to log time
         const logicalTime = parseTimeStr(startInput);
         logStart = logicalTimeToLogTime(logicalTime);
       }
@@ -206,7 +240,7 @@ export const useCMSystem = (videoDuration) => {
         const duration = parseTimeStr(endInput);
         logEnd = logStart + duration;
       } else if (endMode === 'log') {
-        logEnd = parseLogTimeInput(endInput, startTimeStr);
+        logEnd = parseDateTimeInput(endDateInput, endInput, startDateStr, startTimeStr);
       } else if (endMode === 'video') {
         const videoTime = parseTimeStr(endInput);
         logEnd = videoTimeToLogTime(videoTime);
@@ -221,7 +255,9 @@ export const useCMSystem = (videoDuration) => {
         logEnd,
         labelStart,
         labelEnd,
-        videoStart: 0, // Will be recalculated
+        startDateStr: startDateInput || '',
+        endDateStr: endDateInput || '',
+        videoStart: 0,
       });
     },
     [addCmRange, logicalTimeToLogTime]
@@ -282,6 +318,10 @@ export const useCMSystem = (videoDuration) => {
     setCmStartInput,
     cmEndInput,
     setCmEndInput,
+    cmStartDateInput,
+    setCmStartDateInput,
+    cmEndDateInput,
+    setCmEndDateInput,
     isWaitingCm,
     setIsWaitingCm,
     currentCmWaitTime,
