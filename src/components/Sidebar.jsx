@@ -1265,7 +1265,11 @@ const Sidebar = ({
                               cmStartInput,
                               cmEndMode,
                               cmEndInput,
-                              startTimeStr
+
+                              startTimeStr,
+                              cmStartDateInput,
+                              cmEndDateInput,
+                              startDateStr
                             );
                             setEditingCmIndex(null);
                             setCmStartInput('');
@@ -1329,7 +1333,15 @@ const Sidebar = ({
                             }`}
                           >
                             <div className="flex items-center justify-between">
-                              <span>{`ログ: ${range.labelStart} ~ ${range.labelEnd}`}</span>
+                              <span>{`ログ: ${
+                                range.startDateStr
+                                  ? `${range.startDateStr.split('-').slice(1).join('/')} `
+                                  : ''
+                              }${range.labelStart} ~ ${
+                                range.endDateStr
+                                  ? `${range.endDateStr.split('-').slice(1).join('/')} `
+                                  : ''
+                              }${range.labelEnd}`}</span>
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => {
@@ -1339,6 +1351,11 @@ const Sidebar = ({
                                     // Use imported padTime utility
                                     setCmStartInput(padTime(range.labelStart));
                                     setCmEndInput(padTime(range.labelEnd));
+                                    // Set Date Inputs
+                                    if (setCmStartDateInput)
+                                      setCmStartDateInput(range.startDateStr || '');
+                                    if (setCmEndDateInput)
+                                      setCmEndDateInput(range.endDateStr || '');
                                   }}
                                   className="hover:text-blue-400"
                                 >
