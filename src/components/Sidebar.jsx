@@ -1206,45 +1206,53 @@ const Sidebar = ({
                 <div ref={cmSettingsRef} className="space-y-2">
                   <div className="flex flex-col gap-2 bg-gray-800 p-2 rounded border border-gray-700">
                     {/* Start Time Row */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 w-8 shrink-0">開始</span>
-                      <select
-                        value={cmStartMode}
-                        onChange={(e) => setCmStartMode(e.target.value)}
-                        className="bg-gray-700 text-white text-[10px] p-1 rounded border border-gray-600 outline-none"
-                      >
-                        <option value="log">ログ時間</option>
-                        <option value="video">動画時間</option>
-                      </select>
-                      {renderTimeInput(
-                        cmStartMode,
-                        cmStartInput,
-                        setCmStartInput,
-                        cmStartMode === 'log' ? '00:00:00' : '00:00',
-                        cmStartDateInput,
-                        setCmStartDateInput
-                      )}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 w-8 shrink-0">開始</span>
+                        <select
+                          value={cmStartMode}
+                          onChange={(e) => setCmStartMode(e.target.value)}
+                          className="bg-gray-700 text-white text-[10px] p-1 rounded border border-gray-600 outline-none flex-1"
+                        >
+                          <option value="log">ログ時間</option>
+                          <option value="video">動画時間</option>
+                        </select>
+                      </div>
+                      <div className="flex justify-end w-full">
+                        {renderTimeInput(
+                          cmStartMode,
+                          cmStartInput,
+                          setCmStartInput,
+                          cmStartMode === 'log' ? '00:00:00' : '00:00',
+                          cmStartDateInput,
+                          setCmStartDateInput
+                        )}
+                      </div>
                     </div>
 
                     {/* End Time Row */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 w-8 shrink-0">終了</span>
-                      <select
-                        value={cmEndMode}
-                        onChange={(e) => setCmEndMode(e.target.value)}
-                        className="bg-gray-700 text-white text-[10px] p-1 rounded border border-gray-600 outline-none"
-                      >
-                        <option value="log">ログ時間</option>
-                        <option value="duration">長さ</option>
-                      </select>
-                      {renderTimeInput(
-                        cmEndMode,
-                        cmEndInput,
-                        setCmEndInput,
-                        cmEndMode === 'log' ? '00:00:00' : '00:00',
-                        cmEndDateInput,
-                        setCmEndDateInput
-                      )}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 w-8 shrink-0">終了</span>
+                        <select
+                          value={cmEndMode}
+                          onChange={(e) => setCmEndMode(e.target.value)}
+                          className="bg-gray-700 text-white text-[10px] p-1 rounded border border-gray-600 outline-none flex-1"
+                        >
+                          <option value="log">ログ時間</option>
+                          <option value="duration">長さ</option>
+                        </select>
+                      </div>
+                      <div className="flex justify-end w-full">
+                        {renderTimeInput(
+                          cmEndMode,
+                          cmEndInput,
+                          setCmEndInput,
+                          cmEndMode === 'log' ? '00:00:00' : '00:00',
+                          cmEndDateInput,
+                          setCmEndDateInput
+                        )}
+                      </div>
                     </div>
 
                     {editingCmIndex !== null ? (
