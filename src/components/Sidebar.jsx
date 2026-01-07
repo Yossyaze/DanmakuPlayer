@@ -1100,11 +1100,8 @@ const Sidebar = ({
                         />
                         <button
                           onClick={() => {
-                            const timeStr = startTimeStr || '00:00:00';
-                            const [h, m, s] = timeStr.split(':').map((v) => parseInt(v) || 0);
-
-                            const startSec = h * 3600 + m * 60 + s;
-                            const currentSec = startSec + currentLogicalTime;
+                            // Use currentLogicalTime directly as it represents the absolute log time (including offset)
+                            const currentSec = currentLogicalTime;
 
                             // Handle day overflow
                             let days = Math.floor(currentSec / 86400);

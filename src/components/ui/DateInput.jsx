@@ -223,7 +223,9 @@ const DateInput = ({ value, onChange, placeholder = 'YYYY/MM/DD' }) => {
 
       {/* Display area */}
       <div className="font-mono text-sm select-none flex-1">
-        {isFocused && hasStartedTyping && !editingSegment ? (
+        {!value && !isFocused ? (
+          <span className="text-gray-500">{placeholder}</span>
+        ) : isFocused && hasStartedTyping && !editingSegment ? (
           <span className="text-blue-400">{formatForDisplay(editDigits)}</span>
         ) : (
           <span className="flex items-center gap-0">
