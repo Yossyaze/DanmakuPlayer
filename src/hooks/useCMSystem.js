@@ -264,7 +264,17 @@ export const useCMSystem = (videoDuration) => {
   );
 
   const updateCmRange = useCallback(
-    (index, startMode, startInput, endMode, endInput, startTimeStr) => {
+    (
+      index,
+      startMode,
+      startInput,
+      endMode,
+      endInput,
+      startTimeStr,
+      startDateInput,
+      endDateInput,
+      startDateStr
+    ) => {
       setCmRanges((prev) => {
         const newRanges = [...prev];
         const target = newRanges[index];
@@ -275,9 +285,8 @@ export const useCMSystem = (videoDuration) => {
 
         // 1. Calculate Log Start
         if (startMode === 'log') {
-          logStart = parseLogTimeInput(startInput, startTimeStr);
+          logStart = parseDateTimeInput(startDateInput, startInput, startDateStr, startTimeStr);
         } else if (startMode === 'video') {
-          // User inputs logical time (seekbar time), convert to log time
           const logicalTime = parseTimeStr(startInput);
           logStart = logicalTimeToLogTime(logicalTime);
         }
@@ -287,7 +296,7 @@ export const useCMSystem = (videoDuration) => {
           const duration = parseTimeStr(endInput);
           logEnd = logStart + duration;
         } else if (endMode === 'log') {
-          logEnd = parseLogTimeInput(endInput, startTimeStr);
+          logEnd = parseDateTimeInput(endDateInput, endInput, startDateStr, startTimeStr);
         } else if (endMode === 'video') {
           const videoTime = parseTimeStr(endInput);
           logEnd = videoTimeToLogTime(videoTime);
@@ -303,6 +312,8 @@ export const useCMSystem = (videoDuration) => {
           logEnd,
           labelStart,
           labelEnd,
+          startDateStr: startDateInput || '',
+          endDateStr: endDateInput || '',
         };
 
         return recalculateCmVideoTimes(newRanges, timeOffset);

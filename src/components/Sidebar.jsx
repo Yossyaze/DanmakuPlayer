@@ -74,6 +74,10 @@ const Sidebar = ({
   setCmStartInput,
   cmEndInput,
   setCmEndInput,
+  cmStartDateInput,
+  setCmStartDateInput,
+  cmEndDateInput,
+  setCmEndDateInput,
   addCmRangeSmart,
   updateCmRange,
   removeCmRange,
@@ -1243,7 +1247,10 @@ const Sidebar = ({
                             cmStartInput,
                             cmEndMode,
                             cmEndInput,
-                            startTimeStr
+                            startTimeStr,
+                            cmStartDateInput,
+                            cmEndDateInput,
+                            startDateStr
                           )
                         }
                         className="bg-blue-600 hover:bg-blue-500 text-white p-1.5 rounded text-xs flex items-center justify-center gap-1 mt-1"

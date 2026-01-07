@@ -67,10 +67,15 @@ const SidebarSettings = ({
   setCmStartInput,
   cmEndInput,
   setCmEndInput,
+  cmStartDateInput,
+  setCmStartDateInput,
+  cmEndDateInput,
+  setCmEndDateInput,
   addCmRangeSmart,
   updateCmRange,
   removeCmRange,
   cmRanges,
+  startDateStr,
 
   // Auto-scroll
 
@@ -332,11 +337,16 @@ const SidebarSettings = ({
               setCmStartInput={setCmStartInput}
               cmEndInput={cmEndInput}
               setCmEndInput={setCmEndInput}
+              cmStartDateInput={cmStartDateInput}
+              setCmStartDateInput={setCmStartDateInput}
+              cmEndDateInput={cmEndDateInput}
+              setCmEndDateInput={setCmEndDateInput}
               addCmRangeSmart={addCmRangeSmart}
               updateCmRange={updateCmRange}
               removeCmRange={removeCmRange}
               cmRanges={cmRanges}
               startTimeStr={startTimeStr}
+              startDateStr={startDateStr}
               currentLogicalTime={currentLogicalTime}
               timeOffset={timeOffset}
               formatTime={formatTime}
