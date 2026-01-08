@@ -36,7 +36,7 @@ const CommentList = forwardRef(
 
       isAutoScroll,
       setIsAutoScroll,
-      timeOffset = 0,
+      logStartTime = 0,
       onSetLogStart,
       onSetCmStart,
       onSetCmEnd,
@@ -327,7 +327,7 @@ const CommentList = forwardRef(
               showImages={showImages}
               imageLayout={imageLayout}
               setZoomedImage={setZoomedImage}
-              timeOffset={timeOffset}
+              logStartTime={logStartTime}
               onRowClick={handleRowClick}
               totalComments={comments.length}
               onIdClick={onIdClick}
@@ -360,7 +360,7 @@ const CommentList = forwardRef(
         onUrlLoad,
         showImages,
         setZoomedImage,
-        timeOffset,
+        logStartTime,
         handleRowClick,
         comments.length,
         onIdClick,
@@ -448,7 +448,7 @@ const CommentList = forwardRef(
             onAddNgId={onAddNgId}
             onAddNgComment={onAddNgComment}
             formatTime={formatTime}
-            timeOffset={timeOffset}
+            logStartTime={logStartTime}
             aaMode={aaMode}
             aaOverride={aaOverrideMap[contextMenu.comment.id]}
             onToggleAA={(comment, isAA) => {

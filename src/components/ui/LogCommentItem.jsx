@@ -10,7 +10,7 @@ import VideoEmbed from './VideoEmbed';
 const LogCommentItem = ({
   comment,
   formatTime = defaultFormatTime,
-  timeOffset = 0,
+  logStartTime = 0,
   totalComments = 0,
   onIdClick,
   onAnchorClick,
@@ -160,7 +160,7 @@ const LogCommentItem = ({
 
         {safeSettings.showIds && (
           <span className="text-gray-600 font-mono text-xs ml-auto">
-            {formatTime(comment.time - timeOffset)} (動画時間)
+            {formatTime(comment.time - logStartTime)} (動画時間)
           </span>
         )}
       </div>

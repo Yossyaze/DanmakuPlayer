@@ -110,7 +110,7 @@ export function useAppHandlers({
               target: {
                 value: Math.min(
                   cmSystem.getTotalDuration,
-                  currentTime - cmSystem.timeOffset + (Number(skipSeconds) || 5)
+                  currentTime - cmSystem.logStartTime + (Number(skipSeconds) || 5)
                 ),
               },
             });
@@ -119,7 +119,7 @@ export function useAppHandlers({
             e.preventDefault();
             handleSeek({
               target: {
-                value: Math.max(0, currentTime - cmSystem.timeOffset - (Number(skipSeconds) || 5)),
+                value: Math.max(0, currentTime - cmSystem.logStartTime - (Number(skipSeconds) || 5)),
               },
             });
             break;

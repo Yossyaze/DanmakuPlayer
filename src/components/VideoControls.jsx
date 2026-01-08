@@ -62,7 +62,7 @@ const VideoControls = ({
   progressBarRef,
   thumbRef,
   cmRanges,
-  timeOffset = 0,
+  logStartTime = 0,
   logTimeToVideoTime, // Added prop
   visible = true, // Default to true
   videoSrc,
@@ -154,7 +154,7 @@ const VideoControls = ({
 
     if (previewVideoRef.current) {
       // Convert Video Relative Time to Log Time
-      const logTime = time + timeOffset;
+      const logTime = time + logStartTime;
 
       // Convert Log Time to Video Time (handling CMs)
       let videoTime = logTime;
@@ -432,8 +432,8 @@ const VideoControls = ({
           >
             {/* Layer 2: Unplayed CM Ranges (Yellow) */}
             {cmRanges.map((range, i) => {
-              const start = range.logStart - timeOffset;
-              const end = range.logEnd - timeOffset;
+              const start = range.logStart - logStartTime;
+              const end = range.logEnd - logStartTime;
               const duration = end - start;
               const leftPct = totalDuration > 0 ? (start / totalDuration) * 100 : 0;
               const widthPct = totalDuration > 0 ? (duration / totalDuration) * 100 : 0;
@@ -458,8 +458,8 @@ const VideoControls = ({
 
             {/* Layer 4: Played CM Ranges (Green) */}
             {cmRanges.map((range, i) => {
-              const start = range.logStart - timeOffset;
-              const end = range.logEnd - timeOffset;
+              const start = range.logStart - logStartTime;
+              const end = range.logEnd - logStartTime;
               const overlapEnd = Math.min(currentTime, end);
               const overlapStart = Math.max(0, start);
               const overlapDur = Math.max(0, overlapEnd - overlapStart);

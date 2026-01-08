@@ -7,7 +7,7 @@ const AnchorPopup = ({
   comment,
   position,
   formatTime,
-  timeOffset,
+  logStartTime,
   settings,
   setZoomedImage,
   onClose,
@@ -106,7 +106,7 @@ const AnchorPopup = ({
       <RowComponent
         comment={comment}
         formatTime={formatTime}
-        timeOffset={timeOffset}
+        logStartTime={logStartTime}
         settings={{ ...settings, density: 'compact' }}
         className="bg-gray-900 border-b border-gray-700 last:border-b-0 cursor-pointer hover:bg-gray-800"
         onClick={isTopmost ? onClick : undefined}

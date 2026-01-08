@@ -609,7 +609,7 @@ const DesktopApp = () => {
       requestPlay={requestPlay}
       handleSeek={handleSeek}
       onScrub={(videoRelativeTime) => {
-        const logTime = videoRelativeTime + (cmSystem?.timeOffset || 0);
+        const logTime = videoRelativeTime + (cmSystem?.logStartTime || 0);
         handleScrub(logTime);
       }}
       handleSeekStart={handleSeekStart}

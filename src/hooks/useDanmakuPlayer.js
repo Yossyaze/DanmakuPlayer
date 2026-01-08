@@ -167,9 +167,9 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
   const resetPlayerState = useCallback(() => {
     player.setPlayingState(false);
     // Reset to Video Start (offset), not Log Start (0)
-    setCurrentTime(cmSystem.timeOffset);
+    setCurrentTime(cmSystem.logStartTime);
     resetDanmaku();
-    lastProcessedTimeRef.current = cmSystem.timeOffset;
+    lastProcessedTimeRef.current = cmSystem.logStartTime;
     cmSystem.resetCmState();
     setShowEndCard(false);
   }, [player, resetDanmaku, cmSystem]);
@@ -322,11 +322,11 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
       }
 
       // Convert Video Relative Time to Log Time
-      const targetLogTime = targetVideoRelativeTime + cmSystem.timeOffset;
+      const targetLogTime = targetVideoRelativeTime + cmSystem.logStartTime;
       setCurrentTime(targetLogTime);
       performSeek(targetLogTime);
     },
-    [cmSystem.timeOffset, performSeek, player]
+    [cmSystem.logStartTime, performSeek, player]
   );
 
   const lastScrubStateUpdateRef = useRef(0);
@@ -403,11 +403,11 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
       let accDuration = 0;
 
       for (const range of sortedRanges) {
-        // Use pre-calculated videoStart which includes timeOffset
+        // Use pre-calculated videoStart which includes logStartTime
         const videoStart =
           range.videoStart !== undefined
             ? range.videoStart
-            : range.logStart - accDuration - cmSystem.timeOffset;
+            : range.logStart - accDuration - cmSystem.logStartTime;
 
         if (cmSystem.cmStateRef.current.justFinishedCmId === range.id) {
           if (Math.abs(vidTime - videoStart) > 1.0) {
@@ -431,7 +431,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
       }
       return null;
     },
-    [cmSystem.cmRanges, cmSystem.timeOffset, cmSystem.cmStateRef]
+    [cmSystem.cmRanges, cmSystem.logStartTime, cmSystem.cmStateRef]
   );
 
   // --- Play Request with CM Safety ---
@@ -624,7 +624,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
                   const vs =
                     r.videoStart !== undefined
                       ? r.videoStart
-                      : r.logStart - d - cmSystem.timeOffset;
+                      : r.logStart - d - cmSystem.logStartTime;
                   if (Math.abs(vidTime - vs) > 1.0) {
                     cmSystem.updateCmState({ justFinishedCmId: null });
                   }
@@ -661,14 +661,14 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
       // Only update UI if NOT showing end card (freeze UI at end)
       if (!showEndCard) {
         if (progressBarRef.current && cmSystem.getTotalDuration > 0 && !isDraggingRef.current) {
-          // Display Time is Log Time. We want to show progress relative to Video Start (which is at Log Time = timeOffset).
-          // So relative time = displayTime - timeOffset.
-          const relativeTime = displayTime - cmSystem.timeOffset;
+          // Display Time is Log Time. We want to show progress relative to Video Start (which is at Log Time = logStartTime).
+          // So relative time = displayTime - logStartTime.
+          const relativeTime = displayTime - cmSystem.logStartTime;
           const percent = (relativeTime / cmSystem.getTotalDuration) * 100;
           progressBarRef.current.style.width = `${Math.max(0, Math.min(100, percent))}%`;
         }
         if (thumbRef.current && cmSystem.getTotalDuration > 0 && !isDraggingRef.current) {
-          const relativeTime = displayTime - cmSystem.timeOffset;
+          const relativeTime = displayTime - cmSystem.logStartTime;
           const percent = (relativeTime / cmSystem.getTotalDuration) * 100;
           thumbRef.current.style.left = `${Math.max(0, Math.min(100, percent))}%`;
         }
@@ -851,7 +851,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
   const commentDensity = useMemo(() => {
     const duration = cmSystem.getTotalDuration;
     const comments = logSystem.visibleComments;
-    const offset = cmSystem.timeOffset;
+    const offset = cmSystem.logStartTime;
 
     if (!duration || duration <= 0 || !comments || comments.length === 0) {
       return [];
@@ -882,7 +882,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
     if (maxCount === 0) return new Array(bucketCount).fill(0);
 
     return buckets.map((count) => count / maxCount);
-  }, [cmSystem.getTotalDuration, cmSystem.timeOffset, logSystem.visibleComments]);
+  }, [cmSystem.getTotalDuration, cmSystem.logStartTime, logSystem.visibleComments]);
 
   return {
     // Systems

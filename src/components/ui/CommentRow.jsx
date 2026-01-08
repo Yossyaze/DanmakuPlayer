@@ -23,7 +23,7 @@ const CommentRow = React.memo(
     showImages,
     imageLayout = 'inline',
     setZoomedImage,
-    timeOffset,
+    logStartTime,
     formatTime = defaultFormatTime,
     onRowClick,
     totalComments,
@@ -41,7 +41,7 @@ const CommentRow = React.memo(
         isHighlighted={isHighlighted}
         currentTime={currentTime}
         rootTime={rootTime}
-        timeOffset={timeOffset}
+        logStartTime={logStartTime}
         formatTime={formatTime}
         totalComments={totalComments}
         onIdClick={onIdClick}
@@ -80,7 +80,7 @@ const CommentRow = React.memo(
         nextEffectiveTime > nextProps.currentTime &&
       prevProps.showThreadTitle === nextProps.showThreadTitle &&
       prevProps.visibleThreadTitles === nextProps.visibleThreadTitles &&
-      prevProps.timeOffset === nextProps.timeOffset && // Check timeOffset
+      prevProps.logStartTime === nextProps.logStartTime && // Check logStartTime
       prevProps.totalComments === nextProps.totalComments && // Check totalComments
       prevProps.formatTime === nextProps.formatTime && // Check formatTime (crucial for custom formatters)
       prevProps.aaMode === nextProps.aaMode && // Check AA mode

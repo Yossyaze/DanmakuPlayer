@@ -25,7 +25,7 @@ const SidebarCMSettings = ({
   startTimeStr,
   startDateStr,
   currentTime,
-  timeOffset = 0,
+  logStartTime = 0,
   formatTime,
 }) => {
   const [editingCmIndex, setEditingCmIndex] = useState(null);
@@ -46,8 +46,8 @@ const SidebarCMSettings = ({
   const renderTimeInput = (mode, value, setValue, dateValue, setDateValue, placeholder) => {
     const handleGetCurrent = () => {
       if (mode === 'video') {
-        // Use seekbar time (logical time = log time - timeOffset)
-        const seekbarSeconds = Math.floor(currentTime - timeOffset);
+        // Use seekbar time (logical time = log time - logStartTime)
+        const seekbarSeconds = Math.floor(currentTime - logStartTime);
         const h = Math.floor(seekbarSeconds / 3600);
         const m = Math.floor((seekbarSeconds % 3600) / 60);
         const s = Math.floor(seekbarSeconds % 60);

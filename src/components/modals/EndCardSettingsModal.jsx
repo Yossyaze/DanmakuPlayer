@@ -11,7 +11,7 @@ const EndCardSettingsModal = ({
   onSettingsChange,
   logComments, // Array of comments to search for images
   currentTime, // New prop
-  timeOffset = 0, // Offset for Log vs Logical time
+  logStartTime = 0, // Offset for Log vs Logical time
   videoTimeToLogTime, // Function to convert video time to log time
   logTimeToVideoTime, // Function to convert log time to video time
   logStartTime, // "HH:MM:SS" string of log start time
@@ -164,7 +164,7 @@ const EndCardSettingsModal = ({
                           return formatTime(localSettings.previewStartTime || 0);
                         }
                         return formatTime(
-                          Math.max(0, (localSettings.previewStartTime || 0) - timeOffset)
+                          Math.max(0, (localSettings.previewStartTime || 0) - logStartTime)
                         );
                       })()}
                       onChange={(val) => {
@@ -189,7 +189,7 @@ const EndCardSettingsModal = ({
                             finalTime = seconds;
                           }
                         } else {
-                          finalTime = seconds + timeOffset;
+                          finalTime = seconds + logStartTime;
                         }
 
                         setLocalSettings({ ...localSettings, previewStartTime: finalTime });
@@ -202,7 +202,7 @@ const EndCardSettingsModal = ({
                   {currentTime !== undefined && (
                     <button
                       onClick={() => {
-                        const logTime = currentTime + timeOffset;
+                        const logTime = currentTime + logStartTime;
                         setLocalSettings({
                           ...localSettings,
                           previewStartTime: Math.floor(logTime * 10) / 10,
@@ -215,7 +215,7 @@ const EndCardSettingsModal = ({
                         {(() => {
                           if (inputMode === 'log') {
                             if (logStartTime) {
-                              const curLogTime = currentTime + timeOffset;
+                              const curLogTime = currentTime + logStartTime;
                               const [h, m, s] = logStartTime.split(':').map(Number);
                               const startSec = h * 3600 + m * 60 + s;
                               let totalSec = startSec + curLogTime;
@@ -225,7 +225,7 @@ const EndCardSettingsModal = ({
                               const fs = Math.floor(totalSec % 60);
                               return `${fh}:${fm.toString().padStart(2, '0')}:${fs.toString().padStart(2, '0')}`;
                             }
-                            return formatTime(currentTime + timeOffset);
+                            return formatTime(currentTime + logStartTime);
                           } else {
                             return formatTime(currentTime);
                           }

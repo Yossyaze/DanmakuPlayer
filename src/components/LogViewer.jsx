@@ -24,7 +24,7 @@ const LogCommentItemWrapper = React.memo(
     onUrlLoad,
     showImages,
     setZoomedImage,
-    timeOffset,
+    logStartTime,
     formatTime,
     onRowClick,
     totalComments,
@@ -40,7 +40,7 @@ const LogCommentItemWrapper = React.memo(
         isActive={isActive}
         isHighlighted={isHighlighted}
         currentTime={currentTime}
-        timeOffset={timeOffset}
+        logStartTime={logStartTime}
         formatTime={formatTime}
         totalComments={totalComments}
         onIdClick={onIdClick}
@@ -74,7 +74,7 @@ const LogViewer = ({
   activeCommentId,
   // activeThreadTitle, // Unused here, we calculate locally to support filtering
   currentTime,
-  timeOffset,
+  logStartTime,
   onCommentClick,
   onSeekAndPlay, // New prop for seek + play + exit log mode
   onIdClick,
@@ -637,7 +637,7 @@ const LogViewer = ({
           activeCommentRef={refToUse}
           isAutoScroll={false}
           setIsAutoScroll={() => {}}
-          timeOffset={timeOffset}
+          logStartTime={logStartTime}
           isPopupActive={popupStack.length > 0} // Pass isPopupActive to prevent context menu
           initialScrollIndex={initialScrollIndex}
           onScrollIndexChange={(index) => {
@@ -660,7 +660,7 @@ const LogViewer = ({
           containerWidth={containerWidth}
           containerHeight={containerHeight}
           currentTime={currentTime}
-          timeOffset={timeOffset}
+          logStartTime={logStartTime}
           formatTime={customFormatTime}
           logSettings={logSettings}
           aaOverrideMap={aaOverrideMap}
@@ -690,7 +690,7 @@ const LogViewer = ({
       <LogViewerPopupStack
         popupStack={popupStack}
         formatTime={formatTime}
-        timeOffset={timeOffset}
+        logStartTime={logStartTime}
         logSettings={logSettings}
         aaOverrideMap={aaOverrideMap}
         containerWidth={containerWidth}
@@ -723,7 +723,7 @@ const LogViewer = ({
           onCopyId={(id) => navigator.clipboard.writeText(id)}
           onCopyComment={(text) => navigator.clipboard.writeText(text)}
           formatTime={formatTime}
-          timeOffset={timeOffset}
+          logStartTime={logStartTime}
           aaMode={logSettings.aaMode}
           aaOverride={aaOverrideMap[logContextMenu.comment.id]}
           onToggleAA={onToggleAA}

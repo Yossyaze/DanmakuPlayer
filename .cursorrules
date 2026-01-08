@@ -23,7 +23,7 @@
 - **論理時間 (Logical Time)**:
   ユーザーが認識する「再生中の時間」。シークバーに表示される時間と一致する。
   定義: `論理時間 = 現在の動画時間 + 累積CM時間`
-  - **注意**: コード上の変数 `currentLogicalTime` は、実装上「ログ時間（Log Time = 動画時間 + オフセット + CM）」を保持していることが多い。その場合、本来の論理時間を算出するには `currentLogicalTime - timeOffset` を行う必要がある。
+  - **注意**: コード上の変数 `currentLogicalTime` は、実装上「ログ時間（Log Time = 動画時間 + オフセット + CM）」を保持していることが多い。その場合、本来の論理時間を算出するには `currentLogicalTime - logStartTime` を行う必要がある。
   - **関連コード**: `VideoControls.jsx` (prop: `currentTime`), `SidebarCMSettings.jsx` (var: `seekbarSeconds`)
 
 - **CM (Commercial Message)**:

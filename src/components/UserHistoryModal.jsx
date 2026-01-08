@@ -15,7 +15,7 @@ const UserHistoryModal = ({
   onSetCmStart,
   onSetCmEnd,
   formatTime,
-  timeOffset = 0,
+  logStartTime = 0,
   totalComments, // Pass total to calculate ratio correctly
   isSidebarMode = false,
   className = '',
@@ -100,7 +100,7 @@ const UserHistoryModal = ({
                     key={`${comment.id}-${index}`}
                     comment={comment}
                     formatTime={formatTime}
-                    timeOffset={timeOffset}
+                    logStartTime={logStartTime}
                     totalComments={totalComments}
                     onClick={(e) => handleRowClick(e, comment)}
                     // Context menu check for bg color
@@ -152,7 +152,7 @@ const UserHistoryModal = ({
                 setContextMenu(null);
               }}
               formatTime={formatTime}
-              timeOffset={timeOffset}
+              logStartTime={logStartTime}
               totalComments={totalComments}
               onCopyId={(id) => navigator.clipboard.writeText(id)}
               onCopyComment={(text) => navigator.clipboard.writeText(text)}
@@ -204,7 +204,7 @@ const UserHistoryModal = ({
                     key={`${comment.id}-${index}`}
                     comment={comment}
                     formatTime={formatTime}
-                    timeOffset={timeOffset}
+                    logStartTime={logStartTime}
                     totalComments={totalComments}
                     onClick={(e) => handleRowClick(e, comment)}
                     className={`px-6 py-3 ${
@@ -256,7 +256,7 @@ const UserHistoryModal = ({
                 setContextMenu(null);
               }}
               formatTime={formatTime}
-              timeOffset={timeOffset}
+              logStartTime={logStartTime}
               totalComments={totalComments}
               onCopyId={(id) => navigator.clipboard.writeText(id)}
               onCopyComment={(text) => navigator.clipboard.writeText(text)}

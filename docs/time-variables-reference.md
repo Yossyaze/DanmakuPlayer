@@ -18,11 +18,11 @@
 │   例: 82.5 秒 = ログ開始から1分22.5秒経過                                    │
 │   プロパティ: time (秒)                                                      │
 └─────────────────────────────────────────────────────────────────────────────┘
-                    ↓ timeOffset を適用
+                    ↓ logStartTime を適用
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 動画時間 (シークバー上の位置)                                                │
 │   例: 52.5 秒 = 動画開始から52.5秒の位置                                     │
-│   計算: currentTime - timeOffset (CMがない場合)                              │
+│   計算: currentTime - logStartTime (CMがない場合)                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -90,13 +90,13 @@
   currentTime = videoTimeToLogTime(video.currentTime);
 
   // 展開すると:
-  currentTime = video.currentTime + timeOffset + accumulatedCmDuration;
+  currentTime = video.currentTime + logStartTime + accumulatedCmDuration;
 
   // CM待機中:
   currentTime = cmRange.logStart + accumulatedWaitTime + elapsedSinceWaitStart;
   ```
 
-- **範囲**: `timeOffset` ～ `totalDuration + timeOffset`
+- **範囲**: `logStartTime` ～ `totalDuration + logStartTime`
 - **更新タイミング**: 毎フレーム（再生中）、シーク時
 - **使用箇所**:
   - 弾幕表示制御
@@ -106,7 +106,7 @@
 
 > **注意**: `.cursorrules` では「論理時間 = 動画時間 + CM時間」と定義されていますが、コード上の `currentTime` は実際には「ログ時間」（ログ開始からの相対秒数）を保持しています。
 
-### `timeOffset` (秒)
+### `logStartTime` (秒)
 
 - **定義**: `useCMSystem.js` Line 14
 - **意味**: 動画の0秒地点に対応するログ上の時刻
@@ -116,14 +116,14 @@
   ```javascript
   // useTimeSync.js Line 95
   // videoLogicalTime = videoStartTimeStr をパースした秒数
-  timeOffset = -videoLogicalTime;
+  logStartTime = -videoLogicalTime;
 
   // 例: videoStartTimeStr = "0:30:00" (1800秒) の場合
-  timeOffset = -1800;
+  logStartTime = -1800;
   ```
 
 - **使用箇所**:
-  - シークバー位置計算: `currentTime - timeOffset`
+  - シークバー位置計算: `currentTime - logStartTime`
   - ログ時間 → 動画時間変換
   - 動画時間 → ログ時間変換
 
@@ -139,7 +139,7 @@
   videoLogicalTime = parts[0] * 3600 + parts[1] * 60 + parts[2];
   ```
 - **設定箇所**: 同期設定UI
-- **使用箇所**: `useTimeSync.js` で `timeOffset` 計算の基準
+- **使用箇所**: `useTimeSync.js` で `logStartTime` 計算の基準
 
 ### `startTimeStr` (文字列)
 
@@ -210,7 +210,7 @@
 
   ```javascript
   // useCMSystem.js recalculateCmVideoTimes()
-  videoStart = logStart - accumulatedCmDuration - timeOffset;
+  videoStart = logStart - accumulatedCmDuration - logStartTime;
 
   // accumulatedCmDuration = この CM より前の全 CM の合計時間
   ```
@@ -280,7 +280,7 @@
       offset += range.logEnd - range.logStart;
     }
   }
-  videoTime = logTime - offset - timeOffset;
+  videoTime = logTime - offset - logStartTime;
   ```
 
 - **使用箇所**: シーク実行時、CM終了後の動画同期
@@ -293,12 +293,12 @@
   ```javascript
   let offset = 0;
   for (const range of sortedRanges) {
-    const videoStart = range.logStart - offset - timeOffset;
+    const videoStart = range.logStart - offset - logStartTime;
     if (videoTime >= videoStart) {
       offset += range.logEnd - range.logStart;
     }
   }
-  logTime = videoTime + offset + timeOffset;
+  logTime = videoTime + offset + logStartTime;
   ```
 - **使用箇所**: 再生ループでのフレーム処理
 
@@ -308,7 +308,7 @@
 - **意味**: シークバー時間（論理時間）→ ログ上の時刻
 - **計算式**:
   ```javascript
-  logTime = logicalTime + timeOffset;
+  logTime = logicalTime + logStartTime;
   ```
 - **使用箇所**: シークバー操作
 
@@ -319,13 +319,13 @@
 ### シークバー上の現在位置（秒）
 
 ```javascript
-seekbarPosition = currentTime - timeOffset;
+seekbarPosition = currentTime - logStartTime;
 ```
 
 ### シークバー上の現在位置（%）
 
 ```javascript
-seekbarPercent = ((currentTime - timeOffset) / totalDuration) * 100;
+seekbarPercent = ((currentTime - logStartTime) / totalDuration) * 100;
 ```
 
 ### 動画の総時間（論理時間）
@@ -363,7 +363,7 @@ video.currentTime ───────────────► rawTime (Unix
      │    currentTime = videoTimeToLogTime(video.currentTime)
      │
      ▼
-シークバー表示 = currentTime - timeOffset
+シークバー表示 = currentTime - logStartTime
 ```
 
 ---
@@ -375,14 +375,14 @@ video.currentTime ───────────────► rawTime (Unix
 | `rawTime`         | ms   | 絶対時刻 (Unix)        | ログから直接取得                        |
 | `time`            | 秒   | ログ開始からの相対秒数 | `(rawTime - logRefTime) / 1000`         |
 | `currentTime`     | 秒   | 現在のログ上位置       | `videoTimeToLogTime(video.currentTime)` |
-| `timeOffset`      | 秒   | 動画0秒=ログX秒        | `-videoLogicalTime`                     |
-| `videoTime`       | 秒   | 動画上の再生位置       | `logTime - offset - timeOffset`         |
+| `logStartTime`      | 秒   | 動画0秒=ログX秒        | `-videoLogicalTime`                     |
+| `videoTime`       | 秒   | 動画上の再生位置       | `logTime - offset - logStartTime`         |
 | `logStart/logEnd` | 秒   | CM区間(ログ上)         | ユーザー入力から計算                    |
-| `videoStart`      | 秒   | CM区間開始(動画上)     | `logStart - accCmDur - timeOffset`      |
+| `videoStart`      | 秒   | CM区間開始(動画上)     | `logStart - accCmDur - logStartTime`      |
 | `totalWaitOffset` | 秒   | 累積CM待機時間         | `Σ(cmRange.duration)`                   |
 | `displayTime`     | 秒   | 表示用現在時刻         | = `currentTime`                         |
 | `logRefTime`      | ms   | ログ基準時刻           | 最初のコメントの `rawTime`              |
-| `seekbarPosition` | 秒   | シークバー位置         | `currentTime - timeOffset`              |
+| `seekbarPosition` | 秒   | シークバー位置         | `currentTime - logStartTime`              |
 
 ---
 
@@ -394,7 +394,7 @@ A: `.cursorrules` の定義では「論理時間 = 動画時間 + CM時間」で
 
 ### Q2: シークバー上の時間はどう計算される？
 
-A: `currentTime - timeOffset` で計算されます。これが動画ファイル上の再生位置と一致します（CMがない場合）。
+A: `currentTime - logStartTime` で計算されます。これが動画ファイル上の再生位置と一致します（CMがない場合）。
 
 ### Q3: コメントの `.time` と `.rawTime` の違いは？
 

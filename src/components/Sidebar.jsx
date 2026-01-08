@@ -102,7 +102,7 @@ const Sidebar = ({
   handleReorderFiles,
   urlInput,
   setUrlInput,
-  timeOffset = 0,
+  logStartTime = 0,
   onAddNgId,
   onAddNgComment,
   onAddNgWord, // New Prop
@@ -609,8 +609,8 @@ const Sidebar = ({
   const renderTimeInput = (mode, value, setValue, placeholder, dateValue, setDateValue) => {
     const handleGetCurrent = () => {
       if (mode === 'video') {
-        // Use seekbar time (logical time = log time - timeOffset)
-        const seekbarSeconds = Math.floor(currentTime - timeOffset);
+        // Use seekbar time (logical time = log time - logStartTime)
+        const seekbarSeconds = Math.floor(currentTime - logStartTime);
         const h = Math.floor(seekbarSeconds / 3600);
         const m = Math.floor((seekbarSeconds % 3600) / 60);
         const s = Math.floor(seekbarSeconds % 60);
@@ -1102,8 +1102,8 @@ const Sidebar = ({
 
                         <button
                           onClick={() => {
-                            // Defined Logical Time = Video Time + CM = currentTime - timeOffset
-                            const logicalSec = Math.floor(currentTime - timeOffset);
+                            // Defined Logical Time = Video Time + CM = currentTime - logStartTime
+                            const logicalSec = Math.floor(currentTime - logStartTime);
 
                             // Handle day overflow if video is very long (though Logical Time usually doesn't have date)
                             const days = Math.floor(logicalSec / 86400);
@@ -1216,7 +1216,7 @@ const Sidebar = ({
                         />
                         <button
                           onClick={() => {
-                            const totalSec = Math.floor(currentTime - timeOffset);
+                            const totalSec = Math.floor(currentTime - logStartTime);
                             const h = Math.floor(totalSec / 3600);
                             const m = Math.floor((totalSec % 3600) / 60);
                             const s = Math.floor(totalSec % 60);
@@ -1551,7 +1551,7 @@ const Sidebar = ({
           onCommentClick={(time) => onCommentClick && onCommentClick(time)}
           onSeekAndPlay={onSeekAndPlay}
           onAnchorClick={(e, resNum) => handleAnchorClick(e, resNum, false)}
-          timeOffset={timeOffset}
+          logStartTime={logStartTime}
           formatTime={customFormatTime}
           isAutoScroll={localIsAutoScroll}
           setIsAutoScroll={setLocalIsAutoScroll}
@@ -1588,7 +1588,7 @@ const Sidebar = ({
             onSetCmStart={handleSetCmStart}
             onSetCmEnd={handleSetCmEnd}
             formatTime={formatTime}
-            timeOffset={timeOffset}
+            logStartTime={logStartTime}
             totalComments={comments.length}
             isSidebarMode={true}
             className="h-full border-none"
@@ -1649,7 +1649,7 @@ const Sidebar = ({
                 isTopmost={index === popupStack.length - 1}
                 onClick={(e) => handlePopupRowClick(e, popup.comment)}
                 formatTime={formatTime}
-                timeOffset={timeOffset}
+                logStartTime={logStartTime}
                 settings={{
                   fontSize: 'small',
                   density: 'compact',
@@ -1677,7 +1677,7 @@ const Sidebar = ({
                 isTopmost={index === popupStack.length - 1}
                 onClick={handlePopupRowClick}
                 formatTime={formatTime}
-                timeOffset={timeOffset}
+                logStartTime={logStartTime}
                 settings={{
                   fontSize: 'small',
                   density: 'compact',
@@ -1740,7 +1740,7 @@ const Sidebar = ({
           }}
           onSetEndCardPreview={onSetEndCardPreview}
           formatTime={formatTime}
-          timeOffset={timeOffset}
+          logStartTime={logStartTime}
           aaMode={aaMode}
           aaOverride={aaOverrideMap[sidebarContextMenu.comment.id]}
           onToggleAA={onToggleAA}

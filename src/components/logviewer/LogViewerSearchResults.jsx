@@ -15,7 +15,7 @@ const LogViewerSearchResults = ({
   containerWidth,
   containerHeight, // Add containerHeight
   currentTime,
-  timeOffset,
+  logStartTime,
   formatTime,
   logSettings,
   aaOverrideMap,
@@ -106,7 +106,7 @@ const LogViewerSearchResults = ({
                     isActive={false}
                     isHighlighted={false}
                     currentTime={currentTime}
-                    timeOffset={timeOffset}
+                    logStartTime={logStartTime}
                     formatTime={formatTime}
                     totalComments={displayResults.length}
                     onIdClick={onIdClick}

@@ -28,7 +28,7 @@ const CommentContextMenu = ({
   onCopyId,
   onCopyComment,
   formatTime,
-  timeOffset = 0,
+  logStartTime = 0,
   totalComments = 0,
   onJumpToComment,
   onToggleAA,
@@ -81,7 +81,7 @@ const CommentContextMenu = ({
           <CommentItem
             comment={comment}
             formatTime={formatTime}
-            timeOffset={timeOffset}
+            logStartTime={logStartTime}
             totalComments={totalComments}
             className="border-none" // Remove border-b as container handles it
           />

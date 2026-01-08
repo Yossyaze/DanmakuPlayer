@@ -45,7 +45,7 @@ const SidebarSettings = ({
   videoStartTimeStr,
   setVideoStartTimeStr,
   currentTime,
-  timeOffset,
+  logStartTime,
   formatTime,
 
   // Display Options
@@ -348,7 +348,7 @@ const SidebarSettings = ({
               startTimeStr={startTimeStr}
               startDateStr={startDateStr}
               currentTime={currentTime}
-              timeOffset={timeOffset}
+              logStartTime={logStartTime}
               formatTime={formatTime}
             />
           </div>

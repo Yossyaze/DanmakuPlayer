@@ -298,7 +298,7 @@ const MobileApp = () => {
   // Calculate progress percentage
   const totalDuration = cmSystem.getTotalDuration || 0;
   const progressPercent =
-    totalDuration > 0 ? ((currentTime - cmSystem.timeOffset) / totalDuration) * 100 : 0;
+    totalDuration > 0 ? ((currentTime - cmSystem.logStartTime) / totalDuration) * 100 : 0;
 
   // Ref to track last seek time for throttling
   const lastSeekTimeRef = useRef(0);
@@ -331,7 +331,7 @@ const MobileApp = () => {
 
       // Update preview video
       if (previewVideoRef.current && player.videoSrc) {
-        const logTime = newTime + cmSystem.timeOffset;
+        const logTime = newTime + cmSystem.logStartTime;
         const videoTime = cmSystem.logTimeToVideoTime
           ? cmSystem.logTimeToVideoTime(logTime).videoTime
           : newTime;
@@ -362,7 +362,7 @@ const MobileApp = () => {
 
         // Update preview video
         if (previewVideoRef.current && player.videoSrc) {
-          const logTime = time + cmSystem.timeOffset;
+          const logTime = time + cmSystem.logStartTime;
           const videoTime = cmSystem.logTimeToVideoTime
             ? cmSystem.logTimeToVideoTime(logTime).videoTime
             : time;
@@ -800,7 +800,7 @@ const MobileApp = () => {
               }`}
             >
               <span className="text-xs text-white bg-black/50 px-2 py-1 rounded backdrop-blur-sm">
-                {formatTime(currentTime - cmSystem.timeOffset)} / {formatTime(totalDuration)}
+                {formatTime(currentTime - cmSystem.logStartTime)} / {formatTime(totalDuration)}
               </span>
               <button
                 onClick={(e) => {
@@ -986,8 +986,8 @@ const MobileApp = () => {
                 {/* CM Ranges - Unplayed (Yellow) */}
                 {cmSystem.cmRanges &&
                   cmSystem.cmRanges.map((range, i) => {
-                    const start = range.logStart - cmSystem.timeOffset;
-                    const end = range.logEnd - cmSystem.timeOffset;
+                    const start = range.logStart - cmSystem.logStartTime;
+                    const end = range.logEnd - cmSystem.logStartTime;
                     const duration = end - start;
                     const leftPct = totalDuration > 0 ? (start / totalDuration) * 100 : 0;
                     const widthPct = totalDuration > 0 ? (duration / totalDuration) * 100 : 0;
@@ -1015,9 +1015,9 @@ const MobileApp = () => {
                 {/* CM Ranges - Played (Green) */}
                 {cmSystem.cmRanges &&
                   cmSystem.cmRanges.map((range, i) => {
-                    const start = range.logStart - cmSystem.timeOffset;
-                    const end = range.logEnd - cmSystem.timeOffset;
-                    const logicalCurrent = currentTime - cmSystem.timeOffset;
+                    const start = range.logStart - cmSystem.logStartTime;
+                    const end = range.logEnd - cmSystem.logStartTime;
+                    const logicalCurrent = currentTime - cmSystem.logStartTime;
                     const overlapEnd = Math.min(logicalCurrent, end);
                     const overlapStart = Math.max(0, start);
                     const overlapDur = Math.max(0, overlapEnd - overlapStart);
@@ -1124,7 +1124,7 @@ const MobileApp = () => {
                 sidebarOpen={logSidebarOpen}
                 activeCommentId={activeCommentId}
                 currentTime={currentTime}
-                timeOffset={cmSystem.timeOffset}
+                logStartTime={cmSystem.logStartTime}
                 onCommentClick={handleCommentClick}
                 onSeekAndPlay={handleSeekAndPlay}
                 aaOverrideMap={aaOverrideMap}
@@ -1159,7 +1159,7 @@ const MobileApp = () => {
                   aaOverrideMap={aaOverrideMap}
                   onToggleAA={handleToggleAA}
                   showImages={showImages}
-                  timeOffset={cmSystem.timeOffset}
+                  logStartTime={cmSystem.logStartTime}
                   onSetCmStart={handleSetCmStart}
                   onSetCmEnd={handleSetCmEnd}
                   onSetLogStart={handleSetLogStart}

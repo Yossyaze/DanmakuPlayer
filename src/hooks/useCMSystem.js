@@ -11,7 +11,7 @@ export const useCMSystem = (videoDuration) => {
   const [isWaitingCm, setIsWaitingCm] = useState(false);
   const [currentCmWaitTime, setCurrentCmWaitTime] = useState(0);
   const [totalWaitOffset, setTotalWaitOffset] = useState(0);
-  const [timeOffset, setTimeOffset] = useState(0); // Log Time at Video 0
+  const [logStartTime, setTimeOffset] = useState(0); // Log Time at Video 0
 
   const cmStateRef = useRef({
     isWaiting: false,
@@ -44,7 +44,7 @@ export const useCMSystem = (videoDuration) => {
   }, []);
 
   // Helper to recalculate videoStart for all ranges
-  const recalculateCmVideoTimes = (ranges, offset = timeOffset) => {
+  const recalculateCmVideoTimes = (ranges, offset = logStartTime) => {
     const sorted = [...ranges].sort((a, b) => a.logStart - b.logStart);
     let accumulatedCmDuration = 0;
     return sorted.map((range) => {
@@ -57,29 +57,29 @@ export const useCMSystem = (videoDuration) => {
     });
   };
 
-  // Update ranges when timeOffset changes
+  // Update ranges when logStartTime changes
   useEffect(() => {
-    setCmRanges((prev) => recalculateCmVideoTimes(prev, timeOffset));
-  }, [timeOffset]);
+    setCmRanges((prev) => recalculateCmVideoTimes(prev, logStartTime));
+  }, [logStartTime]);
 
   const addCmRange = useCallback(
     (range) => {
       setCmRanges((prev) => {
         const newRanges = [...prev, { ...range, id: Date.now() }];
-        return recalculateCmVideoTimes(newRanges, timeOffset);
+        return recalculateCmVideoTimes(newRanges, logStartTime);
       });
     },
-    [timeOffset]
+    [logStartTime]
   );
 
   const removeCmRange = useCallback(
     (index) => {
       setCmRanges((prev) => {
         const newRanges = prev.filter((_, i) => i !== index);
-        return recalculateCmVideoTimes(newRanges, timeOffset);
+        return recalculateCmVideoTimes(newRanges, logStartTime);
       });
     },
-    [timeOffset]
+    [logStartTime]
   );
 
   // Helper to parse time string "HH:MM:SS" or "MM:SS" to seconds
@@ -146,7 +146,7 @@ export const useCMSystem = (videoDuration) => {
           videoTime =
             range.videoStart !== undefined
               ? range.videoStart
-              : range.logStart - offset - timeOffset;
+              : range.logStart - offset - logStartTime;
           break;
         }
         if (logTime >= range.logEnd) {
@@ -155,12 +155,12 @@ export const useCMSystem = (videoDuration) => {
       }
 
       if (!inCmRange) {
-        videoTime = logTime - offset - timeOffset;
+        videoTime = logTime - offset - logStartTime;
       }
 
       return { videoTime, inCmRange, cmRange };
     },
-    [cmRanges, timeOffset]
+    [cmRanges, logStartTime]
   );
 
   const videoTimeToLogTime = useCallback(
@@ -170,16 +170,16 @@ export const useCMSystem = (videoDuration) => {
       let offset = 0;
 
       for (const range of sorted) {
-        // videoStart = range.logStart - offset - timeOffset
-        const videoStart = range.logStart - offset - timeOffset;
+        // videoStart = range.logStart - offset - logStartTime
+        const videoStart = range.logStart - offset - logStartTime;
         if (videoTime >= videoStart) {
           offset += range.logEnd - range.logStart;
         }
       }
 
-      return videoTime + offset + timeOffset;
+      return videoTime + offset + logStartTime;
     },
-    [cmRanges, timeOffset]
+    [cmRanges, logStartTime]
   );
 
   // Convert logical time (seekbar time) to log time
@@ -190,14 +190,14 @@ export const useCMSystem = (videoDuration) => {
       // For logical time input, we need to find the corresponding log time
       // Logical time is essentially the "perceived" time on the seekbar
       // which equals video time + CM time that has passed
-      // So logicalTime = logTime - timeOffset (assuming no CM midway)
+      // So logicalTime = logTime - logStartTime (assuming no CM midway)
       // But with CM, logicalTime = videoTime + passedCmTime
       // We need: logTime from logicalTime
-      // logicalTime = logTime - timeOffset (since logical time 0 = log start)
-      // Therefore: logTime = logicalTime + timeOffset
-      return logicalTime + timeOffset;
+      // logicalTime = logTime - logStartTime (since logical time 0 = log start)
+      // Therefore: logTime = logicalTime + logStartTime
+      return logicalTime + logStartTime;
     },
-    [timeOffset]
+    [logStartTime]
   );
 
   // Helper to format log time back to string
@@ -316,10 +316,10 @@ export const useCMSystem = (videoDuration) => {
           endDateStr: endDateInput || '',
         };
 
-        return recalculateCmVideoTimes(newRanges, timeOffset);
+        return recalculateCmVideoTimes(newRanges, logStartTime);
       });
     },
-    [videoTimeToLogTime, timeOffset]
+    [videoTimeToLogTime, logStartTime]
   );
 
   return {
@@ -339,7 +339,7 @@ export const useCMSystem = (videoDuration) => {
     setCurrentCmWaitTime,
     totalWaitOffset,
     setTotalWaitOffset,
-    timeOffset,
+    logStartTime,
     setTimeOffset,
     cmStateRef,
     updateCmState,

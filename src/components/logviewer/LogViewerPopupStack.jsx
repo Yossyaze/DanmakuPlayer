@@ -10,7 +10,7 @@ import ReplyListPopup from '../ui/ReplyListPopup';
 const LogViewerPopupStack = ({
   popupStack,
   formatTime,
-  timeOffset,
+  logStartTime,
   logSettings,
   aaOverrideMap,
   containerWidth,
@@ -60,7 +60,7 @@ const LogViewerPopupStack = ({
             isTopmost={index === popupStack.length - 1}
             onClick={(e) => onPopupRowClick(e, popup.comment)}
             formatTime={formatTime}
-            timeOffset={timeOffset}
+            logStartTime={logStartTime}
             settings={logSettings}
             setZoomedImage={setZoomedImage}
             onAnchorClick={(e, resNum, sourceFileId) =>
@@ -87,7 +87,7 @@ const LogViewerPopupStack = ({
             isTopmost={index === popupStack.length - 1}
             onClick={onPopupRowClick}
             formatTime={formatTime}
-            timeOffset={timeOffset}
+            logStartTime={logStartTime}
             settings={logSettings}
             setZoomedImage={setZoomedImage}
             onAnchorClick={(e, resNum, sourceFileId) =>
