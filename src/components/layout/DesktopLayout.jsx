@@ -833,7 +833,7 @@ const DesktopLayout = ({
           logStartTime={cmSystem.logStartTime}
           videoTimeToLogTime={cmSystem.videoTimeToLogTime}
           logTimeToVideoTime={cmSystem.logTimeToVideoTime}
-          logStartTime={logSystem.startTimeStr}
+          startTimeStr={logSystem.startTimeStr}
         />
 
         {/* --- Sidebar (Right) --- */}

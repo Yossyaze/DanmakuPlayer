@@ -14,7 +14,7 @@ const EndCardSettingsModal = ({
   logStartTime = 0, // Offset for Log vs Logical time
   videoTimeToLogTime, // Function to convert video time to log time
   logTimeToVideoTime, // Function to convert log time to video time
-  logStartTime, // "HH:MM:SS" string of log start time
+  startTimeStr, // "HH:MM:SS" string of log start time
 }) => {
   const [localSettings, setLocalSettings] = useState(settings);
   const [activeTab, setActiveTab] = useState(settings.type);
@@ -151,8 +151,8 @@ const EndCardSettingsModal = ({
                       showHours={true}
                       value={(() => {
                         if (inputMode === 'log') {
-                          if (logStartTime && localSettings.previewStartTime !== undefined) {
-                            const [h, m, s] = logStartTime.split(':').map(Number);
+                          if (startTimeStr && localSettings.previewStartTime !== undefined) {
+                            const [h, m, s] = startTimeStr.split(':').map(Number);
                             const startSec = h * 3600 + m * 60 + s;
                             let totalSec = startSec + (localSettings.previewStartTime || 0);
                             totalSec %= 86400;
@@ -178,8 +178,8 @@ const EndCardSettingsModal = ({
                         let finalTime = seconds;
 
                         if (inputMode === 'log') {
-                          if (logStartTime) {
-                            const [h, m, s] = logStartTime.split(':').map(Number);
+                          if (startTimeStr) {
+                            const [h, m, s] = startTimeStr.split(':').map(Number);
                             const startSec = h * 3600 + m * 60 + s;
                             let relLogTime = seconds - startSec;
                             if (relLogTime < -43200) relLogTime += 86400;
@@ -214,9 +214,9 @@ const EndCardSettingsModal = ({
                       <span className="font-mono text-gray-300 opacity-80">
                         {(() => {
                           if (inputMode === 'log') {
-                            if (logStartTime) {
+                            if (startTimeStr) {
                               const curLogTime = currentTime + logStartTime;
-                              const [h, m, s] = logStartTime.split(':').map(Number);
+                              const [h, m, s] = startTimeStr.split(':').map(Number);
                               const startSec = h * 3600 + m * 60 + s;
                               let totalSec = startSec + curLogTime;
                               totalSec %= 86400;
@@ -234,7 +234,7 @@ const EndCardSettingsModal = ({
                     </button>
                   )}
 
-                  {inputMode === 'log' && !logStartTime && (
+                  {inputMode === 'log' && !startTimeStr && (
                     <p className="text-[10px] text-yellow-500 leading-tight">
                       start_time 不明: 相対ログ時間
                     </p>
