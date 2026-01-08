@@ -1,5 +1,5 @@
 import { Clock, X } from 'lucide-react';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // TimeInput component with linear character editing
 // Supports HH:MM:SS or MM:SS based on showHours

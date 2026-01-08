@@ -41,16 +41,6 @@ const SidebarFileRow = ({
     setIsEditing(false);
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleSaveName();
-    } else if (e.key === 'Escape') {
-      setEditName(file.title || file.name);
-      setIsEditing(false);
-    }
-    e.stopPropagation(); // Prevent sidebar generic key handlers
-  };
-
   return (
     <div
       ref={setNodeRef}
@@ -77,18 +67,28 @@ const SidebarFileRow = ({
               {file.isVisible !== false ? <Eye size={14} /> : <EyeOff size={14} />}
             </button>
             {isEditing ? (
-              <input
-                type="text"
+              <textarea
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 onBlur={handleSaveName}
-                onKeyDown={handleKeyDown}
-                className="bg-gray-800 text-white px-1 py-0.5 rounded outline-none w-full min-w-0"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSaveName();
+                  } else if (e.key === 'Escape') {
+                    setEditName(file.title || file.name);
+                    setIsEditing(false);
+                  }
+                  e.stopPropagation();
+                }}
+                className="bg-gray-800 text-white px-1 py-0.5 rounded outline-none w-full min-w-0 resize-none text-xs leading-normal"
+                rows={3}
                 autoFocus
+                onClick={(e) => e.stopPropagation()}
               />
             ) : (
               <span
-                className={`font-mono break-all truncate ${
+                className={`font-mono break-all ${
                   file.isVisible === false ? 'text-gray-600' : 'text-gray-300'
                 }`}
                 title={file.title || file.name}
@@ -108,14 +108,14 @@ const SidebarFileRow = ({
           )}
         </div>
       </div>
-      <div className="flex items-center gap-1 shrink-0 pointer-events-auto">
+      <div className="flex flex-col items-center gap-1 shrink-0 pointer-events-auto">
         {!isEditing && (
           <button
             onClick={() => {
               setEditName(file.title || file.name);
               setIsEditing(true);
             }}
-            className="text-gray-500 hover:text-blue-400 p-1 transition opacity-0 group-hover/item:opacity-100"
+            className="text-gray-500 hover:text-blue-400 p-1 transition"
             title="名前を変更"
           >
             <Edit2 size={14} />

@@ -144,6 +144,8 @@ const DesktopLayout = ({
   handleSeekEnd,
   handleCommentClick,
   handleSeekAndPlay,
+  // Debug logSystem
+  // console.log('DesktopLayout logSystem:', logSystem, 'handleRenameFile:', logSystem?.handleRenameFile);
 
   handleAnimationEnd, // Danmaku end
   handleTruncationIndicatorClick,
@@ -713,6 +715,7 @@ const DesktopLayout = ({
                 scrollPositionsRef={logScrollPositionsRef}
                 sidebarOpen={showSidebar}
                 onToggleSidebar={() => setShowSidebar(!showSidebar)}
+                onRenameFile={logSystem.handleRenameFile}
                 unlockAbeMode={unlockAbeMode}
                 abeMode={abeModeUnlocked && dmSettings.abeMode}
                 onSetEndCardPreview={handleSetEndCardPreview}
@@ -906,6 +909,7 @@ const DesktopLayout = ({
             loadedFiles={logSystem.loadedFiles}
             handleToggleFileVisibility={logSystem.handleToggleFileVisibility}
             handleRemoveFile={logSystem.handleRemoveFile}
+            handleRenameFile={logSystem.handleRenameFile}
             danmakuContainerRef={danmakuContainerRef}
             handleReorderFiles={logSystem.handleReorderFiles}
             formatTime={formatTime}

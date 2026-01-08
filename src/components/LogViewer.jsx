@@ -97,6 +97,7 @@ const LogViewer = ({
   scrollPositionsRef, // Ref for storing scroll positions per file
   sidebarOpen = true, // Control sidebar visibility from outside
   onToggleSidebar, // Callback to toggle sidebar
+  onRenameFile, // New prop
   unlockAbeMode, // Hidden Abe Mode unlock callback
   onRemoveFile, // New prop for file deletion
   abeMode, // Abe Mode (Rainbow)
@@ -487,6 +488,7 @@ const LogViewer = ({
           selectedFileId={selectedFileId}
           onSelectFile={handleFileSelect}
           onRemoveFile={onRemoveFile}
+          onRenameFile={onRenameFile}
         />
       </div>
 
@@ -519,7 +521,7 @@ const LogViewer = ({
               <>
                 <Hash size={18} className="text-blue-400 shrink-0" />
                 <h2
-                  className="text-gray-100 font-bold text-sm leading-tight line-clamp-1 overflow-hidden"
+                  className="text-gray-100 font-bold text-sm leading-tight"
                   title={localActiveThreadTitle}
                 >
                   {localActiveThreadTitle}
