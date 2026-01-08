@@ -43,7 +43,8 @@ export const useCMSystem = (videoDuration) => {
     cmStateRef.current = { ...cmStateRef.current, ...partialState };
   }, []);
 
-  // Helper to recalculate videoStart for all ranges
+  // Helper to recalculate videoStart and accumulated CM duration for all ranges
+  // Each range will have: videoStart, accBefore (CM duration before this range), duration
   const recalculateCmVideoTimes = (ranges, offset = logStartTime) => {
     const sorted = [...ranges].sort((a, b) => a.logStart - b.logStart);
     let accumulatedCmDuration = 0;
@@ -52,8 +53,10 @@ export const useCMSystem = (videoDuration) => {
       // LogStart = VideoStart + accumulatedCmDuration + offset
       // VideoStart = LogStart - accumulatedCmDuration - offset
       const videoStart = range.logStart - accumulatedCmDuration - offset;
-      accumulatedCmDuration += range.logEnd - range.logStart;
-      return { ...range, videoStart };
+      const duration = range.logEnd - range.logStart;
+      const accBefore = accumulatedCmDuration;
+      accumulatedCmDuration += duration;
+      return { ...range, videoStart, accBefore, duration };
     });
   };
 
@@ -134,23 +137,26 @@ export const useCMSystem = (videoDuration) => {
       let inCmRange = false;
       let cmRange = null;
 
-      // Sort ranges
-      const sorted = [...cmRanges].sort((a, b) => a.logStart - b.logStart);
+      // cmRanges should already be sorted and have accBefore/videoStart from recalculateCmVideoTimes
+      // Find the relevant range
       let offset = 0;
-
-      for (const range of sorted) {
+      for (const range of cmRanges) {
         if (logTime >= range.logStart && logTime < range.logEnd) {
+          // Inside this CM range
           inCmRange = true;
           cmRange = range;
-          // Use pre-calculated videoStart if available, otherwise fallback
           videoTime =
             range.videoStart !== undefined
               ? range.videoStart
-              : range.logStart - offset - logStartTime;
+              : range.logStart - (range.accBefore || 0) - logStartTime;
           break;
         }
         if (logTime >= range.logEnd) {
-          offset += range.logEnd - range.logStart;
+          // Use pre-calculated duration if available
+          offset =
+            range.accBefore !== undefined
+              ? range.accBefore + range.duration
+              : offset + (range.logEnd - range.logStart);
         }
       }
 
@@ -165,15 +171,22 @@ export const useCMSystem = (videoDuration) => {
 
   const videoTimeToLogTime = useCallback(
     (videoTime) => {
-      // LogTime = VideoTime + Offset + TimeOffset
-      const sorted = [...cmRanges].sort((a, b) => a.logStart - b.logStart);
+      // cmRanges should already be sorted and have pre-calculated videoStart, accBefore, duration
+      // LogTime = VideoTime + accumulated offset + logStartTime
       let offset = 0;
 
-      for (const range of sorted) {
-        // videoStart = range.logStart - offset - logStartTime
-        const videoStart = range.logStart - offset - logStartTime;
+      for (const range of cmRanges) {
+        // Use pre-calculated videoStart if available
+        const videoStart =
+          range.videoStart !== undefined
+            ? range.videoStart
+            : range.logStart - (range.accBefore || 0) - logStartTime;
         if (videoTime >= videoStart) {
-          offset += range.logEnd - range.logStart;
+          // Use pre-calculated values if available
+          offset =
+            range.accBefore !== undefined
+              ? range.accBefore + range.duration
+              : offset + (range.logEnd - range.logStart);
         }
       }
 
