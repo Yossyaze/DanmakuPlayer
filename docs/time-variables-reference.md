@@ -1,6 +1,6 @@
 # 時間変数リファレンス
 
-このドキュメントは、DanmakuPlayer における時間関連の変数・プロパティ・関数をすべて整理し、その意味と使用箇所を明確にしたものです。
+このドキュメントは、DanmakuPlayer における時間関連の変数・プロパティ・関数をすべて整理し、その意味・計算式・使用箇所を明確にしたものです。
 
 ---
 
@@ -22,7 +22,7 @@
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 動画時間 (シークバー上の位置)                                                │
 │   例: 52.5 秒 = 動画開始から52.5秒の位置                                     │
-│   計算: time - timeOffset (CMがない場合)                                     │
+│   計算: currentTime - timeOffset (CMがない場合)                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -33,7 +33,13 @@
 ### `rawTime` (ミリ秒)
 
 - **意味**: コメントが投稿された絶対時刻（Unix Timestamp）
-- **単位**: ミリ秒
+- **単位**: ミリ秒 (ms)
+- **計算式**: なし（ログファイルから直接取得）
+  ```javascript
+  // logParser.js - parseDat()
+  const timestamp = new Date(cleanDateStr).getTime();
+  rawTime = timestamp;
+  ```
 - **設定箇所**: `logParser.js` でファイル読み込み時に設定
 - **使用箇所**:
   - 「ログ時間を反映するスポイト」で日時を取得
@@ -43,10 +49,18 @@
 
 - **意味**: ログ開始時点からの相対秒数
 - **単位**: 秒
-- **設定箇所**: `useTimeSync.js` で計算
 - **計算式**:
-  - 絶対時刻ログ: `(rawTime - logRefTime) / 1000`
-  - 相対時刻ログ: `rawTime / 1000`
+
+  ```javascript
+  // useTimeSync.js
+  // 絶対時刻ログの場合:
+  time = (rawTime - logRefTime) / 1000;
+
+  // 相対時刻ログの場合 (年 < 2000):
+  time = rawTime / 1000;
+  ```
+
+- **設定箇所**: `useTimeSync.js` Line 103-167
 - **使用箇所**:
   - 弾幕表示判定 (`useDanmakuPlayer.js`)
   - サイドバーでのアクティブコメント判定
@@ -56,6 +70,7 @@
 
 - **意味**: 表示用の日時文字列
 - **例**: `"2025/12/21(日) 16:53:44.00"`
+- **計算式**: なし（ログファイルから直接取得）
 - **設定箇所**: `logParser.js`
 - **使用箇所**: サイドバーでのコメント表示
 
@@ -67,6 +82,20 @@
 
 - **定義**: `useDanmakuPlayer.js` Line 23
 - **意味**: 現在の再生位置（ログ上の相対時刻）
+- **単位**: 秒
+- **計算式**:
+
+  ```javascript
+  // 通常再生時 (useDanmakuPlayer.js frameLoop)
+  currentTime = videoTimeToLogTime(video.currentTime);
+
+  // 展開すると:
+  currentTime = video.currentTime + timeOffset + accumulatedCmDuration;
+
+  // CM待機中:
+  currentTime = cmRange.logStart + accumulatedWaitTime + elapsedSinceWaitStart;
+  ```
+
 - **範囲**: `timeOffset` ～ `totalDuration + timeOffset`
 - **更新タイミング**: 毎フレーム（再生中）、シーク時
 - **使用箇所**:
@@ -81,7 +110,18 @@
 
 - **定義**: `useCMSystem.js` Line 14
 - **意味**: 動画の0秒地点に対応するログ上の時刻
-- **計算式**: `-videoLogicalTime` (useTimeSync.js Line 95)
+- **単位**: 秒
+- **計算式**:
+
+  ```javascript
+  // useTimeSync.js Line 95
+  // videoLogicalTime = videoStartTimeStr をパースした秒数
+  timeOffset = -videoLogicalTime;
+
+  // 例: videoStartTimeStr = "0:30:00" (1800秒) の場合
+  timeOffset = -1800;
+  ```
+
 - **使用箇所**:
   - シークバー位置計算: `currentTime - timeOffset`
   - ログ時間 → 動画時間変換
@@ -91,6 +131,13 @@
 
 - **意味**: 動画の開始位置に対応する論理時間（シークバー上の時間）
 - **例**: `"0:30:00"` = 動画開始がシークバー30分の位置
+- **計算式**: なし（ユーザー入力）
+- **パース**:
+  ```javascript
+  // useTimeSync.js Line 29-36
+  const parts = videoStartTimeStr.split(':').map(Number);
+  videoLogicalTime = parts[0] * 3600 + parts[1] * 60 + parts[2];
+  ```
 - **設定箇所**: 同期設定UI
 - **使用箇所**: `useTimeSync.js` で `timeOffset` 計算の基準
 
@@ -98,15 +145,36 @@
 
 - **意味**: ログの開始時刻（絶対時刻の時刻部分）
 - **例**: `"16:53:44"`
-- **設定箇所**: 同期設定UI または自動設定（最初のコメントから）
+- **計算式**: なし（ユーザー入力 または 最初のコメントから自動取得）
 - **使用箇所**: `useTimeSync.js` で `logRefTime` 計算
 
 ### `startDateStr` (文字列)
 
 - **意味**: ログの開始日付（絶対時刻の日付部分）
 - **例**: `"2025-12-21"`
-- **設定箇所**: 同期設定UI または自動設定
+- **計算式**: なし（ユーザー入力 または 最初のコメントから自動取得）
 - **使用箇所**: `useTimeSync.js` で `logRefTime` 計算
+
+### `logRefTime` (ミリ秒)
+
+- **定義**: `useTimeSync.js` 内のローカル変数
+- **意味**: ログの基準時刻（time=0 に対応する絶対時刻）
+- **単位**: ミリ秒 (ms)
+- **計算式**:
+
+  ```javascript
+  // useTimeSync.js Line 42-67
+  // デフォルト: 最初の絶対時刻コメントの rawTime
+  logRefTime = firstAbsoluteComment.rawTime;
+
+  // startDateStr/startTimeStr が設定されている場合:
+  const refDate = new Date(firstAbsoluteComment.rawTime);
+  refDate.setFullYear(year, month - 1, day); // startDateStr から
+  refDate.setHours(h, m, s, 0); // startTimeStr から
+  logRefTime = refDate.getTime();
+  ```
+
+- **使用箇所**: コメントの `time` 計算
 
 ---
 
@@ -115,6 +183,20 @@
 ### `logStart` / `logEnd` (秒)
 
 - **意味**: CM区間の開始・終了位置（ログ上の相対時刻）
+- **単位**: 秒
+- **計算式**:
+
+  ```javascript
+  // useCMSystem.js addCmRangeSmart()
+  // 動画時間モードの場合:
+  logStart = videoTimeToLogTime(parseTimeStr(startInput));
+  logEnd = videoTimeToLogTime(parseTimeStr(endInput));
+
+  // ログ時間モードの場合:
+  logStart = parseDateTimeInput(startDateInput, startInput, startDateStr);
+  logEnd = parseDateTimeInput(endDateInput, endInput, startDateStr);
+  ```
+
 - **設定箇所**: `useCMSystem.js` の `addCmRangeSmart` / `updateCmRange`
 - **使用箇所**:
   - CM待機判定
@@ -123,17 +205,57 @@
 ### `videoStart` (秒)
 
 - **意味**: CM区間の開始位置（動画上の再生時刻）
-- **計算式**: `logStart - accumulatedCmDuration - timeOffset`
+- **単位**: 秒
+- **計算式**:
+
+  ```javascript
+  // useCMSystem.js recalculateCmVideoTimes()
+  videoStart = logStart - accumulatedCmDuration - timeOffset;
+
+  // accumulatedCmDuration = この CM より前の全 CM の合計時間
+  ```
+
 - **使用箇所**: CM衝突検出、シークバー上のCMマーカー表示
+
+### `accumulatedCmDuration` (秒)
+
+- **意味**: 指定時点より前に完了したCM区間の累積時間
+- **単位**: 秒
+- **計算式**:
+  ```javascript
+  // useCMSystem.js logTimeToVideoTime() 内で計算
+  let offset = 0;
+  for (const range of sortedCmRanges) {
+    if (logTime >= range.logEnd) {
+      offset += range.logEnd - range.logStart;
+    }
+  }
+  accumulatedCmDuration = offset;
+  ```
+- **使用箇所**: 時間変換関数内
 
 ### `totalWaitOffset` (秒)
 
-- **意味**: 完了したCM区間の累積待機時間
+- **意味**: 完了したCM区間の累積待機時間（State として保持）
+- **単位**: 秒
+- **計算式**:
+  ```javascript
+  // useDanmakuPlayer.js
+  totalWaitOffset = cmRanges
+    .filter((r) => r.logEnd <= currentTime)
+    .reduce((acc, r) => acc + (r.logEnd - r.logStart), 0);
+  ```
 - **使用箇所**: 動画時間 → ログ時間変換
 
 ### `currentCmWaitTime` (秒)
 
 - **意味**: 現在のCM待機で経過した時間
+- **単位**: 秒
+- **計算式**:
+  ```javascript
+  // useDanmakuPlayer.js frameLoop
+  currentCmWaitTime = accumulatedWaitTime + (performance.now() - waitStartTime) / 1000;
+  ```
 - **使用箇所**: CM待機オーバーレイの進捗表示
 
 ---
@@ -144,35 +266,87 @@
 
 - **定義**: `useCMSystem.js` Line 131-164
 - **意味**: ログ上の時刻 → 動画上の再生時刻
-- **計算**:
+- **計算式**:
+
+  ```javascript
+  // CM区間内の場合:
+  inCmRange = true;
+  videoTime = range.videoStart; // CM開始位置で固定
+
+  // CM区間外の場合:
+  let offset = 0;
+  for (const range of sortedRanges) {
+    if (logTime >= range.logEnd) {
+      offset += range.logEnd - range.logStart;
+    }
+  }
+  videoTime = logTime - offset - timeOffset;
   ```
-  videoTime = logTime - timeOffset - accumulatedCmDuration
-  ```
+
 - **使用箇所**: シーク実行時、CM終了後の動画同期
 
 ### `videoTimeToLogTime(videoTime)` → `logTime`
 
 - **定義**: `useCMSystem.js` Line 166-183
 - **意味**: 動画上の再生時刻 → ログ上の時刻
-- **計算**:
-  ```
-  logTime = videoTime + timeOffset + accumulatedCmDuration
+- **計算式**:
+  ```javascript
+  let offset = 0;
+  for (const range of sortedRanges) {
+    const videoStart = range.logStart - offset - timeOffset;
+    if (videoTime >= videoStart) {
+      offset += range.logEnd - range.logStart;
+    }
+  }
+  logTime = videoTime + offset + timeOffset;
   ```
 - **使用箇所**: 再生ループでのフレーム処理
 
 ### `logicalTimeToLogTime(logicalTime)` → `logTime`
 
 - **定義**: `useCMSystem.js` Line 185-201
-- **意味**: シークバー時間 → ログ上の時刻
-- **計算**:
-  ```
-  logTime = logicalTime + timeOffset
+- **意味**: シークバー時間（論理時間）→ ログ上の時刻
+- **計算式**:
+  ```javascript
+  logTime = logicalTime + timeOffset;
   ```
 - **使用箇所**: シークバー操作
 
 ---
 
-## 6. 時間の流れ図
+## 6. 派生計算
+
+### シークバー上の現在位置（秒）
+
+```javascript
+seekbarPosition = currentTime - timeOffset;
+```
+
+### シークバー上の現在位置（%）
+
+```javascript
+seekbarPercent = ((currentTime - timeOffset) / totalDuration) * 100;
+```
+
+### 動画の総時間（論理時間）
+
+```javascript
+// useCMSystem.js getTotalDuration
+totalDuration = player.duration + Σ(cmRange.logEnd - cmRange.logStart);
+```
+
+### コメントが表示されるタイミング
+
+```javascript
+// comment.time <= currentTime の時に表示
+if (comment.time <= currentTime) {
+  showComment(comment);
+}
+```
+
+---
+
+## 7. 時間の流れ図
 
 ```
 [動画ファイル]                    [ログファイル]
@@ -181,11 +355,12 @@
 video.currentTime ───────────────► rawTime (Unix ms)
      │                                │
      │ videoTimeToLogTime()           │ useTimeSync.js
+     │                                │ time = (rawTime - logRefTime) / 1000
      │                                ▼
      │                           time (相対秒)
      │                                │
      │ ◄─────────────────────────────┘
-     │    currentTime = time (再生ループで同期)
+     │    currentTime = videoTimeToLogTime(video.currentTime)
      │
      ▼
 シークバー表示 = currentTime - timeOffset
@@ -193,24 +368,25 @@ video.currentTime ───────────────► rawTime (Unix
 
 ---
 
-## 7. 変数一覧表
+## 8. 変数一覧表
 
-| 変数名            | 単位 | 意味                   | 定義箇所              |
-| ----------------- | ---- | ---------------------- | --------------------- |
-| `rawTime`         | ms   | 絶対時刻 (Unix)        | `logParser.js`        |
-| `time`            | 秒   | ログ開始からの相対秒数 | `useTimeSync.js`      |
-| `currentTime`     | 秒   | 現在のログ上位置       | `useDanmakuPlayer.js` |
-| `timeOffset`      | 秒   | 動画0秒=ログX秒        | `useCMSystem.js`      |
-| `videoTime`       | 秒   | 動画上の再生位置       | 各所で計算            |
-| `logStart/logEnd` | 秒   | CM区間(ログ上)         | `useCMSystem.js`      |
-| `videoStart`      | 秒   | CM区間開始(動画上)     | `useCMSystem.js`      |
-| `totalWaitOffset` | 秒   | 累積CM待機時間         | `useCMSystem.js`      |
-| `displayTime`     | 秒   | 表示用現在時刻         | `useDanmakuPlayer.js` |
-| `logRefTime`      | ms   | ログ基準時刻           | `useTimeSync.js`      |
+| 変数名            | 単位 | 意味                   | 計算式                                  |
+| ----------------- | ---- | ---------------------- | --------------------------------------- |
+| `rawTime`         | ms   | 絶対時刻 (Unix)        | ログから直接取得                        |
+| `time`            | 秒   | ログ開始からの相対秒数 | `(rawTime - logRefTime) / 1000`         |
+| `currentTime`     | 秒   | 現在のログ上位置       | `videoTimeToLogTime(video.currentTime)` |
+| `timeOffset`      | 秒   | 動画0秒=ログX秒        | `-videoLogicalTime`                     |
+| `videoTime`       | 秒   | 動画上の再生位置       | `logTime - offset - timeOffset`         |
+| `logStart/logEnd` | 秒   | CM区間(ログ上)         | ユーザー入力から計算                    |
+| `videoStart`      | 秒   | CM区間開始(動画上)     | `logStart - accCmDur - timeOffset`      |
+| `totalWaitOffset` | 秒   | 累積CM待機時間         | `Σ(cmRange.duration)`                   |
+| `displayTime`     | 秒   | 表示用現在時刻         | = `currentTime`                         |
+| `logRefTime`      | ms   | ログ基準時刻           | 最初のコメントの `rawTime`              |
+| `seekbarPosition` | 秒   | シークバー位置         | `currentTime - timeOffset`              |
 
 ---
 
-## 8. よくある混乱ポイント
+## 9. よくある混乱ポイント
 
 ### Q1: `currentTime` は「論理時間」ではないの？
 
@@ -229,9 +405,13 @@ A:
 
 弾幕表示には `.time` を使い、日時取得には `.rawTime` を使います。
 
+### Q4: CM区間の時間計算はなぜ複雑？
+
+A: CM区間は「ログ時間は進むが動画時間は止まる」という挙動をするため、変換時に累積CM時間を考慮する必要があります。
+
 ---
 
-## 9. 関連ファイル
+## 10. 関連ファイル
 
 - `src/hooks/useDanmakuPlayer.js` - メイン再生ループ、currentTime管理
 - `src/hooks/useCMSystem.js` - CM管理、時間変換関数
