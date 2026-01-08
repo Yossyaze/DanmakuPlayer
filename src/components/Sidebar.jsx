@@ -1099,38 +1099,31 @@ const Sidebar = ({
                           onChange={setStartTimeStr}
                           showHours={true}
                         />
+
                         <button
                           onClick={() => {
-                            const timeStr = startTimeStr || '00:00:00';
-                            const [h, m, s] = timeStr.split(':').map((v) => parseInt(v) || 0);
+                            // Defined Logical Time = Video Time + CM = currentLogicalTime - timeOffset
+                            const logicalSec = Math.floor(currentLogicalTime - timeOffset);
 
-                            const startSec = h * 3600 + m * 60 + s;
-                            const currentSec = startSec + currentLogicalTime;
+                            // Handle day overflow if video is very long (though Logical Time usually doesn't have date)
+                            const days = Math.floor(logicalSec / 86400);
+                            const remainingSec = logicalSec % 86400;
 
-                            // Handle day overflow
-                            let days = Math.floor(currentSec / 86400);
-                            let remainingSec = currentSec % 86400;
-                            if (remainingSec < 0) {
-                              days -= 1;
-                              remainingSec += 86400;
-                            }
+                            const hh = Math.floor(remainingSec / 3600) + days * 24; // Show total hours if > 24? Or wrap?
+                            // Usually video time is just hours. Let's stick to standard HH:MM:SS
+                            // But if days > 0, we might want to just show large hours.
+                            // Let's use standard h/m/s calculation without day wrapping for strict video time.
 
-                            const hh = Math.floor(remainingSec / 3600);
-                            const mm = Math.floor((remainingSec % 3600) / 60);
-                            const ss = Math.floor(remainingSec % 60);
+                            const h = Math.floor(logicalSec / 3600);
+                            const m = Math.floor((logicalSec % 3600) / 60);
+                            const s = Math.floor(logicalSec % 60);
 
-                            const formatted = `${hh}:${mm.toString().padStart(2, '0')}:${ss
+                            const formatted = `${h}:${m.toString().padStart(2, '0')}:${s
                               .toString()
                               .padStart(2, '0')}`;
                             setStartTimeStr(formatted);
 
-                            // Always update date
-                            if (startDateStr) {
-                              const baseDate = new Date(startDateStr);
-                              baseDate.setDate(baseDate.getDate() + days);
-                              const newDateStr = `${baseDate.getFullYear()}-${String(baseDate.getMonth() + 1).padStart(2, '0')}-${String(baseDate.getDate()).padStart(2, '0')}`;
-                              setStartDateStr(newDateStr);
-                            }
+                            // Do NOT update date for Logical Time (it's date-agnostic)
                           }}
                           title="現在の論理時間を取得"
                           className="text-gray-400 hover:text-white"

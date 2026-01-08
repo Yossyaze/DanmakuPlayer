@@ -21,10 +21,10 @@
   - **関連コード**: `startTimeStr`, `startDateStr` (State: useLogSystem), `c.time` (Comment prop), `c.date`
 
 - **論理時間 (Logical Time)**:
-  「動画の再生に合わせて、ログのどの部分を流すか」を決めるための時間。
-  基本計算式: `論理時間 = 現在の動画時間 + 時間オフセット (Time Offset) + 累積CM時間`
-  動画の再生位置にオフセットとCMスキップ時間を加算し、ログ上の絶対的な位置（ログ時間）と同期させる。
-  - **関連コード**: `currentLogicalTime` (Variable), `timeOffset` (State: useTimeSync), `useTimeSync` (Hook)
+  ユーザーが認識する「再生中の時間」。シークバーに表示される時間と一致する。
+  定義: `論理時間 = 現在の動画時間 + 累積CM時間`
+  - **注意**: コード上の変数 `currentLogicalTime` は、実装上「ログ時間（Log Time = 動画時間 + オフセット + CM）」を保持していることが多い。その場合、本来の論理時間を算出するには `currentLogicalTime - timeOffset` を行う必要がある。
+  - **関連コード**: `VideoControls.jsx` (prop: `currentTime`), `SidebarCMSettings.jsx` (var: `seekbarSeconds`)
 
 - **CM (Commercial Message)**:
   実況ログには含まれるが、手元の動画ファイルには含まれていない時間帯（放送休止時間やCMカットされた部分）。
@@ -45,6 +45,55 @@
 - **Oyster / Kako**:
   過去ログ倉庫の通称。`.dat` ファイルのURL解決ロジックなどで登場する。
   - **関連コード**: `resolveDatUrls` (Function: useLogSystem)
+
+## UI用語 (UI Terminology)
+
+### サイドバー (Sidebar)
+- **設定 (Settings)**:
+  ログファイルの読み込み、同期設定、表示設定、キーボード設定、CM設定を行うメインパネル。
+  - **関連コード**: `SidebarSettings.jsx`, `showSettingsPanel` (State: Sidebar)
+
+- **NG**:
+  不快なコメントを非表示にするための設定パネル。ID、コメント本文、単語（正規表現）でのフィルタリングが可能。
+  - **関連コード**: `SidebarNGPanel.jsx`, `useLogFilter.js`, `ngSettings` (State)
+
+- **同期設定 (Sync Settings)**:
+  ログの開始時間（`startTimeStr`）と動画の現在の再生位置（`videoStartTimeStr`）を定義し、コメントと動画の時間を同期させるセクション。
+  - **関連コード**: `SidebarSettings.jsx`, `useTimeSync.js`
+
+- **ピペット (Pipette)**:
+  入力フィールドの横にあるスポイトアイコンのボタン。クリックすると「現在の動画時間/論理時間」を取得して入力欄に自動入力する。
+  - **関連コード**: `renderTimeInput` (Sidebar Helper), `handleGetCurrent`
+
+- **追従ボタン (Sync Button)**:
+  サイドバーのスクロール位置が再生中のコメントから外れた際、右下に表示される「下矢印（↓）」のフローティングボタン。クリックすると自動スクロール（Auto Scroll）が再開される。
+  - **関連コード**: `handleSyncButtonLocal` (Sidebar), `isAutoScroll` (State)
+
+- **ツリー表示 (Tree View)**:
+  アンカー（`>>1`など）による返信関係を検出し、スレッドのような階層構造でコメントを表示するモード。
+  - **関連コード**: `useDanmakuTree.js`, `CommentList.jsx`, `enableTreeView` (State)
+
+- **ユーザーヒストリー (User History)**:
+  サイドバーのコメント内のIDをクリックした際に表示されるモーダル。そのユーザー（ID）の過去の全発言を一覧表示し、特定の発言へジャンプできる。
+  - **関連コード**: `UserHistoryModal.jsx`, `userHistoryId` (State: Sidebar)
+
+### プレイヤー (Player Controls)
+- **弾幕設定 (Danmaku Settings)**:
+  プレイヤー右下の設定（歯車）アイコンからアクセス、またはオーバーレイ表示される設定群。
+  - **Duration**: 弾幕が画面を流れる速度（秒数）。小さいほど速い。 (`settings.duration`)
+  - **Opacity**: 弾幕の透明度。 (`settings.opacity`)
+  - **Area**: 弾幕が表示される画面領域（上から何%まで表示するか）。 (`settings.area`)
+  - **Image Mode**: 画像URLの表示方法（画像 / プレースホルダ / なし）。 (`settings.imageMode`)
+  - **関連コード**: `VideoControls.jsx`, `useDanmaku.js`, `dmSettings` (State)
+
+- **シークバー (Seek Bar)**:
+  - **CM区間**: バー上に黄色（未再生）または緑色（再生済み）で表示される帯。
+  - **勢いグラフ**: シークバーの上部に表示される緑色の波形グラフ。コメント密度（盛り上がり）を可視化したもの。
+  - **関連コード**: `VideoControls.jsx`, `commentDensity` (Prop)
+
+- **エンドカード (End Card)**:
+  動画再生終了時に表示されるオーバーレイ画面。「次枠」の予告画像などを表示する機能。
+  - **関連コード**: `EndCard.jsx`, `useEndCard.js` (if exists) or code in `useDanmakuPlayer.js`, `endCardSettings` (State)
 
 ## コーディング規約 (Coding Standards)
 
