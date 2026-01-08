@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react';
 
-export const useTimeSync = ({ videoStartTimeStr, logSystem, cmSystem, setCurrentTime }) => {
+export const useTimeSync = ({
+  videoStartTimeStr,
+  logSystem,
+  cmSystem,
+  setCurrentTime,
+  currentTime,
+}) => {
   const timeSyncInitializedRef = useRef(false);
 
   // Reset initialization flag when sync settings change
@@ -86,9 +92,8 @@ export const useTimeSync = ({ videoStartTimeStr, logSystem, cmSystem, setCurrent
         // Preserve the seekbar position:
         // oldSeekbarPos = oldCurrentTime - oldOffset
         // newCurrentTime = oldSeekbarPos + newOffset = oldCurrentTime + (newOffset - oldOffset)
-        // But we don't have oldCurrentTime here, so we'll leave currentTime unchanged
-        // The frame loop will handle the sync naturally
-        // Just don't reset currentTime
+        const delta = offset - prevOffset;
+        setCurrentTime(currentTime + delta);
       } else {
         // First init: start at seekbar 0:00
         setCurrentTime(offset);

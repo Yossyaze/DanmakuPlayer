@@ -33,6 +33,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
     logSystem,
     cmSystem,
     setCurrentTime,
+    currentTime,
   });
   const [dmSettings, setDmSettings] = useState(() => {
     try {
