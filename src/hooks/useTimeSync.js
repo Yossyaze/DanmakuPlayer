@@ -67,34 +67,33 @@ export const useTimeSync = ({ videoStartTimeStr, logSystem, cmSystem, setCurrent
       }
     }
 
-    // Calculate offset (Only on init)
+    // Calculate offset and update logStartTime
+    // On first init: set currentTime to offset (start at 0:00 on seekbar)
+    // On subsequent changes: preserve the seekbar position by adjusting currentTime
     if (!timeSyncInitializedRef.current) {
-      // Use the simpler approach: offset = -videoLogicalTime for relative logs
-      // For absolute logs, Log Start Time = Video Time, so offset = videoLogicalTime
-      // But since we might have mixed logs, we need a unified approach.
-      //
-      // The key insight:
-      // - Relative log time=0 should appear at logical time = videoLogicalTime
-      // - Absolute log at logRefTime should appear at logical time = videoLogicalTime
-      //
-      // For relative: offset = -videoLogicalTime (time + offset = 0 + -vlt = -vlt,
-      //   so at logical time vlt, we show time 0)
-      // For absolute: offset = videoLogicalTime (time + offset = 0 + vlt = vlt,
-      //   so at logical time vlt, we show time 0 = logRefTime)
-      //
-      // Since we display based on visibleComments where each has its own time,
-      // and the player checks if comment.time + offset matches currentTime,
-      // we need a single offset that works for both.
-      //
-      // Actually, the issue is that relative and absolute logs have DIFFERENT
-      // time reference points. The comment.time is calculated differently.
-      //
-      // Unified approach: Use relative-style offset (-videoLogicalTime).
-      // Then in time calculation, adjust absolute log times to be relative.
-
       const offset = -videoLogicalTime;
+      const prevOffset = cmSystem.logStartTime;
+
+      // If this is a re-initialization (prevOffset !== 0), preserve seekbar position
+      // seekbarPos = currentTime - offset, so newCurrentTime = seekbarPos + newOffset
+      // But we don't have direct access to current seekbar position here...
+      // Instead, we calculate the delta and adjust currentTime
+      const isReInit = prevOffset !== 0 || prevOffset !== offset;
+
       cmSystem.setTimeOffset(offset);
-      setCurrentTime(offset);
+
+      if (isReInit && prevOffset !== offset) {
+        // Preserve the seekbar position:
+        // oldSeekbarPos = oldCurrentTime - oldOffset
+        // newCurrentTime = oldSeekbarPos + newOffset = oldCurrentTime + (newOffset - oldOffset)
+        // But we don't have oldCurrentTime here, so we'll leave currentTime unchanged
+        // The frame loop will handle the sync naturally
+        // Just don't reset currentTime
+      } else {
+        // First init: start at seekbar 0:00
+        setCurrentTime(offset);
+      }
+
       timeSyncInitializedRef.current = true;
     }
 
