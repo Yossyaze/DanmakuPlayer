@@ -1,0 +1,53 @@
+# Project Rules & Terminology
+
+## 専門用語 (Terminology)
+
+このプロジェクトで使用される専門用語の定義です。これらの用語はコードやコミュニケーションの中で頻繁に使用されます。
+
+- **弾幕 (Danmaku / Comment)**:
+  動画上にオーバーレイ表示されるユーザーコメントのこと。画面右から左へ流れるのが一般的。
+  - **関連コード**: `activeDanmaku` (State: useDanmaku), `DanmakuLayer` (Component), `CommentList` (Component)
+
+- **ログ (Log)**:
+  コメントデータを含むファイル。主に2ちゃんねる（5ch）形式の `.dat` ファイルを指す。
+  - **関連コード**: `loadedFiles` (State: useLogSystem), `parseLogFile` (Utils), `useLogSystem` (Hook)
+
+- **動画時間 (Video Time)**:
+  動画ファイル（MP4等）の現在の再生位置（秒）。`0` から始まる。
+  - **関連コード**: `playedSeconds` (ReactPlayer), `usePlayer` (Hook)
+
+- **ログ時間 (Log Time)**:
+  コメントが投稿された絶対的な日時（Unixタイムスタンプ等）。`.dat` ファイル内の各レスの日付情報に基づく。
+  - **関連コード**: `startTimeStr`, `startDateStr` (State: useLogSystem), `c.time` (Comment prop), `c.date`
+
+- **論理時間 (Logical Time)**:
+  「動画の再生に合わせて、ログのどの部分を流すか」を決めるための時間。
+  基本計算式: `論理時間 = 現在の動画時間 + 時間オフセット (Time Offset) + 累積CM時間`
+  動画の再生位置にオフセットとCMスキップ時間を加算し、ログ上の絶対的な位置（ログ時間）と同期させる。
+  - **関連コード**: `currentLogicalTime` (Variable), `timeOffset` (State: useTimeSync), `useTimeSync` (Hook)
+
+- **CM (Commercial Message)**:
+  実況ログには含まれるが、手元の動画ファイルには含まれていない時間帯（放送休止時間やCMカットされた部分）。
+  この区間は「動画時間」が存在しないため、プレイヤー上ではスキップ（または高速シーク）される必要がある区間として扱われる。
+  - **関連コード**: `cmRanges` (State: useCMSystem), `SidebarCMSettings` (Component), `useCMSystem` (Hook)
+
+- **NG**:
+  ユーザーが見たくないコメントを非表示にする機能。
+  - **NG ID**: 特定のユーザーID（`userId`）のコメントをすべて非表示にする。
+  - **NG Word**: 特定の単語や正規表現にマッチするコメントを非表示にする。
+  - **関連コード**: `ngSettings` (State: useLogSystem), `SidebarNGPanel` (Component), `useLogFilter` (Hook)
+
+- **安倍モード (Abe Mode)**:
+  特定のキーワード（「安倍」「晋三」等）が入力された際に発動する隠しモード。
+  このモードに入ると、特定のエフェクト（レインボーコメント等）や演出（ファンファーレ）が有効になる。
+  - **関連コード**: `useAbeMode` (Hook), `abeModeUnlocked` (State), `Sidebar.jsx`, `UrlInputModal.jsx`
+
+- **Oyster / Kako**:
+  過去ログ倉庫の通称。`.dat` ファイルのURL解決ロジックなどで登場する。
+  - **関連コード**: `resolveDatUrls` (Function: useLogSystem)
+
+## コーディング規約 (Coding Standards)
+
+- **言語**: 日本語 (Japanese)
+- **スタイル**: モダンな React + Tailwind CSS
+- **コメント**: コード内のコメントは日本語で記述する。

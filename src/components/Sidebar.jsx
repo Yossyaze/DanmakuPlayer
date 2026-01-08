@@ -25,6 +25,7 @@ import {
   Hash,
   Image,
   Link as LinkIcon,
+  MessageSquare,
   Pipette,
   Plus,
   RefreshCw,
@@ -1100,8 +1101,11 @@ const Sidebar = ({
                         />
                         <button
                           onClick={() => {
-                            // Use currentLogicalTime directly as it represents the absolute log time (including offset)
-                            const currentSec = currentLogicalTime;
+                            const timeStr = startTimeStr || '00:00:00';
+                            const [h, m, s] = timeStr.split(':').map((v) => parseInt(v) || 0);
+
+                            const startSec = h * 3600 + m * 60 + s;
+                            const currentSec = startSec + currentLogicalTime;
 
                             // Handle day overflow
                             let days = Math.floor(currentSec / 86400);
@@ -1128,10 +1132,39 @@ const Sidebar = ({
                               setStartDateStr(newDateStr);
                             }
                           }}
-                          title="現在の時間を取得"
+                          title="現在の論理時間を取得"
                           className="text-gray-400 hover:text-white"
                         >
                           <Pipette size={12} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (!allComments || allComments.length === 0) return;
+                            const curVpos = currentLogicalTime * 100;
+                            let targetComment = null;
+                            // Find the latest comment that has appeared so far
+                            for (let i = 0; i < allComments.length; i++) {
+                              if (allComments[i].vpos > curVpos) break;
+                              targetComment = allComments[i];
+                            }
+
+                            if (targetComment && targetComment.date) {
+                              const dateObj = new Date(targetComment.date * 1000);
+                              const y = dateObj.getFullYear();
+                              const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                              const d = String(dateObj.getDate()).padStart(2, '0');
+                              const hh = String(dateObj.getHours()).padStart(2, '0');
+                              const mm = String(dateObj.getMinutes()).padStart(2, '0');
+                              const ss = String(dateObj.getSeconds()).padStart(2, '0');
+
+                              setStartDateStr(`${y}-${m}-${d}`);
+                              setStartTimeStr(`${hh}:${mm}:${ss}`);
+                            }
+                          }}
+                          title="直近のコメント(ログ時間)を取得"
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <MessageSquare size={12} />
                         </button>
                       </div>
                     </div>
