@@ -130,6 +130,7 @@ const Sidebar = ({
   const scrollContainerRef = useRef(null);
   const settingsScrollRef = useRef(null); // Ref for settings panel scroll container
   const cmSettingsRef = useRef(null); // Ref for CM settings section
+  const logStartSettingsRef = useRef(null); // New ref for Log Start Settings
   const activeCommentRef = useRef(null);
   const isAutoScrollRef = useRef(isAutoScroll);
   const [localIsAutoScroll, setLocalIsAutoScroll] = useState(isAutoScroll);
@@ -558,6 +559,7 @@ const Sidebar = ({
     }
     if (timeStr || dateStr) {
       setShowSettingsPanel(true);
+      setTimeout(() => scrollToLogStartSettings(), 100);
     }
   };
 
@@ -567,10 +569,38 @@ const Sidebar = ({
       : 0;
     const targetSec = startSec + time;
 
-    const h = Math.floor(targetSec / 3600);
-    const m = Math.floor((targetSec % 3600) / 60);
-    const s = Math.floor(targetSec % 60);
+    // Handle day overflow
+    const days = Math.floor(targetSec / 86400);
+    const remainingSec = targetSec % 86400;
+
+    const h = Math.floor(remainingSec / 3600);
+    const m = Math.floor((remainingSec % 3600) / 60);
+    const s = Math.floor(remainingSec % 60);
     const timeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+    console.log('[Sidebar] Set CM Start:', timeStr, 'Days:', days);
+
+    // Handle Date if startDateStr exists
+    if (startDateStr) {
+      const parts = startDateStr.split('-').map(Number);
+      if (parts.length === 3) {
+        const [oy, om, od] = parts;
+        const date = new Date(oy, om - 1, od);
+
+        if (!isNaN(date.getTime())) {
+          date.setDate(date.getDate() + days);
+          const y = date.getFullYear();
+          const mo = String(date.getMonth() + 1).padStart(2, '0');
+          const d = String(date.getDate()).padStart(2, '0');
+          const newDateStr = `${y}-${mo}-${d}`;
+
+          if (setCmStartDateInput) {
+            setCmStartDateInput(newDateStr);
+            console.log('[Sidebar] Set CM Start Date:', newDateStr);
+          }
+        }
+      }
+    }
 
     setCmStartMode('log');
     setCmStartInput(timeStr);
@@ -584,10 +614,38 @@ const Sidebar = ({
       : 0;
     const targetSec = startSec + time;
 
-    const h = Math.floor(targetSec / 3600);
-    const m = Math.floor((targetSec % 3600) / 60);
-    const s = Math.floor(targetSec % 60);
+    // Handle day overflow
+    const days = Math.floor(targetSec / 86400);
+    const remainingSec = targetSec % 86400;
+
+    const h = Math.floor(remainingSec / 3600);
+    const m = Math.floor((remainingSec % 3600) / 60);
+    const s = Math.floor(remainingSec % 60);
     const timeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+    console.log('[Sidebar] Set CM End:', timeStr, 'Days:', days);
+
+    // Handle Date if startDateStr exists
+    if (startDateStr) {
+      const parts = startDateStr.split('-').map(Number);
+      if (parts.length === 3) {
+        const [oy, om, od] = parts;
+        const date = new Date(oy, om - 1, od);
+
+        if (!isNaN(date.getTime())) {
+          date.setDate(date.getDate() + days);
+          const y = date.getFullYear();
+          const mo = String(date.getMonth() + 1).padStart(2, '0');
+          const d = String(date.getDate()).padStart(2, '0');
+          const newDateStr = `${y}-${mo}-${d}`;
+
+          if (setCmEndDateInput) {
+            setCmEndDateInput(newDateStr);
+            console.log('[Sidebar] Set CM End Date:', newDateStr);
+          }
+        }
+      }
+    }
 
     setCmEndMode('log');
     setCmEndInput(timeStr);
@@ -598,9 +656,27 @@ const Sidebar = ({
   // Helper to scroll to CM settings
   const scrollToCmSettings = () => {
     if (settingsScrollRef.current && cmSettingsRef.current) {
-      cmSettingsRef.current.scrollIntoView({
+      const container = settingsScrollRef.current;
+      const element = cmSettingsRef.current;
+      const elementTop = element.offsetTop;
+
+      container.scrollTo({
+        top: elementTop - 20, // Add some padding
         behavior: 'smooth',
-        block: 'center',
+      });
+    }
+  };
+
+  // Helper to scroll to Log Start settings
+  const scrollToLogStartSettings = () => {
+    if (settingsScrollRef.current && logStartSettingsRef.current) {
+      const container = settingsScrollRef.current;
+      const element = logStartSettingsRef.current;
+      const elementTop = element.offsetTop;
+
+      container.scrollTo({
+        top: elementTop - 20, // Add some padding
+        behavior: 'smooth',
       });
     }
   };
@@ -1084,7 +1160,7 @@ const Sidebar = ({
               <div className="h-px bg-gray-700 my-2" />
 
               {/* 2. Sync Settings */}
-              <div className="space-y-2">
+              <div ref={logStartSettingsRef} className="space-y-2">
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                   同期設定
                 </h4>
@@ -1102,45 +1178,12 @@ const Sidebar = ({
 
                         <button
                           onClick={() => {
-                            // Defined Logical Time = Video Time + CM = currentTime - logStartTime
-                            const logicalSec = Math.floor(currentTime - logStartTime);
-
-                            // Handle day overflow if video is very long (though Logical Time usually doesn't have date)
-                            const days = Math.floor(logicalSec / 86400);
-                            const remainingSec = logicalSec % 86400;
-
-                            const hh = Math.floor(remainingSec / 3600) + days * 24; // Show total hours if > 24? Or wrap?
-                            // Usually video time is just hours. Let's stick to standard HH:MM:SS
-                            // But if days > 0, we might want to just show large hours.
-                            // Let's use standard h/m/s calculation without day wrapping for strict video time.
-
-                            const h = Math.floor(logicalSec / 3600);
-                            const m = Math.floor((logicalSec % 3600) / 60);
-                            const s = Math.floor(logicalSec % 60);
-
-                            const formatted = `${h}:${m.toString().padStart(2, '0')}:${s
-                              .toString()
-                              .padStart(2, '0')}`;
-                            setStartTimeStr(formatted);
-
-                            // Do NOT update date for Logical Time (it's date-agnostic)
-                          }}
-                          title="現在の論理時間を取得"
-                          className="text-gray-400 hover:text-white"
-                        >
-                          <Pipette size={12} />
-                        </button>
-                        <button
-                          onClick={() => {
                             console.log(
                               '[Log Time Pipette] allComments:',
                               allComments?.length,
                               allComments?.[0]
                             );
-                            console.log(
-                              '[Log Time Pipette] currentTime:',
-                              currentTime
-                            );
+                            console.log('[Log Time Pipette] currentTime:', currentTime);
 
                             if (!allComments || allComments.length === 0) {
                               console.log('[Log Time Pipette] No comments available');
@@ -1149,10 +1192,7 @@ const Sidebar = ({
 
                             // Use .time property (relative seconds from log start) for comparison
                             // This is the same property used for danmaku display
-                            console.log(
-                              '[Log Time Pipette] currentTime:',
-                              currentTime
-                            );
+                            console.log('[Log Time Pipette] currentTime:', currentTime);
                             console.log(
                               '[Log Time Pipette] First comment .time:',
                               allComments[0]?.time
@@ -1198,7 +1238,7 @@ const Sidebar = ({
                           title="直近のコメント(ログ時間)を取得"
                           className="text-gray-400 hover:text-white"
                         >
-                          <MessageSquare size={12} />
+                          <Pipette size={12} />
                         </button>
                       </div>
                     </div>
@@ -1211,7 +1251,7 @@ const Sidebar = ({
                         <TimeInput
                           value={videoStartTimeStr}
                           onChange={setVideoStartTimeStr}
-                          showHours={true}
+                          showHours={totalDuration >= 3600}
                           placeholder="00:00"
                         />
                         <button
@@ -1221,7 +1261,7 @@ const Sidebar = ({
                             const m = Math.floor((totalSec % 3600) / 60);
                             const s = Math.floor(totalSec % 60);
                             const val =
-                              h > 0
+                              totalDuration >= 3600 || h > 0
                                 ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
                                 : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
                             setVideoStartTimeStr(val);

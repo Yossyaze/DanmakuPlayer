@@ -119,7 +119,10 @@ export function useAppHandlers({
             e.preventDefault();
             handleSeek({
               target: {
-                value: Math.max(0, currentTime - cmSystem.logStartTime - (Number(skipSeconds) || 5)),
+                value: Math.max(
+                  0,
+                  currentTime - cmSystem.logStartTime - (Number(skipSeconds) || 5)
+                ),
               },
             });
             break;
@@ -160,6 +163,7 @@ export function useAppHandlers({
       timestamp: Date.now(),
       videoStartTimeStr: videoStartTimeStr,
       startTimeStr: logSystem.startTimeStr,
+      startDateStr: logSystem.startDateStr, // Add Date
       cmRanges: cmSystem.cmRanges,
       dmSettings: dmSettings,
       loadedFiles: logSystem.loadedFiles,
@@ -172,6 +176,7 @@ export function useAppHandlers({
     [
       videoStartTimeStr,
       logSystem.startTimeStr,
+      logSystem.startDateStr,
       cmSystem.cmRanges,
       dmSettings,
       logSystem.loadedFiles,
@@ -234,8 +239,8 @@ export function useAppHandlers({
         }
         // Check Time Sync
         if (
-          (videoStartTimeStr || logSystem.startTimeStr) &&
-          (data.videoStartTimeStr || data.startTimeStr)
+          (videoStartTimeStr || logSystem.startTimeStr || logSystem.startDateStr) &&
+          (data.videoStartTimeStr || data.startTimeStr || data.startDateStr)
         ) {
           conflicts.push('timeSync');
         }
@@ -247,7 +252,7 @@ export function useAppHandlers({
         throw new Error('Invalid Project File');
       }
     },
-    [cmSystem.cmRanges, videoStartTimeStr, logSystem.startTimeStr]
+    [cmSystem.cmRanges, videoStartTimeStr, logSystem.startTimeStr, logSystem.startDateStr]
   );
 
   // 2. Apply Import Data
@@ -272,6 +277,12 @@ export function useAppHandlers({
       if (data.startTimeStr !== undefined) {
         if (overwriteSettings || !logSystem.startTimeStr) {
           logSystem.setStartTimeStr(data.startTimeStr);
+        }
+      }
+
+      if (data.startDateStr !== undefined) {
+        if (overwriteSettings || !logSystem.startDateStr) {
+          logSystem.setStartDateStr(data.startDateStr);
         }
       }
 
@@ -338,6 +349,7 @@ export function useAppHandlers({
       setProjectDirPath,
       endCardSettings,
       setEndCardSettings,
+      setIsAutoScroll,
     ]
   );
 
@@ -419,14 +431,52 @@ export function useAppHandlers({
         ? logSystem.startTimeStr.split(':').reduce((acc, v) => acc * 60 + Number(v), 0)
         : 0;
       const targetSec = startSec + time;
-      const h = Math.floor(targetSec / 3600);
-      const m = Math.floor((targetSec % 3600) / 60);
-      const s = Math.floor(targetSec % 60);
+
+      // Handle day overflow
+      const days = Math.floor(targetSec / 86400);
+      const remainingSec = targetSec % 86400;
+
+      const h = Math.floor(remainingSec / 3600);
+      const m = Math.floor((remainingSec % 3600) / 60);
+      const s = Math.floor(remainingSec % 60);
       const timeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
       cmSystem.setCmStartInput(timeStr);
-      console.log('Set CM Start:', timeStr);
+
+      console.log('[handleSetCmStart] InputTime:', time, 'StartDateStr:', logSystem.startDateStr);
+
+      // Handle Date if startDateStr exists
+      if (logSystem.startDateStr) {
+        // Parse explicitly as local YMD to avoid UTC shifts
+        const parts = logSystem.startDateStr.split('-').map(Number);
+        if (parts.length === 3) {
+          const [oy, om, od] = parts;
+          const date = new Date(oy, om - 1, od);
+
+          if (!isNaN(date.getTime())) {
+            date.setDate(date.getDate() + days);
+            const y = date.getFullYear();
+            const mo = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            const newDateStr = `${y}-${mo}-${d}`;
+
+            cmSystem.setCmStartDateInput(newDateStr);
+            console.log(
+              '[handleSetCmStart] Setting Date:',
+              newDateStr,
+              `(Origin: ${logSystem.startDateStr} + ${days} days)`
+            );
+          } else {
+            console.warn('[handleSetCmStart] Invalid Date Object');
+          }
+        } else {
+          console.warn('[handleSetCmStart] Invalid StartDate format');
+        }
+      } else {
+        console.log('[handleSetCmStart] No startDateStr set');
+      }
     },
-    [cmSystem, logSystem.startTimeStr]
+    [cmSystem, logSystem.startTimeStr, logSystem.startDateStr]
   );
 
   const handleSetCmEnd = useCallback(
@@ -435,19 +485,83 @@ export function useAppHandlers({
         ? logSystem.startTimeStr.split(':').reduce((acc, v) => acc * 60 + Number(v), 0)
         : 0;
       const targetSec = startSec + time;
-      const h = Math.floor(targetSec / 3600);
-      const m = Math.floor((targetSec % 3600) / 60);
-      const s = Math.floor(targetSec % 60);
+
+      // Handle day overflow
+      const days = Math.floor(targetSec / 86400);
+      const remainingSec = targetSec % 86400;
+
+      const h = Math.floor(remainingSec / 3600);
+      const m = Math.floor((remainingSec % 3600) / 60);
+      const s = Math.floor(remainingSec % 60);
       const timeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
       cmSystem.setCmEndInput(timeStr);
-      console.log('Set CM End:', timeStr);
+
+      console.log('[handleSetCmEnd] InputTime:', time, 'StartDateStr:', logSystem.startDateStr);
+
+      // Handle Date if startDateStr exists
+      if (logSystem.startDateStr) {
+        // Parse explicitly as local YMD
+        const parts = logSystem.startDateStr.split('-').map(Number);
+        if (parts.length === 3) {
+          const [oy, om, od] = parts;
+          const date = new Date(oy, om - 1, od);
+
+          if (!isNaN(date.getTime())) {
+            date.setDate(date.getDate() + days);
+            const y = date.getFullYear();
+            const mo = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            const newDateStr = `${y}-${mo}-${d}`;
+
+            cmSystem.setCmEndDateInput(newDateStr);
+            console.log(
+              '[handleSetCmEnd] Setting Date:',
+              newDateStr,
+              `(Origin: ${logSystem.startDateStr} + ${days} days)`
+            );
+          } else {
+            console.warn('[handleSetCmEnd] Invalid Date Object');
+          }
+        } else {
+          console.warn('[handleSetCmEnd] Invalid StartDate format');
+        }
+      } else {
+        console.log('[handleSetCmEnd] No startDateStr set');
+      }
     },
-    [cmSystem, logSystem.startTimeStr]
+    [cmSystem, logSystem.startTimeStr, logSystem.startDateStr]
   );
 
-  const handleSetLogStart = useCallback((comment) => {
-    console.log('Set Log Start request for comment:', comment.id);
-  }, []);
+  const handleSetLogStart = useCallback(
+    (comment) => {
+      console.log('Set Log Start request for comment:', comment.id, comment.time);
+
+      const time = comment.time;
+      const h = Math.floor(time / 3600);
+      const m = Math.floor((time % 3600) / 60);
+      const s = Math.floor(time % 60);
+      const timeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+      logSystem.setStartTimeStr(timeStr);
+
+      // Handle Date if startDateStr exists (Log Start Date Sync)
+      // If we are setting the Log Start Time to this comment's times,
+      // strictly speaking, we are just changing the OFFSET.
+      // But if the user implies "This comment happened at X date",
+      // we might need to adjust the start date?
+      // For now, let's just set the Time Offset as that is the primary function.
+      // But if we want to sync valid date...
+
+      // Handle day overflow for Date as well?
+      // If comment time is > 24h, and we set that as Start Time,
+      // Valid Start Time usually 0-23.
+      // DanmakuPlayer allows >24h start time? Yes.
+
+      console.log('[handleSetLogStart] Set StartTime:', timeStr);
+    },
+    [logSystem]
+  );
 
   const handleAddNgId = useCallback(
     (userId) => {

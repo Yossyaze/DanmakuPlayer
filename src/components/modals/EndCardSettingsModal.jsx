@@ -1,4 +1,4 @@
-import { FileImage, Link, X } from 'lucide-react';
+import { FileImage, Link, Pipette, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 import { formatTime } from '../../utils/danmakuUtils';
@@ -15,6 +15,7 @@ const EndCardSettingsModal = ({
   videoTimeToLogTime, // Function to convert video time to log time
   logTimeToVideoTime, // Function to convert log time to video time
   startTimeStr, // "HH:MM:SS" string of log start time
+  totalDuration,
 }) => {
   const [localSettings, setLocalSettings] = useState(settings);
   const [activeTab, setActiveTab] = useState(settings.type);
@@ -131,13 +132,13 @@ const EndCardSettingsModal = ({
                         onClick={() => setInputMode('logical')}
                         className={`flex-1 py-1.5 text-xs rounded transition-colors ${inputMode === 'logical' ? 'bg-gray-700 text-white font-bold' : 'text-gray-400 hover:text-white'}`}
                       >
-                        論理時間
+                        動画時間
                       </button>
                       <button
                         onClick={() => setInputMode('log')}
                         className={`flex-1 py-1.5 text-xs rounded transition-colors ${inputMode === 'log' ? 'bg-gray-700 text-white font-bold' : 'text-gray-400 hover:text-white'}`}
                       >
-                        実時間
+                        ログ時間
                       </button>
                     </div>
                   </div>
@@ -145,10 +146,10 @@ const EndCardSettingsModal = ({
                   {/* Time Input */}
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">
-                      開始時間 ({inputMode === 'logical' ? '動画時間' : '絶対時間'})
+                      開始時間 ({inputMode === 'logical' ? '動画時間' : 'ログ時間'})
                     </label>
                     <TimeInput
-                      showHours={true}
+                      showHours={totalDuration >= 3600}
                       value={(() => {
                         if (inputMode === 'log') {
                           if (startTimeStr && localSettings.previewStartTime !== undefined) {
@@ -159,7 +160,11 @@ const EndCardSettingsModal = ({
                             const fh = Math.floor(totalSec / 3600);
                             const fm = Math.floor((totalSec % 3600) / 60);
                             const fs = Math.floor(totalSec % 60);
-                            return `${fh}:${fm.toString().padStart(2, '0')}:${fs.toString().padStart(2, '0')}`;
+                            if (totalDuration >= 3600 || fh > 0) {
+                              return `${fh}:${fm.toString().padStart(2, '0')}:${fs.toString().padStart(2, '0')}`;
+                            } else {
+                              return `${fm.toString().padStart(2, '0')}:${fs.toString().padStart(2, '0')}`;
+                            }
                           }
                           return formatTime(localSettings.previewStartTime || 0);
                         }
@@ -210,7 +215,10 @@ const EndCardSettingsModal = ({
                       }}
                       className="w-full py-2 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded-lg transition-colors flex flex-col items-center justify-center gap-0.5 border border-gray-600 hover:border-gray-500"
                     >
-                      <span>現在の時間を設定</span>
+                      <div className="flex items-center gap-1">
+                        <Pipette size={14} />
+                        <span>現在の時間を設定</span>
+                      </div>
                       <span className="font-mono text-gray-300 opacity-80">
                         {(() => {
                           if (inputMode === 'log') {
@@ -223,7 +231,11 @@ const EndCardSettingsModal = ({
                               const fh = Math.floor(totalSec / 3600);
                               const fm = Math.floor((totalSec % 3600) / 60);
                               const fs = Math.floor(totalSec % 60);
-                              return `${fh}:${fm.toString().padStart(2, '0')}:${fs.toString().padStart(2, '0')}`;
+                              if (totalDuration >= 3600 || fh > 0) {
+                                return `${fh}:${fm.toString().padStart(2, '0')}:${fs.toString().padStart(2, '0')}`;
+                              } else {
+                                return `${fm.toString().padStart(2, '0')}:${fs.toString().padStart(2, '0')}`;
+                              }
                             }
                             return formatTime(currentTime + logStartTime);
                           } else {

@@ -214,6 +214,15 @@ const DesktopApp = () => {
     // handleImport, // Replaced by local handleImport with conflict check
     checkImportConflicts,
     applyImportData,
+    handleSetCmStart,
+    handleSetCmEnd,
+    handleSetLogStart,
+    handleAddNgId,
+    handleAddNgComment,
+    handleAddNgWord,
+    handleRemoveNgId,
+    handleRemoveNgComment,
+    handleRemoveNgWord,
   } = useAppHandlers({
     player,
     cmSystem,
@@ -549,6 +558,15 @@ const DesktopApp = () => {
       player={player}
       cmSystem={cmSystem}
       logSystem={logSystem}
+      handleSetCmStart={handleSetCmStart}
+      handleSetCmEnd={handleSetCmEnd}
+      handleSetLogStart={handleSetLogStart}
+      handleAddNgId={handleAddNgId}
+      handleAddNgComment={handleAddNgComment}
+      handleAddNgWord={handleAddNgWord}
+      handleRemoveNgId={handleRemoveNgId}
+      handleRemoveNgComment={handleRemoveNgComment}
+      handleRemoveNgWord={handleRemoveNgWord}
       currentTime={currentTime}
       isAutoScroll={isAutoScroll}
       setIsAutoScroll={setIsAutoScroll}

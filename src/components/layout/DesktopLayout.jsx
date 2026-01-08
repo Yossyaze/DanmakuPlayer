@@ -53,6 +53,17 @@ const DesktopLayout = ({
   cmSystem,
   logSystem,
 
+  // Handlers
+  handleSetCmStart,
+  handleSetCmEnd,
+  handleSetLogStart,
+  handleAddNgId,
+  handleAddNgComment,
+  handleAddNgWord,
+  handleRemoveNgId,
+  handleRemoveNgComment,
+  handleRemoveNgWord,
+
   // Player & Time State
   currentTime,
   isAutoScroll,
@@ -686,23 +697,16 @@ const DesktopLayout = ({
                 onScrollComplete={() => setScrollToCommentId(null)}
                 // setZoomedImage passed for LogViewer image handling
                 setZoomedImage={setZoomedImage}
-                onSetCmStart={logSystem.handleSetCmStart}
-                // Wait, handlers in App.jsx:
-                // onSetCmStart={handleSetCmStart}
-                // onSetCmEnd={handleSetCmEnd}
-                // onSetLogStart={handleSetLogStart}
-                // onAddNgId={handleAddNgId}
-                // onAddNgComment, etc.
-                // These need to be props.
-                onSetCmEnd={logSystem.handleSetCmEnd}
-                onSetLogStart={logSystem.handleSetLogStart}
-                onAddNgId={logSystem.handleAddNgId}
-                onAddNgComment={logSystem.handleAddNgComment}
-                onAddNgWord={logSystem.addNgWord} // Add prop
+                onSetCmStart={handleSetCmStart}
+                onSetCmEnd={handleSetCmEnd}
+                onSetLogStart={handleSetLogStart}
+                onAddNgId={handleAddNgId}
+                onAddNgComment={handleAddNgComment}
+                onAddNgWord={handleAddNgWord}
                 ngSettings={logSystem.ngSettings}
-                removeNgId={logSystem.removeNgId}
-                removeNgComment={logSystem.removeNgComment}
-                removeNgWord={logSystem.removeNgWord} // Add prop
+                removeNgId={handleRemoveNgId}
+                removeNgComment={handleRemoveNgComment}
+                removeNgWord={handleRemoveNgWord}
                 allComments={logSystem.comments}
                 formatTime={formatTime}
                 totalDuration={cmSystem.getTotalDuration}
@@ -834,6 +838,7 @@ const DesktopLayout = ({
           videoTimeToLogTime={cmSystem.videoTimeToLogTime}
           logTimeToVideoTime={cmSystem.logTimeToVideoTime}
           startTimeStr={logSystem.startTimeStr}
+          totalDuration={cmSystem.getTotalDuration}
         />
 
         {/* --- Sidebar (Right) --- */}
