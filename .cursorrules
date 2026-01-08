@@ -12,19 +12,35 @@
   コメントデータを含むファイル。主に2ちゃんねる（5ch）形式の `.dat` ファイルを指す。
   - **関連コード**: `loadedFiles` (State: useLogSystem), `parseLogFile` (Utils), `useLogSystem` (Hook)
 
+### 時間の種類 (Time Types)
+
 - **動画時間 (Video Time)**:
   動画ファイル（MP4等）の現在の再生位置（秒）。`0` から始まる。
+  - **計算式**: `video.currentTime`（HTMLVideoElement）
   - **関連コード**: `playedSeconds` (ReactPlayer), `usePlayer` (Hook)
 
-- **ログ時間 (Log Time)**:
-  コメントが投稿された絶対的な日時（Unixタイムスタンプ等）。`.dat` ファイル内の各レスの日付情報に基づく。
-  - **関連コード**: `startTimeStr`, `startDateStr` (State: useLogSystem), `c.time` (Comment prop), `c.date`
+- **ログ時間 (Log Time) / currentTime**:
+  コメントの `time` プロパティと同じ基準の相対時刻（秒）。ログ開始からの経過秒数。
+  **これがアプリ内で主に使用される時間基準。**
+  - **計算式**: `currentTime = videoTimeToLogTime(video.currentTime)`
+  - **コメントとの関係**: `comment.time <= currentTime` の時にコメントを表示
+  - **関連コード**: `currentTime` (State: useDanmakuPlayer), `c.time` (Comment prop)
 
-- **論理時間 (Logical Time)**:
+- **論理時間 (Logical Time) / シークバー時間**:
   ユーザーが認識する「再生中の時間」。シークバーに表示される時間と一致する。
-  定義: `論理時間 = 現在の動画時間 + 累積CM時間`
-  - **注意**: コード上の変数 `currentLogicalTime` は、実装上「ログ時間（Log Time = 動画時間 + オフセット + CM）」を保持していることが多い。その場合、本来の論理時間を算出するには `currentLogicalTime - logStartTime` を行う必要がある。
-  - **関連コード**: `VideoControls.jsx` (prop: `currentTime`), `SidebarCMSettings.jsx` (var: `seekbarSeconds`)
+  - **計算式**: `logicalTime = currentTime - logStartTime`
+  - **関連コード**: `VideoControls.jsx` (prop: `currentTime`), `SidebarCMSettings.jsx`
+
+- **logStartTime (旧: timeOffset)**:
+  動画の0秒地点に対応するログ上の時刻（秒）。同期設定から計算される。
+  - **計算式**: `logStartTime = -parseTime(videoStartTimeStr)`
+  - **用途**: シークバー位置 = `currentTime - logStartTime`
+  - **関連コード**: `useCMSystem.js`, `useTimeSync.js`
+
+- **rawTime (コメントプロパティ)**:
+  コメントが投稿された絶対時刻（Unix Timestamp、ミリ秒）。
+  - **用途**: 日時表示、同期設定のスポイト機能
+  - **関連コード**: `logParser.js`
 
 - **CM (Commercial Message)**:
   実況ログには含まれるが、手元の動画ファイルには含まれていない時間帯（放送休止時間やCMカットされた部分）。
