@@ -8,6 +8,7 @@ export const useTimeSync = ({
   currentTime,
 }) => {
   const timeSyncInitializedRef = useRef(false);
+  const hasEverInitializedRef = useRef(false); // Track if we've ever done initial sync
 
   // Reset initialization flag when sync settings change
   const prevVideoStartTimeRef = useRef(videoStartTimeStr);
@@ -75,29 +76,24 @@ export const useTimeSync = ({
 
     // Calculate offset and update logStartTime
     // On first init: set currentTime to offset (start at 0:00 on seekbar)
-    // On subsequent changes: preserve the seekbar position by adjusting currentTime
+    // On subsequent changes: preserve the seekbar position
     if (!timeSyncInitializedRef.current) {
       const offset = -videoLogicalTime;
       const prevOffset = cmSystem.logStartTime;
-
-      // If this is a re-initialization (prevOffset !== 0), preserve seekbar position
-      // seekbarPos = currentTime - offset, so newCurrentTime = seekbarPos + newOffset
-      // But we don't have direct access to current seekbar position here...
-      // Instead, we calculate the delta and adjust currentTime
-      const isReInit = prevOffset !== 0 || prevOffset !== offset;
+      const isFirstEverInit = !hasEverInitializedRef.current;
 
       cmSystem.setTimeOffset(offset);
 
-      if (isReInit && prevOffset !== offset) {
-        // Preserve the seekbar position:
-        // oldSeekbarPos = oldCurrentTime - oldOffset
-        // newCurrentTime = oldSeekbarPos + newOffset = oldCurrentTime + (newOffset - oldOffset)
+      if (isFirstEverInit) {
+        // True first initialization: start at seekbar 0:00
+        setCurrentTime(offset);
+        hasEverInitializedRef.current = true;
+      } else if (prevOffset !== offset) {
+        // Re-init with offset change: adjust currentTime by delta
         const delta = offset - prevOffset;
         setCurrentTime(currentTime + delta);
-      } else {
-        // First init: start at seekbar 0:00
-        setCurrentTime(offset);
       }
+      // If offset is the same (log start time change only), just skip - don't reset currentTime
 
       timeSyncInitializedRef.current = true;
     }
