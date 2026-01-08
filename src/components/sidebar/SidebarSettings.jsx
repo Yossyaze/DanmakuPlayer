@@ -44,7 +44,7 @@ const SidebarSettings = ({
   setStartTimeStr,
   videoStartTimeStr,
   setVideoStartTimeStr,
-  currentLogicalTime,
+  currentTime,
   timeOffset,
   formatTime,
 
@@ -347,7 +347,7 @@ const SidebarSettings = ({
               cmRanges={cmRanges}
               startTimeStr={startTimeStr}
               startDateStr={startDateStr}
-              currentLogicalTime={currentLogicalTime}
+              currentTime={currentTime}
               timeOffset={timeOffset}
               formatTime={formatTime}
             />

@@ -25,7 +25,7 @@ const UserHistoryModal = ({
   onAnchorMouseLeave,
   isPopupActive = false, // New prop
   settings = {}, // Allow passing settings
-  currentLogicalTime, // Add currentLogicalTime for LogCommentItem
+  currentTime, // Add currentTime for LogCommentItem
   RowComponent = null, // Optional custom row component (e.g., LogCommentItem)
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
@@ -112,7 +112,7 @@ const UserHistoryModal = ({
                     onAnchorMouseEnter={onAnchorMouseEnter}
                     onAnchorMouseLeave={onAnchorMouseLeave}
                     settings={settings} // Pass settings
-                    currentLogicalTime={currentLogicalTime} // Pass currentLogicalTime
+                    currentTime={currentTime} // Pass currentTime
                     depth={0}
                   />
                 );
@@ -216,7 +216,7 @@ const UserHistoryModal = ({
                     onAnchorMouseEnter={onAnchorMouseEnter}
                     onAnchorMouseLeave={onAnchorMouseLeave}
                     settings={settings}
-                    currentLogicalTime={currentLogicalTime}
+                    currentTime={currentTime}
                     depth={0}
                   />
                 );

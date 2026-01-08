@@ -14,7 +14,7 @@ const CommentRow = React.memo(
     node,
     isActive,
     isHighlighted,
-    currentLogicalTime,
+    currentTime,
     rootTime,
     onAnchorClick,
     onAnchorMouseEnter,
@@ -39,7 +39,7 @@ const CommentRow = React.memo(
         comment={node}
         isActive={isActive}
         isHighlighted={isHighlighted}
-        currentLogicalTime={currentLogicalTime}
+        currentTime={currentTime}
         rootTime={rootTime}
         timeOffset={timeOffset}
         formatTime={formatTime}
@@ -75,9 +75,9 @@ const CommentRow = React.memo(
       prevProps.isActive === nextProps.isActive &&
       prevProps.isHighlighted === nextProps.isHighlighted && // Check highlight status
       prevProps.rootTime === nextProps.rootTime && // Check rootTime
-      // Ignore fine-grained currentLogicalTime changes, only care if it crosses the effective time
-      prevEffectiveTime > prevProps.currentLogicalTime ===
-        nextEffectiveTime > nextProps.currentLogicalTime &&
+      // Ignore fine-grained currentTime changes, only care if it crosses the effective time
+      prevEffectiveTime > prevProps.currentTime ===
+        nextEffectiveTime > nextProps.currentTime &&
       prevProps.showThreadTitle === nextProps.showThreadTitle &&
       prevProps.visibleThreadTitles === nextProps.visibleThreadTitles &&
       prevProps.timeOffset === nextProps.timeOffset && // Check timeOffset

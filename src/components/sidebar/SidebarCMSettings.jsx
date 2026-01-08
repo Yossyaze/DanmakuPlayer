@@ -24,7 +24,7 @@ const SidebarCMSettings = ({
   cmRanges,
   startTimeStr,
   startDateStr,
-  currentLogicalTime,
+  currentTime,
   timeOffset = 0,
   formatTime,
 }) => {
@@ -47,7 +47,7 @@ const SidebarCMSettings = ({
     const handleGetCurrent = () => {
       if (mode === 'video') {
         // Use seekbar time (logical time = log time - timeOffset)
-        const seekbarSeconds = Math.floor(currentLogicalTime - timeOffset);
+        const seekbarSeconds = Math.floor(currentTime - timeOffset);
         const h = Math.floor(seekbarSeconds / 3600);
         const m = Math.floor((seekbarSeconds % 3600) / 60);
         const s = Math.floor(seekbarSeconds % 60);
@@ -63,7 +63,7 @@ const SidebarCMSettings = ({
         if (isNaN(h) || isNaN(m) || isNaN(s)) return;
 
         const startSec = h * 3600 + m * 60 + s;
-        const currentSec = startSec + currentLogicalTime;
+        const currentSec = startSec + currentTime;
 
         // Handle day overflow
         let days = Math.floor(currentSec / 86400);

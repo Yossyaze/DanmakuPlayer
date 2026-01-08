@@ -88,7 +88,7 @@ const Sidebar = ({
 
   comments,
   activeCommentId,
-  currentLogicalTime,
+  currentTime,
   isAutoScroll,
   setIsAutoScroll,
   handleSyncButton,
@@ -610,7 +610,7 @@ const Sidebar = ({
     const handleGetCurrent = () => {
       if (mode === 'video') {
         // Use seekbar time (logical time = log time - timeOffset)
-        const seekbarSeconds = Math.floor(currentLogicalTime - timeOffset);
+        const seekbarSeconds = Math.floor(currentTime - timeOffset);
         const h = Math.floor(seekbarSeconds / 3600);
         const m = Math.floor((seekbarSeconds % 3600) / 60);
         const s = Math.floor(seekbarSeconds % 60);
@@ -627,7 +627,7 @@ const Sidebar = ({
         if (isNaN(h) || isNaN(m) || isNaN(s)) return;
 
         const startSec = h * 3600 + m * 60 + s;
-        const currentSec = startSec + currentLogicalTime;
+        const currentSec = startSec + currentTime;
 
         // Handle day overflow
         let days = Math.floor(currentSec / 86400);
@@ -841,16 +841,16 @@ const Sidebar = ({
       targetComment = comments.find((c) => c.id === activeCommentId);
     }
 
-    // 2. If no active comment, find last comment before currentLogicalTime
+    // 2. If no active comment, find last comment before currentTime
     if (!targetComment) {
-      // Binary search for the last comment <= currentLogicalTime
+      // Binary search for the last comment <= currentTime
       let low = 0;
       let high = comments.length - 1;
       let idx = -1;
 
       while (low <= high) {
         const mid = Math.floor((low + high) / 2);
-        if (comments[mid].time <= currentLogicalTime) {
+        if (comments[mid].time <= currentTime) {
           idx = mid;
           low = mid + 1;
         } else {
@@ -870,7 +870,7 @@ const Sidebar = ({
     }
 
     return { activeThreadTitle: null };
-  }, [activeCommentId, currentLogicalTime, comments, loadedFiles]);
+  }, [activeCommentId, currentTime, comments, loadedFiles]);
 
   const [showNgPanel, setShowNgPanel] = useState(false);
 
@@ -1102,8 +1102,8 @@ const Sidebar = ({
 
                         <button
                           onClick={() => {
-                            // Defined Logical Time = Video Time + CM = currentLogicalTime - timeOffset
-                            const logicalSec = Math.floor(currentLogicalTime - timeOffset);
+                            // Defined Logical Time = Video Time + CM = currentTime - timeOffset
+                            const logicalSec = Math.floor(currentTime - timeOffset);
 
                             // Handle day overflow if video is very long (though Logical Time usually doesn't have date)
                             const days = Math.floor(logicalSec / 86400);
@@ -1132,29 +1132,67 @@ const Sidebar = ({
                         </button>
                         <button
                           onClick={() => {
-                            if (!allComments || allComments.length === 0) return;
-                            // Using rawTime (ms) as allComments here are likely raw log objects without vpos
-                            // currentLogicalTime is in seconds (Log Time including offset)
-                            const currentLogTimeMs = currentLogicalTime * 1000;
+                            console.log(
+                              '[Log Time Pipette] allComments:',
+                              allComments?.length,
+                              allComments?.[0]
+                            );
+                            console.log(
+                              '[Log Time Pipette] currentTime:',
+                              currentTime
+                            );
+
+                            if (!allComments || allComments.length === 0) {
+                              console.log('[Log Time Pipette] No comments available');
+                              return;
+                            }
+
+                            // Use .time property (relative seconds from log start) for comparison
+                            // This is the same property used for danmaku display
+                            console.log(
+                              '[Log Time Pipette] currentTime:',
+                              currentTime
+                            );
+                            console.log(
+                              '[Log Time Pipette] First comment .time:',
+                              allComments[0]?.time
+                            );
+
                             let targetComment = null;
                             // Find the latest comment that has appeared so far
                             for (let i = 0; i < allComments.length; i++) {
-                              // allComments is sorted by rawTime
-                              if (allComments[i].rawTime > currentLogTimeMs) break;
+                              // Compare using .time (relative seconds), not rawTime (absolute ms)
+                              if (allComments[i].time > currentTime) break;
                               targetComment = allComments[i];
                             }
 
+                            console.log(
+                              '[Log Time Pipette] targetComment:',
+                              targetComment?.id,
+                              targetComment?.time
+                            );
+
                             if (targetComment && targetComment.rawTime) {
+                              // Extract the actual timestamp from rawTime (absolute Unix timestamp in ms)
                               const dateObj = new Date(targetComment.rawTime);
                               const y = dateObj.getFullYear();
-                              const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                              const mo = String(dateObj.getMonth() + 1).padStart(2, '0');
                               const d = String(dateObj.getDate()).padStart(2, '0');
                               const hh = String(dateObj.getHours()).padStart(2, '0');
                               const mm = String(dateObj.getMinutes()).padStart(2, '0');
                               const ss = String(dateObj.getSeconds()).padStart(2, '0');
 
-                              setStartDateStr(`${y}-${m}-${d}`);
+                              console.log(
+                                '[Log Time Pipette] Setting:',
+                                `${y}-${mo}-${d}`,
+                                `${hh}:${mm}:${ss}`
+                              );
+                              setStartDateStr(`${y}-${mo}-${d}`);
                               setStartTimeStr(`${hh}:${mm}:${ss}`);
+                            } else {
+                              console.log(
+                                '[Log Time Pipette] No matching comment found or no rawTime'
+                              );
                             }
                           }}
                           title="直近のコメント(ログ時間)を取得"
@@ -1178,7 +1216,7 @@ const Sidebar = ({
                         />
                         <button
                           onClick={() => {
-                            const totalSec = Math.floor(currentLogicalTime - timeOffset);
+                            const totalSec = Math.floor(currentTime - timeOffset);
                             const h = Math.floor(totalSec / 3600);
                             const m = Math.floor((totalSec % 3600) / 60);
                             const s = Math.floor(totalSec % 60);
@@ -1506,7 +1544,7 @@ const Sidebar = ({
           comments={enrichedComments}
           activeCommentId={activeCommentId}
           RowComponent={null}
-          currentLogicalTime={currentLogicalTime}
+          currentTime={currentTime}
           enableTreeView={enableTreeView}
           showImages={showImages}
           showThreadTitle={showThreadTitle}
@@ -1564,7 +1602,7 @@ const Sidebar = ({
               density: dmSettings.density,
               showImages,
             }}
-            currentLogicalTime={currentLogicalTime} // Pass currentLogicalTime
+            currentTime={currentTime} // Pass currentTime
           />
         )}
 

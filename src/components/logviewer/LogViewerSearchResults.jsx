@@ -14,7 +14,7 @@ const LogViewerSearchResults = ({
   activeUserId, // New prop
   containerWidth,
   containerHeight, // Add containerHeight
-  currentLogicalTime,
+  currentTime,
   timeOffset,
   formatTime,
   logSettings,
@@ -105,7 +105,7 @@ const LogViewerSearchResults = ({
                     comment={comment}
                     isActive={false}
                     isHighlighted={false}
-                    currentLogicalTime={currentLogicalTime}
+                    currentTime={currentTime}
                     timeOffset={timeOffset}
                     formatTime={formatTime}
                     totalComments={displayResults.length}

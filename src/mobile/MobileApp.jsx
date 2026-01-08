@@ -1057,7 +1057,7 @@ const MobileApp = () => {
           {cmSystem.isWaitingCm && (
             <CmWaitOverlay
               cmSystem={cmSystem}
-              currentLogicalTime={currentTime}
+              currentTime={currentTime}
               startTimeStr={logSystem.startTimeStr}
               handleCmSkip={handleCmSkip}
             />
@@ -1123,7 +1123,7 @@ const MobileApp = () => {
                 files={logSystem.loadedFiles}
                 sidebarOpen={logSidebarOpen}
                 activeCommentId={activeCommentId}
-                currentLogicalTime={currentTime}
+                currentTime={currentTime}
                 timeOffset={cmSystem.timeOffset}
                 onCommentClick={handleCommentClick}
                 onSeekAndPlay={handleSeekAndPlay}
@@ -1150,7 +1150,7 @@ const MobileApp = () => {
                 <CommentList
                   comments={logSystem.visibleComments}
                   activeCommentId={activeCommentId}
-                  currentLogicalTime={currentTime}
+                  currentTime={currentTime}
                   onCommentClick={handleCommentClick}
                   onSeekAndPlay={handleSeekAndPlay}
                   isAutoScroll={isAutoScroll}

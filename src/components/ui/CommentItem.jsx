@@ -19,7 +19,7 @@ const CommentItem = ({
   onClick,
   isActive = false,
   isHighlighted = false,
-  currentLogicalTime,
+  currentTime,
   depth = 0,
   rootTime, // Time of the root comment in tree view
   showImages = true,
@@ -47,7 +47,7 @@ const CommentItem = ({
   // This ensures descendants are marked as "played" when their root is played
   const effectiveTime = rootTime !== undefined ? rootTime : comment.time;
   const isFuture =
-    !isLogMode && currentLogicalTime !== undefined && effectiveTime > currentLogicalTime;
+    !isLogMode && currentTime !== undefined && effectiveTime > currentTime;
   const shouldHighlightActive = !isLogMode && isActive;
 
   // AA Logic

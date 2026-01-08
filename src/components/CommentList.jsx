@@ -18,7 +18,7 @@ const CommentList = forwardRef(
     {
       comments,
       activeCommentId,
-      currentLogicalTime,
+      currentTime,
       enableTreeView,
       showImages,
       imageLayout = 'inline',
@@ -315,7 +315,7 @@ const CommentList = forwardRef(
                 activeCommentId === node.id || (enableTreeView && node.rootId === activeCommentId)
               }
               isHighlighted={highlightedCommentId === node.id}
-              currentLogicalTime={currentLogicalTime}
+              currentTime={currentTime}
               rootTime={enableTreeView && rootTimeMap ? rootTimeMap.get(node.rootId) : undefined}
               showThreadTitle={showThreadTitle}
               visibleThreadTitles={visibleThreadTitles}
@@ -353,7 +353,7 @@ const CommentList = forwardRef(
         RowToRender,
         activeCommentId,
         highlightedCommentId,
-        currentLogicalTime,
+        currentTime,
         handleAnchorClick,
         onAnchorMouseEnter,
         onAnchorMouseLeave,

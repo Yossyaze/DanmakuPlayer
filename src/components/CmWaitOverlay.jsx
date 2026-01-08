@@ -4,7 +4,7 @@ import { formatTime } from '../utils/danmakuUtils';
 
 const CmWaitOverlay = ({
   cmSystem,
-  currentLogicalTime, // Current log time (updates with CM wait)
+  currentTime, // Current log time (updates with CM wait)
   startTimeStr, // For displaying absolute log time (e.g., "22:30:00")
   handleCmSkip,
 }) => {
@@ -17,14 +17,14 @@ const CmWaitOverlay = ({
   }
 
   // Calculate remaining time: CM end time - current log time (both in log time)
-  const remaining = Math.max(0, currentRange.logEnd - currentLogicalTime);
+  const remaining = Math.max(0, currentRange.logEnd - currentTime);
 
   // Calculate absolute log time for display
-  let absoluteLogSeconds = currentLogicalTime;
+  let absoluteLogSeconds = currentTime;
   if (startTimeStr) {
     const parts = startTimeStr.split(':').map(Number);
     if (parts.length === 3) {
-      absoluteLogSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2] + currentLogicalTime;
+      absoluteLogSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2] + currentTime;
     }
   }
 

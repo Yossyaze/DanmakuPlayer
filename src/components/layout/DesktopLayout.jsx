@@ -572,7 +572,7 @@ const DesktopLayout = ({
                 {cmSystem.isWaitingCm && (
                   <CmWaitOverlay
                     cmSystem={cmSystem}
-                    currentLogicalTime={currentTime}
+                    currentTime={currentTime}
                     startTimeStr={logSystem.startTimeStr}
                     handleCmSkip={handleCmSkip}
                   />
@@ -676,7 +676,7 @@ const DesktopLayout = ({
                 onRemoveFile={logSystem.handleRemoveFile}
                 activeCommentId={activeCommentId}
                 activeThreadTitle={activeThreadTitle}
-                currentLogicalTime={currentTime}
+                currentTime={currentTime}
                 timeOffset={cmSystem.timeOffset}
                 onCommentClick={handleCommentClick}
                 onSeekAndPlay={handleSeekAndPlay}
@@ -877,7 +877,7 @@ const DesktopLayout = ({
             comments={logSystem.visibleComments}
             allComments={logSystem.comments}
             activeCommentId={activeCommentId}
-            currentLogicalTime={currentTime}
+            currentTime={currentTime}
             handleCommentClick={handleCommentClick}
             onCommentClick={handleCommentClick}
             onSeekAndPlay={handleSeekAndPlay}

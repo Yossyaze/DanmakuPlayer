@@ -19,7 +19,7 @@ const LogCommentItemWrapper = React.memo(
     node,
     isActive,
     isHighlighted,
-    currentLogicalTime,
+    currentTime,
     onAnchorClick,
     onUrlLoad,
     showImages,
@@ -39,7 +39,7 @@ const LogCommentItemWrapper = React.memo(
         comment={node}
         isActive={isActive}
         isHighlighted={isHighlighted}
-        currentLogicalTime={currentLogicalTime}
+        currentTime={currentTime}
         timeOffset={timeOffset}
         formatTime={formatTime}
         totalComments={totalComments}
@@ -73,7 +73,7 @@ const LogViewer = ({
   files = [], // New prop
   activeCommentId,
   // activeThreadTitle, // Unused here, we calculate locally to support filtering
-  currentLogicalTime,
+  currentTime,
   timeOffset,
   onCommentClick,
   onSeekAndPlay, // New prop for seek + play + exit log mode
@@ -418,14 +418,14 @@ const LogViewer = ({
     if (filteredComments.length === 0) return '';
     let active = null;
     for (let i = filteredComments.length - 1; i >= 0; i--) {
-      if (filteredComments[i].time <= currentLogicalTime) {
+      if (filteredComments[i].time <= currentTime) {
         active = filteredComments[i];
         break;
       }
     }
     if (!active) active = filteredComments[0];
     return active ? active.threadTitle || active.sourceFileId : '';
-  }, [filteredComments, currentLogicalTime]);
+  }, [filteredComments, currentTime]);
   // Jump Logic (for Context Menu)
   const handleJumpToComment = (targetComment) => {
     if (!targetComment) return;
@@ -614,7 +614,7 @@ const LogViewer = ({
           activeCommentId={activeCommentId}
           RowComponent={LogCommentItemWrapper}
           indentSize={16}
-          currentLogicalTime={currentLogicalTime}
+          currentTime={currentTime}
           enableTreeView={logSettings.enableTreeView}
           showImages={logSettings.showImages}
           showThreadTitle={false}
@@ -659,7 +659,7 @@ const LogViewer = ({
           activeUserId={activeUserId} // Pass activeUserId
           containerWidth={containerWidth}
           containerHeight={containerHeight}
-          currentLogicalTime={currentLogicalTime}
+          currentTime={currentTime}
           timeOffset={timeOffset}
           formatTime={customFormatTime}
           logSettings={logSettings}
