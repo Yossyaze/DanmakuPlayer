@@ -1133,16 +1133,19 @@ const Sidebar = ({
                         <button
                           onClick={() => {
                             if (!allComments || allComments.length === 0) return;
-                            const curVpos = currentLogicalTime * 100;
+                            // Using rawTime (ms) as allComments here are likely raw log objects without vpos
+                            // currentLogicalTime is in seconds (Log Time including offset)
+                            const currentLogTimeMs = currentLogicalTime * 1000;
                             let targetComment = null;
                             // Find the latest comment that has appeared so far
                             for (let i = 0; i < allComments.length; i++) {
-                              if (allComments[i].vpos > curVpos) break;
+                              // allComments is sorted by rawTime
+                              if (allComments[i].rawTime > currentLogTimeMs) break;
                               targetComment = allComments[i];
                             }
 
-                            if (targetComment && targetComment.date) {
-                              const dateObj = new Date(targetComment.date * 1000);
+                            if (targetComment && targetComment.rawTime) {
+                              const dateObj = new Date(targetComment.rawTime);
                               const y = dateObj.getFullYear();
                               const m = String(dateObj.getMonth() + 1).padStart(2, '0');
                               const d = String(dateObj.getDate()).padStart(2, '0');
