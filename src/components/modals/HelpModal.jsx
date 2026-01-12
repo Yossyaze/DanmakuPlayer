@@ -1,13 +1,24 @@
 import {
+  ArrowDown as ArrowDownIcon,
+  Ban as BanIcon,
   BookOpen,
+  CheckSquare,
   Download,
+  FileText,
   FileVideo,
   Info,
   Keyboard,
-  MessageSquare,
+  Menu,
+  MessageSquare as MessageSquareIcon,
   MonitorPlay,
+  MousePointerClick,
   Puzzle,
+  Settings,
   Sidebar,
+  Sliders,
+  Sparkles,
+  Trophy as TrophyIcon,
+  Tv,
   X,
 } from 'lucide-react';
 import React, { useState } from 'react';
@@ -19,8 +30,9 @@ const HelpModal = ({ isOpen, onClose, onStartTutorial }) => {
 
   const tabs = [
     { id: 'basic', label: '基本操作', icon: Info },
+    { id: 'features', label: '機能紹介', icon: Sparkles },
+    { id: 'settings', label: '設定ガイド', icon: Sliders },
     { id: 'shortcuts', label: 'ショートカット', icon: Keyboard },
-    { id: 'features', label: '機能紹介', icon: BookOpen },
     { id: 'extensions', label: '拡張機能', icon: Puzzle },
   ];
 
@@ -30,11 +42,10 @@ const HelpModal = ({ isOpen, onClose, onStartTutorial }) => {
       onClick={onClose}
     >
       <div
-        className="bg-gray-800 w-full max-w-4xl max-h-[80vh] rounded-xl shadow-2xl border border-gray-700 flex flex-col overflow-hidden"
+        className="bg-gray-800 w-full max-w-6xl h-[90vh] rounded-xl shadow-2xl border border-gray-700 flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900/50">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-gray-700 bg-gray-900/50">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <Info className="text-blue-400" />
             ヘルプ・チュートリアル
@@ -48,12 +59,12 @@ const HelpModal = ({ isOpen, onClose, onStartTutorial }) => {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-700 bg-gray-900/30">
+        <div className="flex shrink-0 border-b border-gray-700 bg-gray-900/30 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors relative ${
+              className={`flex items-center gap-2 px-6 h-12 text-base font-bold transition-colors relative whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'text-blue-400 bg-blue-900/10'
                   : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
@@ -73,7 +84,7 @@ const HelpModal = ({ isOpen, onClose, onStartTutorial }) => {
           {activeTab === 'basic' && (
             <div className="space-y-8 animate-fade-in">
               {/* Tutorial Banner */}
-              <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/30 p-6 rounded-xl flex items-center justify-between">
+              <div className="bg-linear-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/30 p-6 rounded-xl flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-bold text-white mb-1">チュートリアルを再生</h3>
                   <p className="text-sm text-gray-300">
@@ -168,6 +179,155 @@ const HelpModal = ({ isOpen, onClose, onStartTutorial }) => {
             </div>
           )}
 
+          {activeTab === 'features' && (
+            <div className="space-y-8 animate-fade-in">
+              <FeatureItem
+                title="右クリックメニュー (コンテキストメニュー)"
+                icon={<MousePointerClick size={24} />}
+                desc={
+                  <ul className="list-disc list-inside space-y-1 mt-2">
+                    <li>
+                      <b>この位置へシーク:</b> 選択したコメントの時間へ動画を移動します。
+                    </li>
+                    <li>
+                      <b>NGに追加:</b> 投稿者のIDやコメント本文をNGリストに追加します。
+                    </li>
+                    <li>
+                      <b>コピー:</b> コメントの内容や投稿時間をコピーします。
+                    </li>
+                  </ul>
+                }
+              />
+              <FeatureItem
+                title="End Card (次回予告)"
+                icon={<Tv size={24} />}
+                desc="再生終了時、自動的に次の動画や関連情報のプレビューを表示します。サイドバーの設定パネルから表示時間や内容をカスタマイズできます。"
+              />
+              <FeatureItem
+                title="NG機能"
+                icon={<BanIcon size={24} />}
+                desc="特定のIDや単語を含むコメントを非表示にできます。サイドバーの「NG」タブから設定可能です。正規表現を使用した高度なフィルタリングもサポートしています。"
+              />
+              <FeatureItem
+                title="オートスクロール"
+                icon={<ArrowDownIcon size={24} />}
+                desc="動画の再生に合わせて、サイドバーのコメントリストを自動的にスクロールします。手動でスクロールリストを操作すると一時的に解除され、右下の矢印ボタンで再開できます。"
+              />
+              <FeatureItem
+                title="AA (アスキーアート) 自動検出"
+                icon={<MessageSquareIcon size={24} />}
+                desc="コメント内のアスキーアートを自動検出し、崩れないように最適なフォントとサイズで表示します。「設定」パネルから検出モード（自動/手動/OFF）を切り替え可能です。"
+              />
+              <FeatureItem
+                title="???モード"
+                icon={<TrophyIcon size={24} />}
+                desc="特定の条件を満たすと開放される隠し機能です。????「勘ぐれ、お前」"
+              />
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="space-y-8 animate-fade-in">
+              <section>
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Sidebar size={20} className="text-purple-400" />
+                  サイドバー設定 (設定パネル)
+                </h3>
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700/50">
+                    <h4 className="font-bold text-white text-sm mb-2 flex items-center gap-2">
+                      <FileText size={16} className="text-blue-400" />
+                      ログファイル管理
+                    </h4>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-400 ml-2">
+                      <li>
+                        <b>ドラッグ＆ドロップ:</b>{' '}
+                        複数のログファイルをサイドバー上部にドロップして追加できます。
+                      </li>
+                      <li>
+                        <b>時間調整 (Offset):</b>{' '}
+                        各ログの開始時間を個別に調整し、動画との同期ズレを修正できます。
+                      </li>
+                      <li>
+                        <b>日付設定:</b>{' '}
+                        コメントの日時と動画の再生時間を合わせるための基準日時を設定できます。
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700/50">
+                    <h4 className="font-bold text-white text-sm mb-2 flex items-center gap-2">
+                      <CheckSquare size={16} className="text-green-400" />
+                      表示オプション
+                    </h4>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-400 ml-2">
+                      <li>
+                        <b>ツリー表示:</b>{' '}
+                        アンカー（&gt;&gt;1など）付きのコメントをスレッド形式で階層表示します。
+                      </li>
+                      <li>
+                        <b>スレッドタイトル表示:</b>{' '}
+                        ログファイルに含まれるスレッドタイトルをコメント一覧に表示します。
+                      </li>
+                      <li>
+                        <b>画像表示:</b>{' '}
+                        コメントに含まれる画像URLをサムネイルとして表示するか設定できます。
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700/50">
+                    <h4 className="font-bold text-white text-sm mb-2 flex items-center gap-2">
+                      <Download size={16} className="text-yellow-400" />
+                      エクスポート (プロジェクト保存)
+                    </h4>
+                    <p className="text-sm text-gray-400">
+                      読み込んだログ、動画パス、設定（NG、同期情報など）をまとめて1つのJSONファイルとして保存します。
+                      <br />
+                      後でファイルを読み込むだけで、再生状態を完全に復元できます。
+                      <br />
+                      <span className="text-xs opacity-70">
+                        ショートカット: Ctrl + S (上書き保存)
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Settings size={20} className="text-blue-400" />
+                  弾幕設定
+                </h3>
+                <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700/50">
+                  <p className="mb-4 text-sm text-gray-400">
+                    ヘッダーの歯車アイコン横の弾幕ボタン、または{' '}
+                    <kbd className="bg-gray-800 px-1 rounded">D</kbd>{' '}
+                    キー長押しで詳細設定を開けます。
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <SettingItem
+                      label="Duration (流れる時間)"
+                      desc="弾幕が画面を横切るスピードを調整します。数値が小さいほど速くなります。"
+                    />
+                    <SettingItem
+                      label="フォントサイズ"
+                      desc="弾幕の文字サイズを調整します。AAモード時は自動調整されます。"
+                    />
+                    <SettingItem
+                      label="不透明度"
+                      desc="弾幕の透明度を設定します。動画が見えにくい場合は下げてください。"
+                    />
+                    <SettingItem
+                      label="表示領域"
+                      desc="画面の上部何％に弾幕を表示するか制限できます（例：上半分だけなど）。"
+                    />
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
           {activeTab === 'shortcuts' && (
             <div className="animate-fade-in">
               <h3 className="text-lg font-bold text-white mb-6">キーボードショートカット一覧</h3>
@@ -180,31 +340,6 @@ const HelpModal = ({ isOpen, onClose, onStartTutorial }) => {
                 <ShortcutItem k="Ctrl + S" desc="プロジェクトの上書き保存" />
                 <ShortcutItem k="Ctrl + R" desc="アプリの再読み込み" />
               </div>
-            </div>
-          )}
-
-          {activeTab === 'features' && (
-            <div className="space-y-8 animate-fade-in">
-              <FeatureItem
-                title="NG機能"
-                icon={<BanIcon />}
-                desc="特定のIDや単語を含むコメントを非表示にできます。サイドバーの「NG」タブから設定可能です。"
-              />
-              <FeatureItem
-                title="オートスクロール"
-                icon={<ArrowDownIcon />}
-                desc="動画の再生に合わせて、サイドバーのコメントリストを自動的にスクロールします。手動でスクロールすると一時的に解除されます。"
-              />
-              <FeatureItem
-                title="???モード"
-                icon={<TrophyIcon />}
-                desc="特定の条件を満たすと開放される隠し機能です。????「勘ぐれ、お前」"
-              />
-              <FeatureItem
-                title="AA (アスキーアート) 自動検出"
-                icon={<MessageSquareIcon />}
-                desc="コメント内のアスキーアートを自動検出し、崩れないようにフォントを調整して表示します。"
-              />
             </div>
           )}
 
@@ -276,7 +411,7 @@ const HelpModal = ({ isOpen, onClose, onStartTutorial }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-700 bg-gray-900/50 flex justify-end">
+        <div className="px-6 py-3 border-t border-gray-700 bg-gray-900/50 flex justify-end">
           <button
             onClick={onClose}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium"
@@ -309,74 +444,11 @@ const FeatureItem = ({ title, icon, desc }) => (
   </div>
 );
 
-// Lucide Icons Wrappers for uniformity
-const BanIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <path d="m4.9 4.9 14.2 14.2" />
-  </svg>
-);
-const ArrowDownIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 8v8" />
-    <path d="m8 12 4 4 4-4" />
-  </svg>
-);
-const TrophyIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-    <path d="M4 22h16" />
-    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-  </svg>
-);
-const MessageSquareIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
+const SettingItem = ({ label, desc }) => (
+  <div className="p-3 bg-gray-900/40 rounded border border-gray-700/50">
+    <h4 className="font-bold text-white text-sm mb-1">{label}</h4>
+    <p className="text-xs text-gray-400 leading-relaxed">{desc}</p>
+  </div>
 );
 
 export default HelpModal;
