@@ -182,6 +182,51 @@ const DesktopLayout = ({
   onSetEndCard,
 }) => {
   const [showDanmakuSettings, setShowDanmakuSettings] = React.useState(false);
+
+  const {
+    playerRef,
+    videoSrc,
+    videoFileName,
+    isPlaying: playerIsPlaying, // alias to avoid conflict if any (though isPlaying is not in props? Wait, togglePlay is. isPlaying is not.)
+    volume,
+    isMuted,
+    handleDuration,
+    handleVolumeChange,
+    toggleMute,
+    handleFileChange: playerHandleFileChange,
+    loadVideoFromFile,
+    videoRef,
+  } = player;
+
+  // HLS Quality State
+  const [qualityLevels, setQualityLevels] = React.useState([]);
+  const [currentLevel, setCurrentLevel] = React.useState(-1);
+  const [manualQuality, setManualQuality] = React.useState(-1);
+  const [retryWithProxy, setRetryWithProxy] = React.useState(false);
+
+  // Reset proxy retry when video source changes
+  React.useEffect(() => {
+    setRetryWithProxy(false);
+  }, [videoSrc]);
+
+  const handleLevelsLoaded = React.useCallback((levels) => {
+    setQualityLevels(levels);
+  }, []);
+
+  const handleLevelChange = React.useCallback((level) => {
+    setCurrentLevel(level);
+  }, []);
+
+  const handleQualitySelect = React.useCallback(
+    (levelIndex) => {
+      setManualQuality(levelIndex);
+      if (playerRef.current && playerRef.current.setLevel) {
+        playerRef.current.setLevel(levelIndex);
+      }
+    },
+    [playerRef]
+  );
+
   const handleSetEndCardPreview = React.useCallback(
     (logTime) => {
       // Use Log Time directly as requested
@@ -202,20 +247,7 @@ const DesktopLayout = ({
     [handleSettingsChange] // Removed cmSystem dependency for this function
   );
 
-  const {
-    playerRef,
-    videoSrc,
-    videoFileName,
-    isPlaying: playerIsPlaying, // alias to avoid conflict if any (though isPlaying is not in props? Wait, togglePlay is. isPlaying is not.)
-    volume,
-    isMuted,
-    handleDuration,
-    handleVolumeChange,
-    toggleMute,
-    handleFileChange: playerHandleFileChange,
-    loadVideoFromFile,
-    videoRef,
-  } = player;
+  // Player de-structuring moved to top
 
   // DEBUG: Monitor End Card Settings prop
   // DEBUG: Monitor End Card Settings prop
@@ -406,6 +438,38 @@ const DesktopLayout = ({
                     volume={volume}
                     muted={isMuted}
                     onDuration={(d) => handleDuration(d)}
+                    // TVer等の認証が必要なサービスは拡張機能プロキシを使用
+                    useExtensionProxy={
+                      retryWithProxy ||
+                      videoSrc.includes('tver.jp') ||
+                      videoSrc.includes('stream.tver') ||
+                      videoSrc.includes('streaks.jp') || // TVer CDN
+                      videoSrc.includes('nhkplus') ||
+                      videoSrc.includes('fod-sp.fujitv')
+                    }
+                    referer={(() => {
+                      // 優先順位を明確に定義
+                      // 1. 特定サービス向けの固定Referer
+                      if (videoSrc.includes('tver') || videoSrc.includes('streaks.jp')) {
+                        return 'https://tver.jp/';
+                      }
+                      if (videoSrc.includes('nhkplus')) {
+                        return 'https://www.nhk.jp/';
+                      }
+                      // 2. 拡張機能から渡されたReferer（最優先）
+                      if (player.referer) {
+                        // console.log('[DesktopLayout] Using player.referer:', player.referer);
+                        return player.referer;
+                      }
+                      // 3. プロキシ再試行時のフォールバック
+                      if (retryWithProxy) {
+                        const fallback = new URL(videoSrc).origin + '/';
+                        // console.log('[DesktopLayout] Using retryWithProxy fallback:', fallback);
+                        return fallback;
+                      }
+                      // 4. それ以外は空
+                      return '';
+                    })()}
                     onReady={() => {
                       console.log('HLSVideo: Ready');
                       player.setIsReady(true);
@@ -431,8 +495,27 @@ const DesktopLayout = ({
                     onPlay={() => player.setPlayingState(true)}
                     onError={(e) => {
                       console.error('HLSVideo: onError', e);
-                      alert('HLS再生エラー: ストリームを読み込めませんでした');
+                      // HLS Network Error (CORS code 0 or HTTP 403) -> Retry with proxy
+                      const responseCode = e?.response?.code;
+                      if (
+                        e?.type === 'networkError' &&
+                        (responseCode === 0 || responseCode === 403)
+                      ) {
+                        console.log(
+                          `DesktopLayout: Detected network error (code: ${responseCode}), enabling extension proxy...`
+                        );
+                        setRetryWithProxy(true);
+                        return;
+                      }
+                      // If already using proxy or other error, show alert (debounce/filtering needed?)
+                      if (!retryWithProxy) {
+                        alert(
+                          'HLS再生エラー: ストリームを読み込めませんでした。拡張機能を再確認してください。'
+                        );
+                      }
                     }}
+                    onLevelsLoaded={handleLevelsLoaded}
+                    onLevelChange={handleLevelChange}
                   />
                 ) : videoSrc.startsWith('blob:') ? (
                   /* Native Video for Local Files */
@@ -676,6 +759,11 @@ const DesktopLayout = ({
                       // So logSystem.commentDensity is the way.
                       onScrub={onScrub}
                       onToggleSettings={() => setShowDanmakuSettings((prev) => !prev)}
+                      // Quality Props
+                      qualityLevels={qualityLevels}
+                      currentLevel={currentLevel}
+                      manualQuality={manualQuality}
+                      onQualitySelect={handleQualitySelect}
                     />
                   </>
                 )}

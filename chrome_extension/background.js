@@ -5,15 +5,45 @@
 
 // App URLs (development and production)
 const APP_URLS = {
-  development: 'http://localhost:5174/',
+  development: 'http://localhost:5173/',
+  developmentAlt: 'http://localhost:5174/',
   production: 'https://yossyaze.github.io/DanmakuPlayer/',
 };
 
 // Detected HLS streams per tab
-const detectedStreams = new Map(); // tabId -> Set of m3u8 URLs
+// 各ストリームは { url, pageTitle, filename, domain } の形式で保存
+const detectedStreams = new Map(); // tabId -> Array of stream objects
 
 // Get all app URL patterns for tab query
+// Get all app URL patterns for tab query
 const getAppUrlPatterns = () => Object.values(APP_URLS).map((url) => url + '*');
+
+// Helper to log to the DanmakuPlayer app tab(s)
+async function logToTab(message) {
+  try {
+    // 開発中と本番環境の両方のURLパターンでタブを検索
+    const patterns = getAppUrlPatterns();
+    const tabs = await chrome.tabs.query({ url: patterns });
+
+    // 見つかったすべてのタブにログを送信
+    for (const tab of tabs) {
+      if (tab.id) {
+        chrome.tabs
+          .sendMessage(tab.id, {
+            type: 'EXTENSION_LOG',
+            message: `[Extension] ${message}`,
+          })
+          .catch(() => {
+            // エラーは無視（タブが閉じている等）
+          });
+      }
+    }
+    // 念のためバックグラウンドコンソールにも出す
+    console.log(`[LogToTab] ${message}`);
+  } catch (err) {
+    console.error('logToTab failed:', err);
+  }
+}
 
 // Create Context Menu on install
 chrome.runtime.onInstalled.addListener(() => {
@@ -53,21 +83,120 @@ function isHlsUrl(url) {
 }
 
 /**
+ * URLからファイル名を抽出
+ */
+function extractFilename(url) {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    const filename = pathname.split('/').pop() || 'stream';
+    // クエリパラメータを除去
+    return filename.split('?')[0];
+  } catch {
+    return 'stream.m3u8';
+  }
+}
+
+/**
+ * URLからドメインを抽出
+ */
+function extractDomain(url) {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch {
+    return '';
+  }
+}
+
+// Map to store referers by request ID
+const requestReferers = new Map();
+
+/**
+ * Capture Referer header from outgoing requests
+ */
+function onBeforeSendHeaders(details) {
+  if (!isHlsUrl(details.url)) return;
+
+  const refererHeader = details.requestHeaders?.find((h) => h.name.toLowerCase() === 'referer');
+
+  if (refererHeader && refererHeader.value) {
+    requestReferers.set(details.requestId, refererHeader.value);
+    // 冗長になるためコメントアウト解除は慎重に (量が多いため)
+    // console.log(`DanmakuPlayer Helper: Captured Referer for ${details.requestId}: ${refererHeader.value}`);
+  }
+}
+
+/**
  * Handle detected network request
  */
-function onRequestCompleted(details) {
+async function onRequestCompleted(details) {
   if (!isHlsUrl(details.url)) return;
 
   const tabId = details.tabId;
-  if (tabId < 0) return; // Ignore background requests
+  const requestId = details.requestId;
 
-  // Store detected URL
-  if (!detectedStreams.has(tabId)) {
-    detectedStreams.set(tabId, new Set());
+  // Clean up refers for non-tab requests or errors (though this is success handler)
+  // We'll clean up at the end of this function
+
+  if (tabId < 0) {
+    requestReferers.delete(requestId);
+    return; // Ignore background requests
   }
-  detectedStreams.get(tabId).add(details.url);
 
-  console.log('DanmakuPlayer Helper: HLS detected:', details.url);
+  // URLが既に登録済みかチェック
+  if (!detectedStreams.has(tabId)) {
+    detectedStreams.set(tabId, []);
+  }
+  const streams = detectedStreams.get(tabId);
+
+  // 重複チェック前にRefererを取得しておく (同一URLでもRefererが違う可能性は低いが念のため)
+  const capturedReferer = requestReferers.get(requestId);
+  requestReferers.delete(requestId); // cleanup
+
+  if (streams.some((s) => s.url === details.url)) {
+    return; // 重複スキップ
+  }
+
+  // ページタイトルとURLを取得
+  let pageTitle = '';
+  let pageUrl = '';
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    pageTitle = tab.title || '';
+    pageUrl = tab.url || '';
+  } catch {
+    // タブ取得失敗時は空文字
+  }
+
+  // Stream Info
+  // 優先順位: キャプチャしたReferer > タブのURL
+  // Stream Info
+  // 優先順位: キャプチャしたReferer > タブのURL
+  const finalReferer = capturedReferer || pageUrl;
+
+  // Logic Check ログは冗長なため無効化
+  // logToTab(
+  //   `Logic Check: requestId=${requestId}, captured=${capturedReferer}, page=${pageUrl}, final=${finalReferer}`
+  // );
+
+  // ストリーム情報を保存
+  const streamInfo = {
+    url: details.url,
+    pageTitle: pageTitle,
+    pageUrl: finalReferer, // pageUrlフィールドだが実質Refererとして扱う
+    filename: extractFilename(details.url),
+    domain: extractDomain(details.url),
+    detectedAt: Date.now(),
+  };
+  streams.push(streamInfo);
+
+  logToTab(`HLS detected: ${JSON.stringify(streamInfo)}`);
+  // REFERER DEBUG ログは冗長なため無効化
+  // logToTab(`[REFERER DEBUG] URL: ${details.url}`);
+  // logToTab(`[REFERER DEBUG] Detected Referer: ${capturedReferer || '(none)'}`);
+  // logToTab(`[REFERER DEBUG] Page URL: ${pageUrl}`);
+  // logToTab(`[REFERER DEBUG] Applied Referer: ${finalReferer}`);
 
   // Update context menu
   updateHlsContextMenu(tabId);
@@ -81,7 +210,7 @@ function onRequestCompleted(details) {
  */
 function updateBadge(tabId) {
   const streams = detectedStreams.get(tabId);
-  const count = streams ? streams.size : 0;
+  const count = streams ? streams.length : 0;
 
   if (count > 0) {
     chrome.action.setBadgeText({ tabId, text: count.toString() });
@@ -97,7 +226,7 @@ function updateBadge(tabId) {
 async function updateHlsContextMenu(tabId) {
   const streams = detectedStreams.get(tabId);
 
-  if (!streams || streams.size === 0) {
+  if (!streams || streams.length === 0) {
     chrome.contextMenus.update('hls-streams', {
       title: 'HLSストリーム (未検出)',
       enabled: false,
@@ -107,12 +236,11 @@ async function updateHlsContextMenu(tabId) {
 
   // Update parent menu
   chrome.contextMenus.update('hls-streams', {
-    title: `HLSストリーム (${streams.size}件検出)`,
+    title: `HLSストリーム (${streams.length}件検出)`,
     enabled: true,
   });
 
   // Remove old child items
-  const streamArray = Array.from(streams);
   for (let i = 0; i < 10; i++) {
     try {
       await chrome.contextMenus.remove(`hls-stream-${i}`);
@@ -122,21 +250,40 @@ async function updateHlsContextMenu(tabId) {
   }
 
   // Add new child items (max 10)
-  streamArray.slice(0, 10).forEach((url, index) => {
-    const shortUrl = url.length > 60 ? url.substring(0, 60) + '...' : url;
+  streams.slice(0, 10).forEach((streamInfo, index) => {
+    // ページタイトルがあれば表示、なければファイル名
+    const displayName = streamInfo.pageTitle
+      ? `${streamInfo.pageTitle.substring(0, 30)} - ${streamInfo.filename}`
+      : streamInfo.filename;
+    const title = displayName.length > 60 ? displayName.substring(0, 57) + '...' : displayName;
     chrome.contextMenus.create({
       id: `hls-stream-${index}`,
       parentId: 'hls-streams',
-      title: shortUrl,
+      title: title,
       contexts: ['page'],
     });
   });
 }
 
 // Start listening for network requests
+// onBeforeSendHeaders needs access to requestHeaders
+chrome.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, { urls: ['<all_urls>'] }, [
+  'requestHeaders',
+  'extraHeaders',
+]);
+
 chrome.webRequest.onCompleted.addListener(onRequestCompleted, {
   urls: ['<all_urls>'],
 });
+
+chrome.webRequest.onErrorOccurred.addListener(
+  (details) => {
+    if (requestReferers.has(details.requestId)) {
+      requestReferers.delete(details.requestId);
+    }
+  },
+  { urls: ['<all_urls>'] }
+);
 
 // Clean up when tab is closed
 chrome.tabs.onRemoved.addListener((tabId) => {
@@ -155,12 +302,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 // Open in DanmakuPlayer
 // ========================================
 
-/**
- * Open URL in DanmakuPlayer
- * @param {string} url - The URL to import
- * @param {boolean} preferProduction - Prefer production URL over localhost
- */
-async function openInPlayer(url, preferProduction = false) {
+async function openInPlayer(url, preferProduction = false, referer = '') {
   if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
     console.warn('DanmakuPlayer Helper: Invalid URL:', url);
     return;
@@ -181,6 +323,7 @@ async function openInPlayer(url, preferProduction = false) {
         await chrome.tabs.sendMessage(tab.id, {
           type: 'IMPORT_URL',
           url: url,
+          referer: referer,
         });
         console.log('DanmakuPlayer Helper: Sent URL to existing tab:', url);
       } catch {
@@ -192,6 +335,7 @@ async function openInPlayer(url, preferProduction = false) {
             await chrome.tabs.sendMessage(tab.id, {
               type: 'IMPORT_URL',
               url: url,
+              referer: referer,
             });
           } catch (retryError) {
             console.error('DanmakuPlayer Helper: Failed to send after reload:', retryError);
@@ -201,7 +345,10 @@ async function openInPlayer(url, preferProduction = false) {
     } else {
       // Open new tab
       const baseUrl = preferProduction ? APP_URLS.production : APP_URLS.development;
-      const target = `${baseUrl}?import=${encodeURIComponent(url)}`;
+      let target = `${baseUrl}?import=${encodeURIComponent(url)}`;
+      if (referer) {
+        target += `&referer=${encodeURIComponent(referer)}`;
+      }
       await chrome.tabs.create({ url: target });
       console.log('DanmakuPlayer Helper: Opened new tab with URL:', target);
     }
@@ -219,11 +366,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     // Handle HLS stream selection
     const index = parseInt(info.menuItemId.replace('hls-stream-', ''));
     const streams = detectedStreams.get(tab.id);
-    if (streams) {
-      const streamArray = Array.from(streams);
-      if (streamArray[index]) {
-        openInPlayer(streamArray[index]);
-      }
+    if (streams && streams[index]) {
+      openInPlayer(streams[index].url, false, streams[index].pageUrl);
     }
   }
 });
@@ -233,7 +377,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 // Listen for messages from content scripts or popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'OPEN_IN_PLAYER') {
-    openInPlayer(message.url, message.preferProduction);
+    openInPlayer(message.url, message.preferProduction, message.referer);
     sendResponse({ success: true });
   } else if (message.type === 'FETCH_URL') {
     // Fetch URL via extension (bypasses CORS)
@@ -248,16 +392,134 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ error: `HTTP ${response.status}` });
           return;
         }
-        const arrayBuffer = await response.arrayBuffer();
-        // Convert to base64 for transfer
-        const base64 = btoa(
-          new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-        );
-        sendResponse({
-          data: base64,
-          contentType: response.headers.get('content-type'),
-        });
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+          const base64data = reader.result.split(',')[1];
+          sendResponse({
+            data: base64data,
+            contentType: response.headers.get('content-type'),
+          });
+        };
+        reader.onerror = () => {
+          sendResponse({ error: 'Failed to convert response to base64' });
+        };
       } catch (error) {
+        sendResponse({ error: error.message });
+      }
+    })();
+    return true; // Keep channel open for async response
+  } else if (message.type === 'FETCH_HLS') {
+    // HLSリクエストをCookie付きでプロキシ（TVer等の認証付きストリーム用）
+    (async () => {
+      try {
+        // URLからドメインを抽出
+        const url = new URL(message.url);
+        const domain = url.hostname;
+
+        // 関連するドメインの Cookie を取得
+        // リクエスト先ドメインのCookieは常に取得対象とする
+        const domains = [domain];
+
+        // TVer等の特定サイト向けの追加ドメイン設定
+        if (domain.includes('streaks.jp')) {
+          domains.push('tver.jp');
+          domains.push('.tver.jp');
+        }
+
+        let cookieString = '';
+        for (const d of domains) {
+          try {
+            const cookies = await chrome.cookies.getAll({ domain: d });
+            const cookieParts = cookies.map((c) => `${c.name}=${c.value}`);
+            if (cookieParts.length > 0) {
+              cookieString += (cookieString ? '; ' : '') + cookieParts.join('; ');
+            }
+          } catch (e) {
+            console.log('Cookie fetch failed for domain:', d, e);
+          }
+        }
+
+        console.log('FETCH_HLS: Cookies collected:', cookieString.length, 'chars for', domain);
+
+        const headers = {
+          Accept: '*/*',
+        };
+
+        // Cookie があれば設定
+        if (cookieString) {
+          headers['Cookie'] = cookieString;
+        }
+
+        // Referer があれば declarativeNetRequest でルールを設定（fetchのheadersでは効かないため）
+        if (message.referer) {
+          // ドメインごとのユニークID生成 (簡易ハッシュ)
+          const domainHash = domain.split('').reduce((a, b) => {
+            a = (a << 5) - a + b.charCodeAt(0);
+            return a & a;
+          }, 0);
+          const ruleId = Math.abs(domainHash) + 1;
+
+          // ルール更新
+          const rule = {
+            id: ruleId,
+            priority: 1,
+            action: {
+              type: 'modifyHeaders',
+              requestHeaders: [
+                { header: 'Referer', operation: 'set', value: message.referer },
+                { header: 'Origin', operation: 'set', value: new URL(message.referer).origin },
+              ],
+            },
+            condition: {
+              urlFilter: `||${domain}`,
+              resourceTypes: ['xmlhttprequest', 'other'], // fetchはxmlhttprequestまたはother扱い
+            },
+          };
+
+          await chrome.declarativeNetRequest.updateDynamicRules({
+            removeRuleIds: [ruleId],
+            addRules: [rule],
+          });
+          console.log(
+            `FETCH_HLS: Updated DNR rule ${ruleId} for ${domain} -> Referer: ${message.referer}`
+          );
+          console.log(
+            `DanmakuPlayer Helper: [PROXY DEBUG] Applying Referer to Proxy Request: ${message.referer}`
+          );
+        } else {
+          console.log(`DanmakuPlayer Helper: [PROXY DEBUG] No Referer to apply for ${message.url}`);
+        }
+
+        const response = await fetch(message.url, {
+          credentials: 'include',
+          headers,
+          referrer: message.referer, // 念のため指定（効かない可能性大）
+          referrerPolicy: 'unsafe-url', // これも念のため
+        });
+
+        if (!response.ok) {
+          console.error('FETCH_HLS: HTTP error', response.status, message.url);
+          sendResponse({ error: `HTTP ${response.status}` });
+          return;
+        }
+
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+          const base64data = reader.result.split(',')[1];
+          sendResponse({
+            data: base64data,
+            contentType: response.headers.get('content-type'),
+          });
+        };
+        reader.onerror = () => {
+          sendResponse({ error: 'Failed to convert response to base64' });
+        };
+      } catch (error) {
+        console.error('FETCH_HLS: Error', error);
         sendResponse({ error: error.message });
       }
     })();
@@ -265,25 +527,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.type === 'GET_DETECTED_STREAMS') {
     const tabId = sender.tab?.id || message.tabId;
     const streams = detectedStreams.get(tabId);
-    sendResponse({ streams: streams ? Array.from(streams) : [] });
+    // ストリーム情報オブジェクト配列をそのまま返す
+    sendResponse({ streams: streams || [] });
   } else if (message.type === 'DOM_URLS_FOUND') {
     // Handle URLs found from DOM scanning
     const tabId = sender.tab?.id;
     if (tabId && message.urls && message.urls.length > 0) {
       if (!detectedStreams.has(tabId)) {
-        detectedStreams.set(tabId, new Set());
+        detectedStreams.set(tabId, []);
       }
+      const streams = detectedStreams.get(tabId);
+      let addedCount = 0;
       message.urls.forEach((url) => {
-        detectedStreams.get(tabId).add(url);
+        // 重複チェック
+        if (!streams.some((s) => s.url === url)) {
+          streams.push({
+            url: url,
+            pageTitle: message.pageTitle || '',
+            filename: extractFilename(url),
+            domain: extractDomain(url),
+            detectedAt: Date.now(),
+          });
+          addedCount++;
+        }
       });
-      console.log(
-        'DanmakuPlayer Helper: DOM scan added',
-        message.urls.length,
-        'URLs for tab',
-        tabId
-      );
-      updateHlsContextMenu(tabId);
-      updateBadge(tabId);
+      if (addedCount > 0) {
+        console.log('DanmakuPlayer Helper: DOM scan added', addedCount, 'URLs for tab', tabId);
+        updateHlsContextMenu(tabId);
+        updateBadge(tabId);
+      }
     }
     sendResponse({ success: true });
   } else if (message.type === 'CONTENT_SCRIPT_READY') {

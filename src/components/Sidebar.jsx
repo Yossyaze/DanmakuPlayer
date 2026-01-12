@@ -1275,33 +1275,33 @@ const Sidebar = ({
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
                       <input
                         type="checkbox"
                         checked={showThreadTitle}
                         onChange={(e) => setShowThreadTitle(e.target.checked)}
-                        className="rounded bg-gray-700 border-gray-600"
+                        className="rounded bg-gray-700 border-gray-600 cursor-pointer"
                       />{' '}
                       スレッドタイトルを表示
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
                       <input
                         type="checkbox"
                         checked={enableTreeView}
                         onChange={(e) => setEnableTreeView(e.target.checked)}
-                        className="rounded bg-gray-700 border-gray-600"
+                        className="rounded bg-gray-700 border-gray-600 cursor-pointer"
                       />{' '}
                       アンカーをツリー表示 (引用)
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
                       <input
                         type="checkbox"
                         checked={showImages}
                         onChange={(e) => setShowImages(e.target.checked)}
-                        className="rounded bg-gray-700 border-gray-600"
+                        className="rounded bg-gray-700 border-gray-600 cursor-pointer"
                       />{' '}
                       画像URLをインライン表示
-                    </label>
+                    </div>
                     {showImages && (
                       <div className="flex items-center gap-2 text-sm text-gray-400 ml-5"></div>
                     )}

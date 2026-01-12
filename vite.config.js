@@ -88,6 +88,39 @@ export default defineConfig({
       },
     },
     {
+      name: 'extension-logger-middleware',
+      configureServer(server) {
+        server.middlewares.use('/__extension_log', (req, res, next) => {
+          if (req.method === 'POST') {
+            let body = '';
+            req.on('data', (chunk) => {
+              body += chunk.toString();
+            });
+            req.on('end', () => {
+              try {
+                const data = JSON.parse(body);
+                const logEntry = `[${data.timestamp}] ${data.message}\n`;
+
+                const logPath = path.resolve(process.cwd(), 'extension.log');
+
+                fs.appendFile(logPath, logEntry, (err) => {
+                  if (err) console.error('Failed to write to extension log:', err);
+                });
+
+                res.statusCode = 200;
+                res.end('Logged');
+              } catch {
+                res.statusCode = 500;
+                res.end('Error');
+              }
+            });
+          } else {
+            next();
+          }
+        });
+      },
+    },
+    {
       name: 'reset-logs-middleware',
       configureServer(server) {
         server.middlewares.use('/__reset_logs', (req, res, next) => {
@@ -96,6 +129,7 @@ export default defineConfig({
 
             const errorLogPath = path.resolve(process.cwd(), 'browser-error.log');
             const debugLogPath = path.resolve(process.cwd(), 'debug.log');
+            const extensionLogPath = path.resolve(process.cwd(), 'extension.log');
 
             const header = `# Log Reset at ${timestamp}\n`;
 
@@ -105,6 +139,10 @@ export default defineConfig({
 
             fs.writeFile(debugLogPath, header, (err) => {
               if (err) console.error('Failed to reset debug log:', err);
+            });
+
+            fs.writeFile(extensionLogPath, header, (err) => {
+              if (err) console.error('Failed to reset extension log:', err);
             });
 
             res.statusCode = 200;

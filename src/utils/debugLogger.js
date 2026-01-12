@@ -65,3 +65,24 @@ export const initDebugLogger = () => {
 
   console.log('[DebugLogger] Debug logging initialized. Logs sent to /__debug_log');
 };
+// Send extension log to server
+export const sendExtensionLog = (message) => {
+  try {
+    const timestamp = new Date().toISOString();
+    fetch('/__extension_log', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        timestamp,
+        message,
+      }),
+      keepalive: true,
+    }).catch(() => {
+      // Ignore errors when backend is not available
+    });
+  } catch (e) {
+    // Failsafe
+  }
+};

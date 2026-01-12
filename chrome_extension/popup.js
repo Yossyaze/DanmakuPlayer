@@ -35,27 +35,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     hlsList.innerHTML = '<p class="empty-message">HLSストリームが検出されていません</p>';
   } else {
     hlsList.innerHTML = streams
-      .map((url) => {
+      .map((streamInfo) => {
+        // streamInfo が文字列（旧形式）かオブジェクト（新形式）かを判定
+        const isObject = typeof streamInfo === 'object' && streamInfo !== null;
+        const url = isObject ? streamInfo.url : streamInfo;
+        const pageTitle = isObject ? streamInfo.pageTitle : '';
+        const filename = isObject
+          ? streamInfo.filename
+          : url.split('/').pop()?.split('?')[0] || 'stream';
+        const domain = isObject ? streamInfo.domain : '';
+
         const isBlob = url.startsWith('blob:');
-        const shortUrl = url.length > 50 ? '...' + url.slice(-47) : url;
         const icon = isBlob ? '📦' : '🎬';
-        const label = isBlob ? '(Blob - コピーのみ)' : '';
+
+        // 表示名を構築
+        let displayName = '';
+        if (pageTitle) {
+          // ページタイトルが30文字を超える場合は省略
+          const shortTitle = pageTitle.length > 30 ? pageTitle.substring(0, 27) + '...' : pageTitle;
+          displayName = shortTitle;
+        }
+
+        // pageUrl を referer として使用
+        const referer = isObject && streamInfo.pageUrl ? streamInfo.pageUrl : '';
+
         return `
-                <div class="hls-item ${
-                  isBlob ? 'blob-url' : ''
-                }" data-url="${encodeURIComponent(url)}" data-blob="${isBlob}">
-                    <span class="icon" title="${
-                      isBlob ? 'Blob URL (再生不可)' : 'ストリームURL'
-                    }">${icon}</span>
-                    <span class="url" title="${url}">${shortUrl}${label ? ' ' + label : ''}</span>
-                    <button class="copy-btn" title="URLをコピー">📋</button>
-                    ${
-                      isBlob
-                        ? ''
-                        : '<button class="open-btn" title="DanmakuPlayerで開く">▶️</button>'
-                    }
+          <div class="hls-item ${isBlob ? 'blob-url' : ''}" data-url="${encodeURIComponent(url)}" data-blob="${isBlob}" data-referer="${encodeURIComponent(referer)}">
+            <div class="hls-item-main">
+              <span class="icon" title="${isBlob ? 'Blob URL (再生不可)' : 'ストリームURL'}">${icon}</span>
+              <div class="hls-item-info">
+                ${displayName ? `<div class="hls-title" title="${pageTitle}">${displayName}</div>` : ''}
+                <div class="hls-filename" title="${url}">
+                  ${filename}${domain ? ` <span class="hls-domain">(${domain})</span>` : ''}
                 </div>
-            `;
+              </div>
+            </div>
+            <div class="hls-item-actions">
+              <button class="copy-btn" title="URLをコピー">📋</button>
+              ${isBlob ? '' : '<button class="open-btn" title="DanmakuPlayerで開く">▶️</button>'}
+            </div>
+          </div>
+        `;
       })
       .join('');
 
@@ -65,11 +85,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.stopPropagation();
         const item = btn.closest('.hls-item');
         const url = decodeURIComponent(item.dataset.url);
+        const referer = item.dataset.referer ? decodeURIComponent(item.dataset.referer) : '';
         const preferProduction = document.getElementById('prefer-production').checked;
         await chrome.runtime.sendMessage({
           type: 'OPEN_IN_PLAYER',
           url,
           preferProduction,
+          referer,
         });
         window.close();
       });
@@ -100,14 +122,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Add click handler for entire row (also opens)
     hlsList.querySelectorAll('.hls-item').forEach((item) => {
       item.addEventListener('click', async (e) => {
-        // Don't trigger if clicking a button
+        // Don't trigger if clicking a button or if it's a blob URL
         if (e.target.closest('button')) return;
+        if (item.dataset.blob === 'true') return;
+
         const url = decodeURIComponent(item.dataset.url);
+        const referer = item.dataset.referer ? decodeURIComponent(item.dataset.referer) : '';
         const preferProduction = document.getElementById('prefer-production').checked;
         await chrome.runtime.sendMessage({
           type: 'OPEN_IN_PLAYER',
           url,
           preferProduction,
+          referer,
         });
         window.close();
       });

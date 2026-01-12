@@ -9,6 +9,7 @@ export const usePlayer = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [videoFileName, setVideoFileName] = useState('');
   const [videoFilePath, setVideoFilePath] = useState(''); // Full absolute path (for compatibility with Desktop version)
+  const [referer, setReferer] = useState(''); // Referer for HLS streams (e.g. from extension)
   const [isReady, setIsReady] = useState(false); // New: Track player readiness
 
   const isPlayingRef = useRef(false);
@@ -142,5 +143,7 @@ export const usePlayer = () => {
     setIsReady,
     setPlayerInstance,
     isPlayingRef, // Expose ref
+    referer,
+    setReferer,
   };
 };

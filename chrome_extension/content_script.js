@@ -81,6 +81,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       {
         type: 'DANMAKU_IMPORT',
         url: message.url,
+        referer: message.referer,
         source: 'danmaku-player-helper',
       },
       '*'
@@ -92,6 +93,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const urls = extractVideoUrlsFromDom();
     console.log('DanmakuPlayer Helper: DOM scan found', urls.length, 'URLs');
     sendResponse({ urls });
+  } else if (message.type === 'EXTENSION_LOG') {
+    // Forward log to window
+    window.postMessage(
+      {
+        type: 'EXTENSION_LOG',
+        message: message.message,
+        source: 'danmaku-player-helper',
+      },
+      '*'
+    );
   }
   return true; // Keep message channel open
 });
@@ -143,6 +154,62 @@ window.addEventListener('message', async (event) => {
     window.postMessage(
       {
         type: 'DANMAKU_FETCH_RESPONSE',
+        requestId,
+        error: error.message,
+      },
+      '*'
+    );
+  }
+});
+
+// Listen for HLS fetch requests (for TVer etc. that need cookies)
+window.addEventListener('message', async (event) => {
+  if (event.source !== window) return;
+  if (event.data?.type !== 'DANMAKU_HLS_FETCH') return;
+
+  const { requestId, url, referer } = event.data;
+  console.log('DanmakuPlayer Helper: HLS Fetch request for:', url);
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: 'FETCH_HLS',
+      url: url,
+      referer: referer,
+    });
+
+    if (response?.error) {
+      window.postMessage(
+        {
+          type: 'DANMAKU_HLS_RESPONSE',
+          requestId,
+          error: response.error,
+        },
+        '*'
+      );
+    } else if (response?.data) {
+      window.postMessage(
+        {
+          type: 'DANMAKU_HLS_RESPONSE',
+          requestId,
+          data: response.data,
+          contentType: response.contentType,
+        },
+        '*'
+      );
+    } else {
+      window.postMessage(
+        {
+          type: 'DANMAKU_HLS_RESPONSE',
+          requestId,
+          error: 'No data received from extension',
+        },
+        '*'
+      );
+    }
+  } catch (error) {
+    window.postMessage(
+      {
+        type: 'DANMAKU_HLS_RESPONSE',
         requestId,
         error: error.message,
       },

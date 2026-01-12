@@ -309,9 +309,47 @@ export const useLogSystem = () => {
     );
   }, []);
 
-  const handleRemoveFile = useCallback((fileId) => {
-    setLoadedFiles((prev) => prev.filter((f) => f.id !== fileId));
-  }, []);
+  const handleRemoveFile = useCallback(
+    (fileId) => {
+      // 1. ファイルリストから削除
+      setLoadedFiles((prev) => prev.filter((f) => f.id !== fileId));
+
+      // 2. 対応するコメントを削除
+      setComments((prev) => {
+        const remaining = prev.filter((c) => c.sourceFileId !== fileId);
+
+        // 3. startDateStr/startTimeStr が空の場合のみ、残りのコメントから再計算
+        if (!startDateStr && !startTimeStr && remaining.length > 0) {
+          // 有効なタイムスタンプを持つコメントを検索
+          const validComments = remaining.filter(
+            (c) => c.rawTime && !isNaN(c.rawTime) && c.rawTime > 0
+          );
+
+          if (validComments.length > 0) {
+            // 最も早いタイムスタンプを検索
+            const earliestTime = Math.min(...validComments.map((c) => c.rawTime));
+            const earliestDate = new Date(earliestTime);
+
+            // 絶対時刻（2000年以降）の場合のみ設定
+            if (earliestDate.getFullYear() >= 2000) {
+              const year = earliestDate.getFullYear();
+              const month = String(earliestDate.getMonth() + 1).padStart(2, '0');
+              const day = String(earliestDate.getDate()).padStart(2, '0');
+              const hours = String(earliestDate.getHours()).padStart(2, '0');
+              const minutes = String(earliestDate.getMinutes()).padStart(2, '0');
+              const seconds = String(earliestDate.getSeconds()).padStart(2, '0');
+
+              setStartDateStr(`${year}-${month}-${day}`);
+              setStartTimeStr(`${hours}:${minutes}:${seconds}`);
+            }
+          }
+        }
+
+        return remaining;
+      });
+    },
+    [startDateStr, startTimeStr]
+  );
 
   const handleReorderFiles = useCallback((fromIndex, toIndex) => {
     setLoadedFiles((prev) => {

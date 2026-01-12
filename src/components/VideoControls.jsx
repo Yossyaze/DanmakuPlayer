@@ -5,6 +5,8 @@ import {
   Pause,
   Play,
   Settings,
+  Sliders, // New
+  Check, // New
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -75,6 +77,11 @@ const VideoControls = ({
   commentDensity = [], // Array of normalized values (0-1)
   onScrub, // New prop for optimized scrubbing (video relative time)
   onToggleSettings, // New prop
+  // Quality Props
+  qualityLevels = [],
+  currentLevel = -1,
+  manualQuality = -1,
+  onQualitySelect,
 }) => {
   const seekContainerRef = useRef(null);
 
@@ -95,6 +102,7 @@ const VideoControls = ({
   const isDraggingRef = useRef(false);
   // const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Removed internal state
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showQualityMenu, setShowQualityMenu] = useState(false); // New state for quality menu
 
   // Watch for fullscreen changes (e.g. user presses Escape)
   useEffect(() => {
@@ -540,7 +548,7 @@ const VideoControls = ({
             </button>
           )}
 
-          {/* Settings Button */}
+          {/* Settings Button (Danmaku) */}
           {dmSettings && setDmSettings && (
             <div className="relative">
               <button
@@ -549,9 +557,68 @@ const VideoControls = ({
                 className={`transition p-1 rounded-full text-white hover:bg-white/10`}
                 title="弾幕設定"
               >
-                <Settings size={20} />
+                <Sliders size={20} />
               </button>
               {/* Popover Removed - Lifted to DesktopLayout */}
+            </div>
+          )}
+
+          {/* Quality Settings Button */}
+          {qualityLevels.length > 0 && onQualitySelect && (
+            <div className="relative">
+              <button
+                onClick={() => setShowQualityMenu(!showQualityMenu)}
+                className={`transition p-1 rounded-full ${
+                  showQualityMenu ? 'text-blue-400 bg-white/10' : 'text-white hover:bg-white/10'
+                }`}
+                title="画質設定"
+              >
+                <Settings size={20} />
+              </button>
+              {/* Quality Menu Popover */}
+              {showQualityMenu && (
+                <div className="absolute bottom-full right-0 mb-2 w-48 bg-black/90 border border-white/20 rounded-lg shadow-xl overflow-hidden backdrop-blur-sm animate-fade-in z-50">
+                  <div className="py-1">
+                    <div className="px-3 py-2 text-xs font-bold text-gray-400 border-b border-white/10 mb-1">
+                      画質を選択
+                    </div>
+                    {/* Auto Option */}
+                    <button
+                      onClick={() => {
+                        onQualitySelect(-1);
+                        setShowQualityMenu(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-white/10 transition-colors ${
+                        manualQuality === -1 ? 'text-blue-400 font-bold' : 'text-white'
+                      }`}
+                    >
+                      <span>
+                        自動
+                        {currentLevel !== -1 && qualityLevels[currentLevel]
+                          ? ` (${qualityLevels[currentLevel].height}p)`
+                          : ''}
+                      </span>
+                      {manualQuality === -1 && <Check size={16} />}
+                    </button>
+                    {/* Quality Levels */}
+                    {qualityLevels.map((level, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          onQualitySelect(index);
+                          setShowQualityMenu(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-white/10 transition-colors ${
+                          manualQuality === index ? 'text-blue-400 font-bold' : 'text-white'
+                        }`}
+                      >
+                        <span>{level.height}p</span>
+                        {manualQuality === index && <Check size={16} />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
