@@ -1,4 +1,5 @@
 import {
+  Check, // New
   Maximize,
   MessageSquare,
   Minimize,
@@ -6,7 +7,6 @@ import {
   Play,
   Settings,
   Sliders, // New
-  Check, // New
   Volume2,
   VolumeX,
 } from 'lucide-react';
@@ -82,6 +82,7 @@ const VideoControls = ({
   currentLevel = -1,
   manualQuality = -1,
   onQualitySelect,
+  forceRender = false, // New prop to force rendering even without videoSrc
 }) => {
   const seekContainerRef = useRef(null);
 
@@ -332,7 +333,7 @@ const VideoControls = ({
     }
   };
 
-  if (!videoSrc) return null;
+  if (!videoSrc && !forceRender) return null;
 
   return (
     <div
@@ -507,9 +508,13 @@ const VideoControls = ({
         </div>
       )}
 
-      <div className="flex items-center justify-between px-4 pb-4 pt-2">
+      <div id="video-controls-bar" className="flex items-center justify-between px-4 pb-4 pt-2">
         <div className="flex items-center gap-4">
-          <button onClick={togglePlay} className="hover:text-blue-400 transition text-white">
+          <button
+            id="btn-play"
+            onClick={togglePlay}
+            className="hover:text-blue-400 transition text-white"
+          >
             {isPlaying ? <Pause size={24} /> : <Play size={24} />}
           </button>
           <div className="flex items-center gap-2 group/vol">
@@ -538,6 +543,7 @@ const VideoControls = ({
           {/* Danmaku Toggle */}
           {setShowDanmaku && (
             <button
+              id="btn-danmaku-toggle"
               onClick={() => setShowDanmaku(!showDanmaku)}
               className={`transition p-1 rounded-full ${
                 showDanmaku ? 'text-white bg-blue-500' : 'text-white/50 hover:bg-white/10'
@@ -552,6 +558,7 @@ const VideoControls = ({
           {dmSettings && setDmSettings && (
             <div className="relative">
               <button
+                id="btn-settings"
                 ref={settingsBtnRef}
                 onClick={onToggleSettings}
                 className={`transition p-1 rounded-full text-white hover:bg-white/10`}

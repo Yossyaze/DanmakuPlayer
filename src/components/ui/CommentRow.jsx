@@ -76,8 +76,7 @@ const CommentRow = React.memo(
       prevProps.isHighlighted === nextProps.isHighlighted && // Check highlight status
       prevProps.rootTime === nextProps.rootTime && // Check rootTime
       // Ignore fine-grained currentTime changes, only care if it crosses the effective time
-      prevEffectiveTime > prevProps.currentTime ===
-        nextEffectiveTime > nextProps.currentTime &&
+      prevEffectiveTime > prevProps.currentTime === nextEffectiveTime > nextProps.currentTime &&
       prevProps.showThreadTitle === nextProps.showThreadTitle &&
       prevProps.visibleThreadTitles === nextProps.visibleThreadTitles &&
       prevProps.logStartTime === nextProps.logStartTime && // Check logStartTime

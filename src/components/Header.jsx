@@ -56,12 +56,13 @@ const Header = ({
       <div className="flex-1" />
 
       {/* View Mode Toggles */}
-      <div className="flex bg-gray-900 rounded p-1 gap-1 shrink-0">
+      <div id="header-view-toggles" className="flex bg-gray-900 rounded p-1 gap-1 shrink-0">
         {/* Danmaku & Sidebar Toggles - shown only in video mode */}
         {!logOnlyMode && (
           <>
             {/* Toggles */}
             <button
+              id="btn-header-danmaku-toggle"
               onClick={() => setShowDanmaku(!showDanmaku)}
               className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
                 showDanmaku
@@ -73,6 +74,7 @@ const Header = ({
               <MessageSquare size={18} />
             </button>
             <button
+              id="btn-header-sidebar-toggle"
               onClick={() => setShowSidebar(!showSidebar)}
               className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
                 showSidebar
@@ -90,6 +92,7 @@ const Header = ({
 
         {/* View Mode Switch (Video / Log) - Click anywhere to toggle */}
         <div
+          id="header-view-mode-switch"
           className="flex bg-black/20 rounded-md p-0.5 border border-gray-700/50 cursor-pointer"
           onClick={() => setLogOnlyMode(!logOnlyMode)}
           title={logOnlyMode ? '動画モードに切り替え (V)' : 'ログ読みモードに切り替え (L)'}
@@ -114,11 +117,15 @@ const Header = ({
       {/* Actions */}
       <div className="flex items-center gap-2 shrink-0">
         {/* Project Actions */}
-        <div className="flex items-center gap-1 bg-gray-900/50 rounded p-1">
+        <div
+          id="header-project-actions"
+          className="flex items-center gap-1 bg-gray-900/50 rounded p-1"
+        >
           <button
             onClick={onSave}
             className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
             title="上書き保存 (Ctrl+S)"
+            id="btn-header-save"
           >
             <Save size={18} />
           </button>
@@ -126,6 +133,7 @@ const Header = ({
             onClick={onSaveAs}
             className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
             title="名前をつけて保存"
+            id="btn-header-save-as"
           >
             <FilePen size={18} />
           </button>
@@ -133,6 +141,7 @@ const Header = ({
             onClick={onImport}
             className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
             title="プロジェクトを読み込む"
+            id="btn-header-import"
           >
             <FileInput size={18} />
           </button>
@@ -141,6 +150,7 @@ const Header = ({
             onClick={onReset}
             className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded transition-colors"
             title="設定をリセット"
+            id="btn-header-reset"
           >
             <RotateCcw size={18} />
           </button>
@@ -149,10 +159,11 @@ const Header = ({
         <div className="h-6 w-px bg-gray-700 mx-1"></div>
 
         {/* Video Actions */}
-        <div className="flex items-center gap-1">
+        <div id="header-video-actions" className="flex items-center gap-1">
           <label
             className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 rounded cursor-pointer transition-colors"
             title="動画ファイルを開く"
+            id="btn-header-open-file"
           >
             <FileVideo size={18} />
             <input type="file" accept="video/*" className="hidden" onChange={handleFileChange} />
@@ -161,6 +172,7 @@ const Header = ({
             onClick={onOpenUrlModal}
             className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 rounded transition-colors"
             title="動画URLを開く"
+            id="btn-header-open-url"
           >
             <LinkIcon size={18} />
           </button>
@@ -173,6 +185,7 @@ const Header = ({
           onClick={onOpenHelp}
           className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
           title="ヘルプ・チュートリアル"
+          id="btn-header-help"
         >
           <CircleHelp size={18} />
         </button>

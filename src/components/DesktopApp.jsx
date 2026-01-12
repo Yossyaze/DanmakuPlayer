@@ -14,6 +14,7 @@ import HelpModal from '../components/modals/HelpModal';
 import UrlInputModal from '../components/modals/UrlInputModal';
 import VideoRequestModal from '../components/modals/VideoRequestModal';
 import Sidebar from '../components/Sidebar';
+import Tutorial from '../components/Tutorial';
 import AbeModeUnlockCelebration from '../components/ui/AbeModeUnlockCelebration';
 import UserHistoryModal from '../components/UserHistoryModal';
 import VideoControls from '../components/VideoControls';
@@ -58,6 +59,12 @@ const DesktopApp = () => {
 
   // Global Zoomed Image State
   const [zoomedImage, setZoomedImage] = useState(null);
+
+  // Tutorial: 弾幕設定ポップオーバーの強制表示制御
+  const [forceShowDanmakuSettings, setForceShowDanmakuSettings] = useState(undefined);
+
+  // Tutorial: ステップ進行トリガー
+  const [advanceTutorial, setAdvanceTutorial] = useState(0);
 
   // AA Override State (Shared between Sidebar and Overlay)
   const [aaOverrideMap, setAaOverrideMap] = useState({}); // { [commentId]: boolean }
@@ -259,6 +266,28 @@ const DesktopApp = () => {
     endCardSettings,
     setEndCardSettings,
   });
+
+  // --- Tutorial State ---
+  const [runTutorial, setRunTutorial] = useState(false);
+
+  useEffect(() => {
+    const isTutorialCompleted = localStorage.getItem('danmaku_tutorial_completed');
+    if (!isTutorialCompleted) {
+      // Small delay to ensure app is fully mounted
+      setTimeout(() => {
+        setRunTutorial(true);
+      }, 1000);
+    }
+  }, []);
+
+  const handleTutorialFinish = useCallback(() => {
+    setRunTutorial(false);
+    localStorage.setItem('danmaku_tutorial_completed', 'true');
+  }, []);
+
+  const handleStartTutorial = useCallback(() => {
+    setRunTutorial(true);
+  }, []);
 
   // Video URL Input State via Hook (Moved after useAppHandlers to resolve dependency)
   const { videoUrlInput, setVideoUrlInput, showUrlModal, setShowUrlModal, handleVideoUrlSubmit } =
@@ -471,6 +500,8 @@ const DesktopApp = () => {
       type: 'warning',
       confirmText: 'リセット',
       onConfirm: () => {
+        // Also clear tutorial flag to show it again on next visit
+        // localStorage.removeItem('danmaku_tutorial_completed'); // User request: Do not reset tutorial on app reset
         window.location.reload();
       },
       onCancel: closeConfirmModal,
@@ -535,149 +566,179 @@ const DesktopApp = () => {
     }
   };
 
+  // チュートリアルのステップ変更時の処理
+  const handleTutorialStepChange = (index, target) => {
+    // ステップ5（コメント一覧）に来たら設定パネルを閉じる
+    if (target === '#sidebar-comment-list') {
+      setShowSettingsPanel(false);
+      setForceShowDanmakuSettings(false);
+    }
+    // 弾幕設定ポップオーバーステップに来たら開く
+    if (target === '#danmaku-settings-popover') {
+      setForceShowDanmakuSettings(true);
+    }
+    // 設定パネル詳細ステップに来たら設定パネルを開き、弾幕設定ポップオーバーを閉じる
+    if (target === '#sidebar-settings') {
+      setShowSettingsPanel(true);
+      setForceShowDanmakuSettings(false);
+    }
+  };
+
   return (
-    <DesktopLayout
-      containerRef={containerRef}
-      danmakuContainerRef={danmakuContainerRef}
-      progressBarRef={progressBarRef}
-      thumbRef={thumbRef}
-      autoPlayRequestedRef={autoPlayRequestedRef}
-      logScrollPositionsRef={logScrollPositionsRef}
-      showSidebar={showSidebar}
-      setShowSidebar={setShowSidebar}
-      startResizing={startResizing}
-      sidebarWidth={sidebarWidth}
-      logOnlyMode={logOnlyMode}
-      setLogOnlyMode={setLogOnlyMode}
-      showControls={showControls}
-      showDanmaku={showDanmaku}
-      setShowDanmaku={setShowDanmaku}
-      projectName={projectName}
-      projectDirPath={projectDirPath}
-      projectFileHandle={projectFileHandle}
-      player={player}
-      cmSystem={cmSystem}
-      logSystem={logSystem}
-      handleSetCmStart={handleSetCmStart}
-      handleSetCmEnd={handleSetCmEnd}
-      handleSetLogStart={handleSetLogStart}
-      handleAddNgId={handleAddNgId}
-      handleAddNgComment={handleAddNgComment}
-      handleAddNgWord={handleAddNgWord}
-      handleRemoveNgId={handleRemoveNgId}
-      handleRemoveNgComment={handleRemoveNgComment}
-      handleRemoveNgWord={handleRemoveNgWord}
-      currentTime={currentTime}
-      isAutoScroll={isAutoScroll}
-      setIsAutoScroll={setIsAutoScroll}
-      skipSeconds={skipSeconds}
-      setSkipSeconds={setSkipSeconds}
-      videoStartTimeStr={videoStartTimeStr}
-      setVideoStartTimeStr={setVideoStartTimeStr}
-      dmSettings={dmSettings}
-      setDmSettings={setDmSettings}
-      activeDanmaku={danmaku.activeDanmaku}
-      activeCommentId={activeCommentId}
-      showThreadTitle={showThreadTitle}
-      setShowThreadTitle={setShowThreadTitle}
-      enableTreeView={enableTreeView}
-      setEnableTreeView={setEnableTreeView}
-      showImages={showImages}
-      setShowImages={setShowImages}
-      aaMode={aaMode}
-      setAaMode={setAaMode}
-      aaOverrideMap={aaOverrideMap}
-      handleToggleAA={handleToggleAA}
-      zoomedImage={zoomedImage}
-      setZoomedImage={setZoomedImage}
-      showExportModal={showExportModal}
-      setShowExportModal={setShowExportModal}
-      exportFileName={exportFileName}
-      setExportFileName={setExportFileName}
-      showVideoRequestModal={showVideoRequestModal}
-      setShowVideoRequestModal={setShowVideoRequestModal}
-      requestedVideoName={requestedVideoName}
-      requestedVideoPath={requestedVideoPath}
-      setRequestedVideoName={setRequestedVideoName}
-      showUrlModal={showUrlModal}
-      setShowUrlModal={setShowUrlModal}
-      videoUrlInput={videoUrlInput}
-      setVideoUrlInput={setVideoUrlInput}
-      showHelpModal={showHelpModal}
-      setShowHelpModal={setShowHelpModal}
-      showAbeUnlockCelebration={showAbeUnlockCelebration}
-      closeAbeUnlockCelebration={closeAbeUnlockCelebration}
-      abeModeUnlocked={abeModeUnlocked}
-      unlockAbeMode={unlockAbeMode}
-      confirmModalState={confirmModalState}
-      closeConfirmModal={closeConfirmModal}
-      userHistoryId={userHistoryId}
-      setUserHistoryId={setUserHistoryId}
-      handleVideoUrlSubmit={handleVideoUrlSubmit}
-      showSettingsPanel={showSettingsPanel}
-      setShowSettingsPanel={setShowSettingsPanel}
-      activeThreadTitle={activeThreadTitle}
-      scrollToCommentId={scrollToCommentId}
-      setScrollToCommentId={setScrollToCommentId}
-      handleSaveProject={handleSaveProject}
-      handleImport={handleImport}
-      handleExportProject={handleExportProject}
-      onReset={handleReset}
-      togglePlay={togglePlay}
-      requestPlay={requestPlay}
-      handleSeek={handleSeek}
-      onScrub={(videoRelativeTime) => {
-        const logTime = videoRelativeTime + (cmSystem?.logStartTime || 0);
-        handleScrub(logTime);
-      }}
-      handleSeekStart={handleSeekStart}
-      handleSeekEnd={handleSeekEnd}
-      handleCommentClick={handleCommentClick}
-      handleSeekAndPlay={handleSeekAndPlay}
-      handleAnimationEnd={danmaku.handleAnimationEnd}
-      handleTruncationIndicatorClick={handleTruncationIndicatorClick}
-      handleCmSkip={handleCmSkip}
-      handleLogUrlLoadWrapper={handleLogUrlLoadWrapper}
-      handleLogFileChange={handleLogFileChange}
-      handleSyncButton={handleSyncButton}
-      formatTime={formatTime}
-      // Drag & Drop
-      isDragOver={isDragOver}
-      handleDragOver={handleDragOver}
-      handleDragLeave={handleDragLeave}
-      handleDrop={handleDrop}
-      handleMouseMove={handleMouseMove}
-      handleMouseLeave={handleMouseLeave}
-      logo={logo}
-      // End Card
-      endCardSettings={endCardSettings}
-      showEndCard={showEndCard}
-      setShowEndCard={setShowEndCard}
-      showEndCardSettingsModal={showEndCardSettingsModal}
-      setShowEndCardSettingsModal={setShowEndCardSettingsModal}
-      handleSettingsChange={setEndCardSettings}
-      handleEndCardReplay={handleEndCardReplay}
-      onSetEndCard={(src) => {
-        setConfirmModalState({
-          isOpen: true,
-          title: 'エンドカード設定',
-          message: '表示中の画像をエンドカード（終了画面）に設定しますか？',
-          confirmText: '設定する',
-          type: 'info', // or 'success' visual
-          onConfirm: () => {
-            setEndCardSettings((prev) => ({
-              ...prev,
-              enabled: true,
-              type: 'url',
-              value: src,
-              file: null,
-            }));
-            closeConfirmModal();
-          },
-          onCancel: closeConfirmModal,
-        });
-      }}
-    />
+    <div id="app-main-container" className="h-full w-full">
+      <Tutorial
+        run={runTutorial}
+        onFinish={handleTutorialFinish}
+        onStepChange={handleTutorialStepChange}
+        advanceStep={advanceTutorial}
+      />
+      <DesktopLayout
+        containerRef={containerRef}
+        danmakuContainerRef={danmakuContainerRef}
+        progressBarRef={progressBarRef}
+        thumbRef={thumbRef}
+        autoPlayRequestedRef={autoPlayRequestedRef}
+        logScrollPositionsRef={logScrollPositionsRef}
+        showSidebar={showSidebar}
+        setShowSidebar={setShowSidebar}
+        startResizing={startResizing}
+        sidebarWidth={sidebarWidth}
+        logOnlyMode={logOnlyMode}
+        setLogOnlyMode={setLogOnlyMode}
+        showControls={showControls}
+        showDanmaku={showDanmaku}
+        setShowDanmaku={setShowDanmaku}
+        projectName={projectName}
+        projectDirPath={projectDirPath}
+        projectFileHandle={projectFileHandle}
+        player={player}
+        cmSystem={cmSystem}
+        logSystem={logSystem}
+        handleSetCmStart={handleSetCmStart}
+        handleSetCmEnd={handleSetCmEnd}
+        handleSetLogStart={handleSetLogStart}
+        handleAddNgId={handleAddNgId}
+        handleAddNgComment={handleAddNgComment}
+        handleAddNgWord={handleAddNgWord}
+        handleRemoveNgId={handleRemoveNgId}
+        handleRemoveNgComment={handleRemoveNgComment}
+        handleRemoveNgWord={handleRemoveNgWord}
+        currentTime={currentTime}
+        isAutoScroll={isAutoScroll}
+        setIsAutoScroll={setIsAutoScroll}
+        skipSeconds={skipSeconds}
+        setSkipSeconds={setSkipSeconds}
+        videoStartTimeStr={videoStartTimeStr}
+        setVideoStartTimeStr={setVideoStartTimeStr}
+        forceRender={runTutorial}
+        forceShowDanmakuSettings={forceShowDanmakuSettings}
+        onDanmakuSettingsOpened={() => setAdvanceTutorial((prev) => prev + 1)}
+        dmSettings={dmSettings}
+        setDmSettings={setDmSettings}
+        activeDanmaku={danmaku.activeDanmaku}
+        activeCommentId={activeCommentId}
+        showThreadTitle={showThreadTitle}
+        setShowThreadTitle={setShowThreadTitle}
+        enableTreeView={enableTreeView}
+        setEnableTreeView={setEnableTreeView}
+        showImages={showImages}
+        setShowImages={setShowImages}
+        onStartTutorial={handleStartTutorial}
+        aaMode={aaMode}
+        setAaMode={setAaMode}
+        aaOverrideMap={aaOverrideMap}
+        handleToggleAA={handleToggleAA}
+        zoomedImage={zoomedImage}
+        setZoomedImage={setZoomedImage}
+        showExportModal={showExportModal}
+        setShowExportModal={setShowExportModal}
+        exportFileName={exportFileName}
+        setExportFileName={setExportFileName}
+        showVideoRequestModal={showVideoRequestModal}
+        setShowVideoRequestModal={setShowVideoRequestModal}
+        requestedVideoName={requestedVideoName}
+        requestedVideoPath={requestedVideoPath}
+        setRequestedVideoName={setRequestedVideoName}
+        showUrlModal={showUrlModal}
+        setShowUrlModal={setShowUrlModal}
+        videoUrlInput={videoUrlInput}
+        setVideoUrlInput={setVideoUrlInput}
+        showHelpModal={showHelpModal}
+        setShowHelpModal={setShowHelpModal}
+        showAbeUnlockCelebration={showAbeUnlockCelebration}
+        closeAbeUnlockCelebration={closeAbeUnlockCelebration}
+        abeModeUnlocked={abeModeUnlocked}
+        unlockAbeMode={unlockAbeMode}
+        confirmModalState={confirmModalState}
+        closeConfirmModal={closeConfirmModal}
+        userHistoryId={userHistoryId}
+        setUserHistoryId={setUserHistoryId}
+        handleVideoUrlSubmit={handleVideoUrlSubmit}
+        showSettingsPanel={showSettingsPanel}
+        setShowSettingsPanel={setShowSettingsPanel}
+        activeThreadTitle={activeThreadTitle}
+        scrollToCommentId={scrollToCommentId}
+        setScrollToCommentId={setScrollToCommentId}
+        handleSaveProject={handleSaveProject}
+        handleImport={handleImport}
+        handleExportProject={handleExportProject}
+        onReset={handleReset}
+        togglePlay={togglePlay}
+        requestPlay={requestPlay}
+        handleSeek={handleSeek}
+        onScrub={(videoRelativeTime) => {
+          const logTime = videoRelativeTime + (cmSystem?.logStartTime || 0);
+          handleScrub(logTime);
+        }}
+        handleSeekStart={handleSeekStart}
+        handleSeekEnd={handleSeekEnd}
+        handleCommentClick={handleCommentClick}
+        handleSeekAndPlay={handleSeekAndPlay}
+        handleAnimationEnd={danmaku.handleAnimationEnd}
+        handleTruncationIndicatorClick={handleTruncationIndicatorClick}
+        handleCmSkip={handleCmSkip}
+        handleLogUrlLoadWrapper={handleLogUrlLoadWrapper}
+        handleLogFileChange={handleLogFileChange}
+        handleSyncButton={handleSyncButton}
+        formatTime={formatTime}
+        // Drag & Drop
+        isDragOver={isDragOver}
+        handleDragOver={handleDragOver}
+        handleDragLeave={handleDragLeave}
+        handleDrop={handleDrop}
+        handleMouseMove={handleMouseMove}
+        handleMouseLeave={handleMouseLeave}
+        logo={logo}
+        // End Card
+        endCardSettings={endCardSettings}
+        showEndCard={showEndCard}
+        setShowEndCard={setShowEndCard}
+        showEndCardSettingsModal={showEndCardSettingsModal}
+        setShowEndCardSettingsModal={setShowEndCardSettingsModal}
+        handleSettingsChange={setEndCardSettings}
+        handleEndCardReplay={handleEndCardReplay}
+        onSetEndCard={(src) => {
+          setConfirmModalState({
+            isOpen: true,
+            title: 'エンドカード設定',
+            message: '表示中の画像をエンドカード（終了画面）に設定しますか？',
+            confirmText: '設定する',
+            type: 'info', // or 'success' visual
+            onConfirm: () => {
+              setEndCardSettings((prev) => ({
+                ...prev,
+                enabled: true,
+                type: 'url',
+                value: src,
+                file: null,
+              }));
+              closeConfirmModal();
+            },
+            onCancel: closeConfirmModal,
+          });
+        }}
+      />
+    </div>
   );
 };
 

@@ -1,5 +1,5 @@
 import { Calendar, X } from 'lucide-react';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // DateInput component with linear character editing
 const DateInput = ({ value, onChange }) => {

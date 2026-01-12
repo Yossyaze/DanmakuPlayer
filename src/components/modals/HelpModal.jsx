@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 
-const HelpModal = ({ isOpen, onClose }) => {
+const HelpModal = ({ isOpen, onClose, onStartTutorial }) => {
   const [activeTab, setActiveTab] = useState('basic');
 
   if (!isOpen) return null;
@@ -72,6 +72,25 @@ const HelpModal = ({ isOpen, onClose }) => {
         <div className="flex-1 overflow-y-auto p-6 text-gray-300">
           {activeTab === 'basic' && (
             <div className="space-y-8 animate-fade-in">
+              {/* Tutorial Banner */}
+              <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/30 p-6 rounded-xl flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-1">チュートリアルを再生</h3>
+                  <p className="text-sm text-gray-300">
+                    基本的な使い方をステップバイステップで案内します。
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    onStartTutorial();
+                    onClose();
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                >
+                  <MonitorPlay size={18} />
+                  開始する
+                </button>
+              </div>
               <section>
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                   <FileVideo size={20} className="text-green-400" />

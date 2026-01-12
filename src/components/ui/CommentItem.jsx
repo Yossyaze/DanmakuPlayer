@@ -46,8 +46,7 @@ const CommentItem = ({
   // In tree view mode (rootTime provided), use rootTime for the past/future calculation
   // This ensures descendants are marked as "played" when their root is played
   const effectiveTime = rootTime !== undefined ? rootTime : comment.time;
-  const isFuture =
-    !isLogMode && currentTime !== undefined && effectiveTime > currentTime;
+  const isFuture = !isLogMode && currentTime !== undefined && effectiveTime > currentTime;
   const shouldHighlightActive = !isLogMode && isActive;
 
   // AA Logic

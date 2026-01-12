@@ -44,10 +44,10 @@ import SidebarFileRow from './SidebarFileRow'; // Restore
 import AnchorPopup from './ui/AnchorPopup';
 import CommentContextMenu from './ui/CommentContextMenu';
 import CommentItem from './ui/CommentItem';
+import DateInput from './ui/DateInput';
 import NgList from './ui/NgList';
 import ReplyListPopup from './ui/ReplyListPopup';
 import TimeInput from './ui/TimeInput';
-import DateInput from './ui/DateInput';
 import UserHistoryModal from './UserHistoryModal';
 
 const Sidebar = ({
@@ -963,12 +963,13 @@ const Sidebar = ({
 
   return (
     <div
+      id="sidebar-panel"
       ref={sidebarContainerRef}
       className="flex flex-col bg-gray-900 border-x border-gray-700 h-full"
       style={{ width: sidebarWidth }}
     >
       {/* Tab Bar - Compact with Text */}
-      <div className="flex bg-gray-800 border-b border-gray-700 shrink-0">
+      <div id="sidebar-tabs" className="flex bg-gray-800 border-b border-gray-700 shrink-0">
         {/* Settings Tab */}
         <button
           onClick={toggleSettings}
@@ -1000,6 +1001,7 @@ const Sidebar = ({
       {showSettingsPanel && (
         <>
           <div
+            id="sidebar-settings"
             ref={settingsScrollRef}
             className="bg-gray-800 border-b border-gray-700 overflow-y-auto max-h-[85vh] scrollbar-thin shrink-0"
           >
@@ -1541,6 +1543,7 @@ const Sidebar = ({
           {/* Close Button Panel */}
           <div className="relative h-0 z-20 flex justify-center">
             <button
+              id="btn-close-settings"
               onClick={() => setShowSettingsPanel(false)}
               className="bg-gray-700 border-b border-r border-l border-gray-600 rounded-b-md px-24 py-4 shadow-md hover:bg-gray-600 transition-colors flex items-center justify-center group"
               title="設定を閉じる"
@@ -1566,7 +1569,10 @@ const Sidebar = ({
       )}
 
       {/* CommentList (ALL comments) */}
-      <div className="flex-1 min-h-0 bg-gray-900 overflow-hidden relative flex flex-col">
+      <div
+        id="sidebar-comment-list"
+        className="flex-1 min-h-0 bg-gray-900 overflow-hidden relative flex flex-col"
+      >
         {/* Thread Title Header (Fixed) */}
         {showThreadTitle && activeThreadTitle && (
           <div className="shrink-0 bg-gray-800 border-b border-gray-700 p-2 shadow-sm z-10 w-full">

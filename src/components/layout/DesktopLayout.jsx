@@ -97,6 +97,7 @@ const DesktopLayout = ({
   // Modals State
   zoomedImage,
   setZoomedImage,
+  forceRender, // Tutorial force render
 
   showExportModal,
   setShowExportModal,
@@ -180,8 +181,27 @@ const DesktopLayout = ({
 
   handleEndCardReplay,
   onSetEndCard,
+  forceShowDanmakuSettings, // チュートリアル用：強制的に弾幕設定を開く
+  onDanmakuSettingsOpened, // チュートリアル用：弾幕設定が開いた時のコールバック
+  onStartTutorial,
 }) => {
   const [showDanmakuSettings, setShowDanmakuSettings] = React.useState(false);
+
+  // チュートリアル用：外部から弾幕設定ポップオーバーを制御
+  React.useEffect(() => {
+    if (forceShowDanmakuSettings !== undefined) {
+      setShowDanmakuSettings(forceShowDanmakuSettings);
+    }
+  }, [forceShowDanmakuSettings]);
+
+  // チュートリアル用：弾幕設定が開いた時に親に通知
+  const handleToggleDanmakuSettings = () => {
+    const nextValue = !showDanmakuSettings;
+    setShowDanmakuSettings(nextValue);
+    if (nextValue && onDanmakuSettingsOpened) {
+      onDanmakuSettingsOpened();
+    }
+  };
 
   const {
     playerRef,
@@ -317,8 +337,8 @@ const DesktopLayout = ({
             >
               {/* --- Video Layer --- */}
               <div
+                id="main-video-layer"
                 className="flex-1 relative bg-black flex items-center justify-center overflow-hidden cursor-pointer"
-                ref={containerRef}
                 onClick={togglePlay}
               >
                 {/* Video Area */}
@@ -758,12 +778,13 @@ const DesktopLayout = ({
                       // logSystem hook returns commentDensity.
                       // So logSystem.commentDensity is the way.
                       onScrub={onScrub}
-                      onToggleSettings={() => setShowDanmakuSettings((prev) => !prev)}
+                      onToggleSettings={handleToggleDanmakuSettings}
                       // Quality Props
                       qualityLevels={qualityLevels}
                       currentLevel={currentLevel}
                       manualQuality={manualQuality}
                       onQualitySelect={handleQualitySelect}
+                      forceRender={forceRender}
                     />
                   </>
                 )}
@@ -1040,7 +1061,11 @@ const DesktopLayout = ({
         />
 
         {/* --- Help Modal --- */}
-        <HelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
+        <HelpModal
+          isOpen={showHelpModal}
+          onClose={() => setShowHelpModal(false)}
+          onStartTutorial={onStartTutorial}
+        />
 
         {/* --- Abe Mode Unlock Celebration --- */}
         <AbeModeUnlockCelebration

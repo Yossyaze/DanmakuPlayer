@@ -34,6 +34,7 @@ const DanmakuSettingsPopover = ({
 
       {/* Popover Content */}
       <div
+        id="danmaku-settings-popover"
         className="absolute bottom-12 right-0 w-72 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl p-4 z-50 text-white animate-fade-in pointer-events-auto"
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
       >
