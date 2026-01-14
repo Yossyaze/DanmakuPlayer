@@ -55,6 +55,8 @@ const CommentList = forwardRef(
       onScrollIndexChange, // Callback when scroll index changes
       indentSize = 12, // Indent size per depth level (default: 12px for sidebar, 16px for log viewer)
       debugId = 'unknown', // DEBUG: identifier for this instance
+      startDateStr, // New prop
+      startTimeStr, // New prop
     },
     ref
   ) => {
@@ -82,6 +84,9 @@ const CommentList = forwardRef(
       return map;
     }, [treeRoots, enableTreeView]);
 
+    // Track previous active ID to detect changes
+    const prevActiveIdRef = useRef(null);
+
     // Scroll to active comment
     useEffect(() => {
       // DEBUG: Auto-scroll investigation
@@ -93,13 +98,12 @@ const CommentList = forwardRef(
       // });
 
       if (isAutoScroll && activeCommentId && virtuosoRef.current) {
+        // Only scroll if ID changed or we just enabled auto-scroll
+        // This prevents fighting with user scroll if implementation is loose,
+        // but here we want strict follow.
+
         const index = treeRoots.findIndex((node) => node.id === activeCommentId);
-        // console.log(
-        //   `[CommentList:${debugId}] Found index:`,
-        //   index,
-        //   'for activeCommentId:',
-        //   activeCommentId
-        // );
+
         if (index !== -1) {
           // Update timestamp to ignore subsequent scroll events temporarily
           lastAutoScrollTimeRef.current = Date.now();
@@ -116,15 +120,6 @@ const CommentList = forwardRef(
               treeEndIndex++;
             }
             const treeSize = treeEndIndex - index + 1;
-
-            // console.log(
-            //   `[CommentList:${debugId}] Tree size:`,
-            //   treeSize,
-            //   'rootIndex:',
-            //   index,
-            //   'endIndex:',
-            //   treeEndIndex
-            // );
 
             // Get approximate visible item count (estimate ~40px per item, viewport ~400px)
             // We'll use a threshold to decide: if tree fits, show tree end at bottom
@@ -153,12 +148,12 @@ const CommentList = forwardRef(
             // console.log(`[CommentList:${debugId}] Calling scrollToIndex:`, index);
             virtuosoRef.current.scrollToIndex({
               index,
-              align: 'end',
-              offset: 50,
+              align: 'center', // Changed to center for better visibility
               behavior: 'auto',
             });
           }
         }
+        prevActiveIdRef.current = activeCommentId;
       }
     }, [activeCommentId, isAutoScroll, treeRoots, debugId, enableTreeView]);
 
@@ -335,6 +330,8 @@ const CommentList = forwardRef(
               aaMode={aaMode}
               aaOverride={aaOverrideMap[node.id]}
               className={borderClass}
+              startDateStr={startDateStr} // Pass to Row
+              startTimeStr={startTimeStr} // Pass to Row
               {...extraRowProps}
             />
             {/* Complement border when depth decreases - extends to next item's depth */}
@@ -350,7 +347,6 @@ const CommentList = forwardRef(
         );
       },
       [
-        RowToRender,
         activeCommentId,
         highlightedCommentId,
         currentTime,
@@ -376,6 +372,9 @@ const CommentList = forwardRef(
         treeRoots,
         imageLayout,
         indentSize,
+        startDateStr, // Added dependency
+        startTimeStr, // Added dependency
+        RowToRender, // Added dependency for React Compiler
       ]
     );
 

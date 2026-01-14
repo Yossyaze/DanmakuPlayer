@@ -78,21 +78,20 @@ const CommentItem = ({
       }}
     >
       <div className="flex gap-2">
-        {/* Time & Date (Left Column) - 3 rows: video time, date, log time */}
         <div className="flex flex-col items-end shrink-0 w-12">
           <span className="text-blue-400 font-mono text-[9px] whitespace-nowrap">
             {formatTime(comment.time - logStartTime)}
           </span>
           <span className="text-gray-600 font-mono text-[9px] whitespace-nowrap">
-            {(() => {
-              // Extract date part: "2025/12/31(火)" -> "12/31(火)"
-              const match = comment.dateDisplay?.match(/(\d{1,2})\/(\d{1,2})(\([^)]+\))/);
-              if (match) return `${match[1]}/${match[2]}${match[3]}`;
-              return '';
-            })()}
+            {comment.dateDisplay ? comment.dateDisplay.replace(/\([^)]+\)/, '').split(' ')[0] : ''}
           </span>
           <span className="text-gray-500 font-mono text-[9px] whitespace-nowrap">
-            {comment.dateDisplay?.split(' ')[1]?.split('.')[0] || ''}
+            {comment.dateDisplay
+              ? comment.dateDisplay
+                  .replace(/\([^)]+\)/, '')
+                  .split(' ')[1]
+                  ?.split('.')[0]
+              : ''}
           </span>
         </div>
 

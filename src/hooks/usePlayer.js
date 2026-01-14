@@ -19,6 +19,10 @@ export const usePlayer = () => {
     const video = playerRef.current;
     if (video && video.tagName === 'VIDEO') {
       if (isPlaying) {
+        // CM待機中はビデオを再生しない（DesktopLayoutで制御）
+        if (video._isWaitingCm) {
+          return;
+        }
         video.play().catch((e) => console.error('Play failed:', e));
       } else {
         video.pause();

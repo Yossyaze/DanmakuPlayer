@@ -400,7 +400,13 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
   // --- Helper for CM Detection ---
   const checkCmCollision = useCallback(
     (vidTime, lookAhead = 0) => {
-      const sortedRanges = [...cmSystem.cmRanges].sort((a, b) => a.logStart - b.logStart);
+      const sortedRanges = [...cmSystem.cmRanges].sort((a, b) => {
+        const aStart =
+          a.logicalStart !== undefined ? a.logicalStart : a.logStart - cmSystem.logStartTime;
+        const bStart =
+          b.logicalStart !== undefined ? b.logicalStart : b.logStart - cmSystem.logStartTime;
+        return aStart - bStart;
+      });
       let accDuration = 0;
 
       for (const range of sortedRanges) {
@@ -408,7 +414,9 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
         const videoStart =
           range.videoStart !== undefined
             ? range.videoStart
-            : range.logStart - accDuration - cmSystem.logStartTime;
+            : range.logicalStart !== undefined
+              ? range.logicalStart - accDuration
+              : range.logStart - accDuration - cmSystem.logStartTime;
 
         if (cmSystem.cmStateRef.current.justFinishedCmId === range.id) {
           if (Math.abs(vidTime - videoStart) > 1.0) {
@@ -642,6 +650,11 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
             // Do NOT stop playing state. We keep isPlaying=true so the loop continues.
             // player.setPlayingState(false);
 
+            // Pause the actual video element to stop playback during CM wait
+            if (player.videoRef.current && typeof player.videoRef.current.pause === 'function') {
+              player.videoRef.current.pause();
+            }
+
             cmSystem.updateCmState({
               isWaiting: true,
               cmRangeId: collision.range.id,
@@ -748,14 +761,17 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
     const anchorRegex = /(?:>>|＞＞|&gt;&gt;)\s*\d+/;
 
     for (let i = sourceComments.length - 1; i >= 0; i--) {
-      if (sourceComments[i].time <= currentTime) {
+      // Use 'time' if available, otherwise convert rawTime (ms) to seconds
+      const commentTime = sourceComments[i].time;
+
+      if (commentTime <= currentTime) {
         // In tree view mode, skip non-root comments (those with anchors)
         if (enableTreeView && anchorRegex.test(sourceComments[i].text)) {
           continue;
         }
         // console.log('[ActiveCommentId]', {
         //   currentTime,
-        //   commentTime: sourceComments[i].time,
+        //   commentTime,
         //   id: sourceComments[i].id,
         //   index: i,
         // });

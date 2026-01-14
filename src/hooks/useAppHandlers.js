@@ -33,6 +33,8 @@ export function useAppHandlers({
 
   setRequestedVideoName,
   setRequestedVideoPath,
+  setRequestedVideoUrl,
+  setRequestedReferer,
   setShowVideoRequestModal,
   projectFileHandle,
   setProjectFileHandle,
@@ -169,6 +171,12 @@ export function useAppHandlers({
       loadedFiles: logSystem.loadedFiles,
       videoFileName: player.videoFileName,
       videoFilePath: player.videoFilePath, // Full absolute path for auto-loading
+      videoUrl:
+        player.videoSrc &&
+        (player.videoSrc.startsWith('http') || player.videoSrc.startsWith('https'))
+          ? player.videoSrc
+          : null,
+      referer: player.referer,
       ngSettings: logSystem.ngSettings,
       aaOverrideMap: aaOverrideMap,
       endCardSettings: { ...endCardSettings, file: null },
@@ -182,6 +190,8 @@ export function useAppHandlers({
       logSystem.loadedFiles,
       player.videoFileName,
       player.videoFilePath,
+      player.videoSrc,
+      player.referer,
       logSystem.ngSettings,
       aaOverrideMap,
       endCardSettings,
@@ -192,6 +202,14 @@ export function useAppHandlers({
   const handleSaveProject = useCallback(async () => {
     if (!projectFileHandle) {
       setShowExportModal(true);
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `現在の内容でプロジェクトファイル「${projectName || 'project.json'}」を上書き保存しますか？`
+      )
+    ) {
       return;
     }
 
@@ -264,6 +282,10 @@ export function useAppHandlers({
 
       if (data.cmRanges) {
         if (overwriteSettings || cmSystem.cmRanges.length === 0) {
+          // Note: recalculateCmVideoTimes in useCMSystem handles backward compatibility:
+          // 1. videoStart (New standard) -> Used as anchor
+          // 2. logicalStart (Short-lived format) -> Converted to videoStart
+          // 3. logStart (Legacy format) -> Converted to videoStart
           cmSystem.setCmRanges(data.cmRanges);
         }
       }
@@ -334,6 +356,13 @@ export function useAppHandlers({
         }
         setShowVideoRequestModal(true);
       }
+
+      if (data.videoUrl) {
+        setRequestedVideoUrl(data.videoUrl);
+        if (data.referer) {
+          setRequestedReferer(data.referer);
+        }
+      }
     },
     [
       cmSystem,
@@ -345,6 +374,8 @@ export function useAppHandlers({
       setProjectName,
       setRequestedVideoName,
       setRequestedVideoPath,
+      setRequestedVideoUrl,
+      setRequestedReferer,
       setShowVideoRequestModal,
       setProjectDirPath,
       endCardSettings,

@@ -142,6 +142,8 @@ const DesktopApp = () => {
   const [showVideoRequestModal, setShowVideoRequestModal] = useState(false);
   const [requestedVideoName, setRequestedVideoName] = useState('');
   const [requestedVideoPath, setRequestedVideoPath] = useState('');
+  const [requestedVideoUrl, setRequestedVideoUrl] = useState(null);
+  const [requestedReferer, setRequestedReferer] = useState(null);
   const [isResizing, setIsResizing] = useState(false);
 
   // End Card Settings Modal State
@@ -265,6 +267,8 @@ const DesktopApp = () => {
     setIsAutoScroll,
     endCardSettings,
     setEndCardSettings,
+    setRequestedVideoUrl,
+    setRequestedReferer,
   });
 
   // --- Tutorial State ---
@@ -279,6 +283,18 @@ const DesktopApp = () => {
       }, 1000);
     }
   }, []);
+
+  // Auto-load video from URL (Project Import)
+  useEffect(() => {
+    if (requestedVideoUrl) {
+      if (requestedReferer) {
+        player.setReferer(requestedReferer);
+      }
+      player.setVideoSrc(requestedVideoUrl);
+      setRequestedVideoUrl(null);
+      setRequestedReferer(null);
+    }
+  }, [requestedVideoUrl, requestedReferer, player]);
 
   const handleTutorialFinish = useCallback(() => {
     setRunTutorial(false);

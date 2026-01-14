@@ -40,7 +40,7 @@ const parseJson = (text, fileId) => {
       name: 'Abema User', // Generic name since it's not in the log
       userId: '', // No ID in this format
       rawTime: rawTime,
-      dateDisplay: item.formattedTime,
+      // dateDisplay: item.formattedTime, // Removed to allow dynamic calculation in UI based on Log Start Time
       text: item.comment,
       color: '#ffffff',
       type: 'scroll',

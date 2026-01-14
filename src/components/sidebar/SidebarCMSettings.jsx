@@ -32,16 +32,6 @@ const SidebarCMSettings = ({
   const [cmStartMode, setCmStartMode] = useState('log');
   const [cmEndMode, setCmEndMode] = useState('log');
 
-  // Helper to get current date from log reference
-  const getCurrentDate = () => {
-    if (startDateStr) {
-      return startDateStr;
-    }
-    // Fallback to today's date
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  };
-
   // Helper to render time input based on mode
   const renderTimeInput = (mode, value, setValue, dateValue, setDateValue, placeholder) => {
     const handleGetCurrent = () => {
@@ -253,8 +243,10 @@ const SidebarCMSettings = ({
             const vStart = typeof range.videoStart === 'number' ? range.videoStart : 0;
             const cmDuration = range.logEnd - range.logStart;
 
-            // Convert to logical time (video time + accumulated CM time)
-            const logicalStart = vStart + accumulatedCmTime;
+            // logicalStart is now directly available from the range object (calculated in useCMSystem)
+            // Fallback to calculation if undefined (though useCMSystem should ensure it's there)
+            const logicalStart =
+              range.logicalStart !== undefined ? range.logicalStart : vStart + accumulatedCmTime;
             const logicalEnd = logicalStart + cmDuration;
 
             // Format label with date if available

@@ -1251,7 +1251,7 @@ const Sidebar = ({
                       <span className="text-[10px] text-gray-400">動画時間</span>
                       <div className="flex items-center gap-2">
                         <TimeInput
-                          value={videoStartTimeStr}
+                          value={videoStartTimeStr || '00:00'}
                           onChange={setVideoStartTimeStr}
                           showHours={totalDuration >= 3600}
                           placeholder="00:00"
@@ -1633,6 +1633,16 @@ const Sidebar = ({
             onSetLogStart={handleSetLogStart}
             onSetCmStart={handleSetCmStart}
             onSetCmEnd={handleSetCmEnd}
+            onSetEndCardPreview={onSetEndCardPreview}
+            onAddNgWord={onAddNgWord}
+            onIdClick={onIdClick}
+            isPopupActive={popupStack.length > 0}
+            aaMode={aaMode}
+            onToggleAA={onToggleAA}
+            aaOverrideMap={aaOverrideMap}
+            // Pass Date/Time strings for dynamic display calculation
+            startDateStr={startDateStr}
+            startTimeStr={startTimeStr}
             formatTime={formatTime}
             logStartTime={logStartTime}
             totalComments={comments.length}
@@ -1642,7 +1652,6 @@ const Sidebar = ({
             onAnchorClick={handleAnchorClick}
             onAnchorMouseEnter={() => {}} // Removed
             onAnchorMouseLeave={() => {}} // Removed
-            onIdClick={onIdClick} // Allow recursive ID click
             settings={{
               fontSize: dmSettings.fontSize,
               density: dmSettings.density,

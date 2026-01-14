@@ -33,6 +33,8 @@ const CommentRow = React.memo(
     onReplyCountClick,
     abeMode, // New prop
     className = '', // New prop for external border control
+    startDateStr, // New prop
+    startTimeStr, // New prop
   }) => {
     return (
       <CommentItem
@@ -59,6 +61,8 @@ const CommentRow = React.memo(
         onReplyCountClick={onReplyCountClick}
         abeMode={abeMode} // Pass through
         className={className}
+        startDateStr={startDateStr}
+        startTimeStr={startTimeStr}
       />
     );
   },
@@ -84,7 +88,11 @@ const CommentRow = React.memo(
       prevProps.formatTime === nextProps.formatTime && // Check formatTime (crucial for custom formatters)
       prevProps.aaMode === nextProps.aaMode && // Check AA mode
       prevProps.aaOverride === nextProps.aaOverride && // Check AA override
-      prevProps.abeMode === nextProps.abeMode // Check Abe Mode
+      prevProps.aaMode === nextProps.aaMode && // Check AA mode
+      prevProps.aaOverride === nextProps.aaOverride && // Check AA override
+      prevProps.abeMode === nextProps.abeMode && // Check Abe Mode
+      prevProps.startDateStr === nextProps.startDateStr && // Check Log Start Date
+      prevProps.startTimeStr === nextProps.startTimeStr // Check Log Start Time
     );
   }
 );

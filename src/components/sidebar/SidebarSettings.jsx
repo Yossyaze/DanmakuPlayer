@@ -244,7 +244,7 @@ const SidebarSettings = ({
                 <div className="flex flex-col items-center gap-1">
                   <span className="text-[10px] text-gray-400">動画時間</span>
                   <TimeInput
-                    value={videoStartTimeStr}
+                    value={videoStartTimeStr || '00:00:00'}
                     onChange={setVideoStartTimeStr}
                     showHours={true}
                     placeholder="00:00"

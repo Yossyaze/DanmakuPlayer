@@ -23,23 +23,32 @@
   コメントの `time` プロパティと同じ基準の相対時刻（秒）。ログ開始からの経過秒数。
   **これがアプリ内で主に使用される時間基準。**
   - **計算式**: `currentTime = videoTimeToLogTime(video.currentTime)`
-  - **コメントとの関係**: `comment.time <= currentTime` の時にコメントを表示
-  - **関連コード**: `currentTime` (State: useDanmakuPlayer), `c.time` (Comment prop)
+  - **Abemaログ**: JSONの `time`（秒）はこれに相当する（`startDate` が自動的に0または基準日に設定されるため）。
+  - **関連コード**: `currentTime` (State: useDanmakuPlayer), `c.vpos` (Sidebar prop)
 
 - **論理時間 (Logical Time) / シークバー時間**:
   ユーザーが認識する「再生中の時間」。シークバーに表示される時間と一致する。
   - **計算式**: `logicalTime = currentTime - logStartTime`
   - **関連コード**: `VideoControls.jsx` (prop: `currentTime`), `SidebarCMSettings.jsx`
 
-- **logStartTime (旧: timeOffset)**:
-  動画の0秒地点に対応するログ上の時刻（秒）。同期設定から計算される。
-  - **計算式**: `logStartTime = -parseTime(videoStartTimeStr)`
+- **logStartTime (動画基準オフセット)**:
+  動画の0秒地点に対応するログ上の時刻（秒）。
+  サイドバーの「同期設定（開始日時）」から計算される値。
+  - **計算式**: `logStartTime`（秒）
   - **用途**: シークバー位置 = `currentTime - logStartTime`
   - **関連コード**: `useCMSystem.js`, `useTimeSync.js`
 
+- **ログ基準日時 (Log Base Date/Time)**:
+  サイドバーでユーザーが入力する「開始日時」。
+  - **変数名**: `startDateStr`, `startTimeStr`
+  - **用途**: `logStartTime` の計算や、日付表示の基準として使用される。
+  - **関連コード**: `Sidebar.jsx`, `useLogSystem.js`
+
 - **rawTime (コメントプロパティ)**:
-  コメントが投稿された絶対時刻（Unix Timestamp、ミリ秒）。
-  - **用途**: 日時表示、同期設定のスポイト機能
+  コメントが投稿された時刻データ（ミリ秒）。
+  - **5chログ**: 絶対時刻（Unix Timestamp、ミリ秒）。
+  - **Abemaログ**: ログ開始からの経過時間（ミリ秒、`item.time * 1000`）。
+  - **用途**: 日時表示の計算ソース。
   - **関連コード**: `logParser.js`
 
 - **CM (Commercial Message)**:

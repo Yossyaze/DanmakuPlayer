@@ -355,6 +355,11 @@ const VideoControls = ({
           {' '}
           {/* Comment Momentum Graph (Hover Only) */}
           {/* Comment Momentum Graph (Hover Only) */}
+          {/* Resize Handle (Invisible but draggable) */}
+          <div
+            className="absolute bottom-full left-0 right-0 h-2 cursor-ns-resize z-40 hover:bg-white/10 transition-colors"
+            onMouseDown={handleMouseDown}
+          />
           {commentDensity.length > 0 && (
             <div
               className={`absolute bottom-5 left-0 right-0 h-16 pointer-events-none transition-opacity duration-300 flex items-end ${

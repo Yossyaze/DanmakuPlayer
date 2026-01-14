@@ -229,6 +229,28 @@ const DesktopLayout = ({
     setRetryWithProxy(false);
   }, [videoSrc]);
 
+  // CM Wait中はビデオを一時停止、終了時に再開
+  // また、_isWaitingCm フラグを設定して usePlayer.js での再生を抑制
+  React.useEffect(() => {
+    const video = playerRef.current;
+    if (!video) return;
+
+    // フラグを設定（usePlayer.js でチェックされる）
+    video._isWaitingCm = cmSystem.isWaitingCm;
+
+    if (cmSystem.isWaitingCm) {
+      // CM待機中はビデオを明示的に一時停止
+      if (typeof video.pause === 'function') {
+        video.pause();
+      }
+    } else if (player.isPlaying) {
+      // CM待機終了後、再生状態なら再生再開
+      if (typeof video.play === 'function') {
+        video.play().catch((e) => console.error('Resume play after CM wait failed:', e));
+      }
+    }
+  }, [cmSystem.isWaitingCm, player.isPlaying, playerRef]);
+
   const handleLevelsLoaded = React.useCallback((levels) => {
     setQualityLevels(levels);
   }, []);
@@ -793,7 +815,7 @@ const DesktopLayout = ({
 
             {logOnlyMode && (
               <LogViewer
-                comments={logSystem.comments} // Pass ALL comments
+                comments={logSystem.allCommentsEnriched || logSystem.comments} // Pass ALL enriched comments
                 files={logSystem.loadedFiles} // Pass loaded files list
                 onRemoveFile={logSystem.handleRemoveFile}
                 activeCommentId={activeCommentId}
@@ -818,7 +840,7 @@ const DesktopLayout = ({
                 removeNgId={handleRemoveNgId}
                 removeNgComment={handleRemoveNgComment}
                 removeNgWord={handleRemoveNgWord}
-                allComments={logSystem.comments}
+                allComments={logSystem.allCommentsEnriched || logSystem.comments}
                 formatTime={formatTime}
                 totalDuration={cmSystem.getTotalDuration}
                 scrollPositionsRef={logScrollPositionsRef}

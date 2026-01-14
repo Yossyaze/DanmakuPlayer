@@ -292,6 +292,20 @@ export const useLogSystem = () => {
               count: parsed.rawComments.length,
             },
           ]);
+
+          // Auto-set start date/time if not manually set and this is an absolute log
+          if (!startDateStr && !startTimeStr && parsed.startDate && parsed.startDate > 0) {
+            const d = new Date(parsed.startDate);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const seconds = String(d.getSeconds()).padStart(2, '0');
+            setStartDateStr(`${year}-${month}-${day}`);
+            setStartTimeStr(`${hours}:${minutes}:${seconds}`);
+          }
+
           setUrlInput('');
           return parsed; // Return parsed object
         }
@@ -300,7 +314,7 @@ export const useLogSystem = () => {
         alert('URLの読み込みに失敗しました: ' + err.message);
       }
     },
-    [urlInput]
+    [urlInput, startDateStr, startTimeStr]
   );
 
   const handleToggleFileVisibility = useCallback((fileId) => {
@@ -376,24 +390,45 @@ export const useLogSystem = () => {
     );
   }, []);
 
-  const addLoadedFiles = useCallback((newFiles) => {
-    const processedFiles = newFiles.map((f) => ({
-      ...f,
-      isVisible: true,
-    }));
+  const addLoadedFiles = useCallback(
+    (newFiles) => {
+      const processedFiles = newFiles.map((f) => ({
+        ...f,
+        isVisible: true,
+      }));
 
-    const newComments = processedFiles.flatMap((file) =>
-      (file.rawComments || []).map((c) => ({
-        ...c,
-        sourceFileId: file.id,
-        threadTitle: file.title || file.name, // Inject thread title
-        isKnownAA: isProbablyAA(c.text), // Pre-calculate AA status
-      }))
-    );
+      const newComments = processedFiles.flatMap((file) =>
+        (file.rawComments || []).map((c) => ({
+          ...c,
+          sourceFileId: file.id,
+          threadTitle: file.title || file.name, // Inject thread title
+          isKnownAA: isProbablyAA(c.text), // Pre-calculate AA status
+        }))
+      );
 
-    setComments((prev) => [...prev, ...newComments].sort((a, b) => a.rawTime - b.rawTime));
-    setLoadedFiles((prev) => [...prev, ...processedFiles]);
-  }, []);
+      setComments((prev) => [...prev, ...newComments].sort((a, b) => a.rawTime - b.rawTime));
+      setLoadedFiles((prev) => [...prev, ...processedFiles]);
+
+      // Auto-set start date/time if not manually set
+      if (!startDateStr && !startTimeStr) {
+        // Find earliest absolute log start date
+        const absoluteFiles = processedFiles.filter((f) => f.startDate && f.startDate > 0);
+        if (absoluteFiles.length > 0) {
+          const earliest = Math.min(...absoluteFiles.map((f) => f.startDate));
+          const d = new Date(earliest);
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const hours = String(d.getHours()).padStart(2, '0');
+          const minutes = String(d.getMinutes()).padStart(2, '0');
+          const seconds = String(d.getSeconds()).padStart(2, '0');
+          setStartDateStr(`${year}-${month}-${day}`);
+          setStartTimeStr(`${hours}:${minutes}:${seconds}`);
+        }
+      }
+    },
+    [startDateStr, startTimeStr]
+  );
 
   const loadProject = useCallback((projectLoadedFiles) => {
     // Ensure isVisible is true for all files
@@ -429,58 +464,135 @@ export const useLogSystem = () => {
     // However, comments in 'comments' state usually have 'sourceFileId'.
     if (loadedFiles.length === 0) return [];
 
+    // 0. Base Timestamp Calculation
+    let baseTime = null;
+
+    // Priority 1: Manual Setting
+    if (startDateStr && startTimeStr) {
+      // Parse YYYY-MM-DD HH:mm:ss (Manual implementation for simple parsing or use Date)
+      // Assuming format YYYY-MM-DD and HH:mm:ss
+      const d = new Date(`${startDateStr}T${startTimeStr}`);
+      if (!isNaN(d.getTime())) {
+        baseTime = d.getTime();
+      }
+    }
+
+    // Priority 2: Auto-sync with existing absolute logs (if no manual setting)
+    if (baseTime === null) {
+      const absoluteFiles = loadedFiles.filter((f) => f.startDate && f.startDate > 0);
+      if (absoluteFiles.length > 0) {
+        // Use the earliest start date among loaded absolute logs
+        baseTime = Math.min(...absoluteFiles.map((f) => f.startDate));
+      }
+    }
+
+    // Priority 3: Default fallback
+    if (baseTime === null) {
+      baseTime = new Date('2000-01-01T00:00:00').getTime();
+    }
+
     const visibleFileIds = new Set(loadedFiles.filter((f) => f.isVisible).map((f) => f.id));
-    console.log('Visible File IDs:', Array.from(visibleFileIds));
+    // File Map for calculating offsets
+    const fileMap = new Map(loadedFiles.map((f) => [f.id, f]));
 
     // 1. Filter by File Visibility
     let filtered = comments.filter((c) => visibleFileIds.has(c.sourceFileId));
 
-    // 2. Filter by NG Settings (ID and Comment ID and Words)
-    if (ngSettings.ids.length > 0) {
-      const ngIds = new Set(ngSettings.ids);
-      filtered = filtered.filter((c) => !ngIds.has(c.userId));
-    }
-    if (ngSettings.comments.length > 0) {
-      const ngComments = new Set(ngSettings.comments);
-      filtered = filtered.filter((c) => !ngComments.has(c.id));
-    }
+    // 2. Filter and Enrich
+    let enriched = [];
+    const ngIds = new Set(ngSettings.ids);
+    const ngComments = new Set(ngSettings.comments);
+
+    // Pre-compile regexes
+    const compiledRegexes = [];
+    const normalWords = [];
     if (ngSettings.words && ngSettings.words.length > 0) {
-      const ngWords = ngSettings.words;
-
-      // Pre-compile regexes to avoid compiling for every comment
-      const compiledRegexes = ngWords
-        .filter((w) => typeof w === 'object' && w.isRegex)
-        .map((w) => {
+      ngSettings.words.forEach((w) => {
+        if (typeof w === 'object' && w.isRegex) {
           try {
-            return new RegExp(w.text);
-          } catch (e) {
-            console.warn('Invalid NG Regex:', w.text, e);
-            return null;
+            compiledRegexes.push(new RegExp(w.text));
+          } catch {
+            // Ignore invalid regex
           }
-        })
-        .filter((r) => r !== null);
-
-      const normalWords = ngWords
-        .filter((w) => typeof w === 'string' || !w.isRegex)
-        .map((w) => (typeof w === 'string' ? w : w.text));
-
-      filtered = filtered.filter((c) => {
-        const text = c.text;
-
-        // 1. Check Normal Words (Partial Match)
-        if (normalWords.some((word) => text.includes(word))) return false;
-
-        // 2. Check Regexes
-        if (compiledRegexes.some((regex) => regex.test(text))) return false;
-
-        return true;
+        } else {
+          normalWords.push(typeof w === 'string' ? w : w.text);
+        }
       });
     }
+
+    filtered.forEach((c) => {
+      // NG Checks
+      if (ngIds.has(c.userId)) return;
+      if (ngComments.has(c.id)) return;
+
+      const text = c.text;
+      if (normalWords.some((w) => text.includes(w))) return;
+      if (compiledRegexes.some((r) => r.test(text))) return;
+
+      // Enrichment Logic
+      const file = fileMap.get(c.sourceFileId);
+      const isRelativeLog = file && file.startDate === 0;
+
+      let vpos = 0;
+      let absoluteTime = 0;
+
+      if (isRelativeLog) {
+        // Relative Log (Abema): rawTime is ms offset
+        vpos = c.rawTime / 1000;
+
+        // Absolute Time Calculation
+        // Use calculated baseTime (Manual > Auto > Default)
+        absoluteTime = baseTime + c.rawTime;
+      } else {
+        // Absolute Log (5ch): rawTime is timestamp ms
+        absoluteTime = c.rawTime;
+
+        // Calculate vpos relative to baseTime?
+        // No, vpos should be relative to THE video start.
+        // If we are syncing Abema to 5ch, that means "Video Start" == "5ch Start".
+        // So vpos = absoluteTime - baseTime.
+
+        // However, if baseTime was determined by "earliest 5ch log",
+        // then baseTime IS the video start time (logically).
+        vpos = (c.rawTime - baseTime) / 1000;
+      }
+
+      // Date Display Formatting
+      // If c.dateDisplay exists and is valid (not relative log default), use it?
+      // Abema logs don't have dateDisplay. 5ch logs do.
+      // We force override dateDisplay if we have a calculated absoluteTime that differs significantly?
+      // Actually, for consistency, let's re-format absoluteTime if it was calculated (Abema).
+      // For 5ch, the original date string is fine, but maybe we want unified format?
+      // Let's use formatted string for Abema, keep original for 5ch if exists.
+
+      // Date Display Formatting
+      // Always re-generate dateDisplay to ensure unified format (YYYY/MM/DD HH:MM:SS.mmm)
+      // and remove day of week (e.g. (日)) from 5ch logs.
+      const d = new Date(absoluteTime);
+      const days = ['(日)', '(月)', '(火)', '(水)', '(木)', '(金)', '(土)'];
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const dayStr = days[d.getDay()];
+      const HH = String(d.getHours()).padStart(2, '0');
+      const MM = String(d.getMinutes()).padStart(2, '0');
+      const SS = String(d.getSeconds()).padStart(2, '0');
+      const MMM = String(d.getMilliseconds()).padStart(3, '0');
+      const dateDisplay = `${yyyy}/${mm}/${dd}${dayStr} ${HH}:${MM}:${SS}.${MMM}`;
+
+      enriched.push({
+        ...c,
+        vpos: vpos,
+        time: vpos, // Compatible with player
+        absoluteTime: absoluteTime,
+        dateDisplay: dateDisplay,
+      });
+    });
 
     // Calculate user comment counts (index / total)
     // Group by userId
     const userGroups = {};
-    filtered.forEach((c) => {
+    enriched.forEach((c) => {
       const uid = c.userId;
       if (!uid) return;
       if (!userGroups[uid]) userGroups[uid] = [];
@@ -488,20 +600,19 @@ export const useLogSystem = () => {
     });
 
     // Create a map for quick lookup: commentId -> { index, total }
-    // We assume comment objects have unique IDs (c.id)
     const metaMap = new Map();
     Object.entries(userGroups).forEach(([, group]) => {
       const total = group.length;
-      // Ensure chronological order for index calculation
-      // filtered is already sorted by time, but group construction preserves that relative order
       group.forEach((c, i) => {
         metaMap.set(c.id, { userIndex: i + 1, userTotal: total });
       });
     });
 
-    // Attach metadata to comments
-    // We create shallow copies to avoid mutating the original state objects
-    const commentsWithMeta = filtered.map((c) => {
+    // Sort by vpos (video relative time) to ensure correct order for auto-scroll
+    enriched.sort((a, b) => a.vpos - b.vpos);
+
+    // Attach metadata
+    const commentsWithMeta = enriched.map((c) => {
       const meta = metaMap.get(c.id);
       if (meta) {
         return { ...c, ...meta };
@@ -509,9 +620,80 @@ export const useLogSystem = () => {
       return c;
     });
 
-    console.log('Filtered visible comments:', commentsWithMeta.length);
+    console.log('Filtered enriched comments:', commentsWithMeta.length);
     return commentsWithMeta;
-  }, [comments, loadedFiles, ngSettings]);
+  }, [comments, loadedFiles, ngSettings, startDateStr, startTimeStr]);
+
+  // 全コメントのエンリッチ版（LogViewer用、フィルタなし、絶対時間計算済み）
+  const allCommentsEnriched = useMemo(() => {
+    if (loadedFiles.length === 0) return [];
+
+    // Base Timestamp Calculation (Same as above)
+    // Base Timestamp Calculation (Same as above)
+    let baseTime = null;
+
+    // Priority 1: Manual Setting
+    if (startDateStr && startTimeStr) {
+      const d = new Date(`${startDateStr}T${startTimeStr}`);
+      if (!isNaN(d.getTime())) {
+        baseTime = d.getTime();
+      }
+    }
+
+    // Priority 2: Auto-sync
+    if (baseTime === null) {
+      const absoluteFiles = loadedFiles.filter((f) => f.startDate && f.startDate > 0);
+      if (absoluteFiles.length > 0) {
+        baseTime = Math.min(...absoluteFiles.map((f) => f.startDate));
+      }
+    }
+
+    // Priority 3: Default fallback
+    if (baseTime === null) {
+      baseTime = new Date('2000-01-01T00:00:00').getTime();
+    }
+
+    const fileMap = new Map(loadedFiles.map((f) => [f.id, f]));
+
+    return comments
+      .map((c) => {
+        const file = fileMap.get(c.sourceFileId);
+        const isRelativeLog = file && file.startDate === 0;
+
+        let vpos = 0;
+        let absoluteTime = 0;
+
+        if (isRelativeLog) {
+          vpos = c.rawTime / 1000;
+          absoluteTime = baseTime + c.rawTime;
+        } else {
+          absoluteTime = c.rawTime;
+          vpos = (c.rawTime - baseTime) / 1000;
+        }
+
+        // Always re-generate dateDisplay
+        const d = new Date(absoluteTime);
+        const days = ['(日)', '(月)', '(火)', '(水)', '(木)', '(金)', '(土)'];
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const dayStr = days[d.getDay()];
+        const HH = String(d.getHours()).padStart(2, '0');
+        const MM = String(d.getMinutes()).padStart(2, '0');
+        const SS = String(d.getSeconds()).padStart(2, '0');
+        const MMM = String(d.getMilliseconds()).padStart(3, '0');
+        const dateDisplay = `${yyyy}/${mm}/${dd}${dayStr} ${HH}:${MM}:${SS}.${MMM}`;
+
+        return {
+          ...c,
+          vpos: vpos,
+          time: vpos,
+          absoluteTime: absoluteTime,
+          dateDisplay: dateDisplay,
+        };
+      })
+      .sort((a, b) => a.vpos - b.vpos);
+  }, [comments, loadedFiles, startDateStr, startTimeStr]);
 
   return {
     loadedFiles,
@@ -519,6 +701,7 @@ export const useLogSystem = () => {
     comments,
     setComments,
     visibleComments,
+    allCommentsEnriched,
     urlInput,
     setUrlInput,
     startTimeStr,

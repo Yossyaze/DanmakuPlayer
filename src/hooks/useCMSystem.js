@@ -66,19 +66,48 @@ const formatLogTime = (logSec, startTimeStr) => {
   return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
-// Helper to recalculate videoStart and accumulated CM duration for all ranges
+// Helper to recalculate videoStart, logStart, and accumulated CM duration for all ranges
+// Now uses videoStart (Video Time) as the anchor for CM start position
 const recalculateCmVideoTimes = (ranges, offset) => {
-  const sorted = [...ranges].sort((a, b) => a.logStart - b.logStart);
+  // Sort by videoStart (Video Time) if available
+  // Fallback to logStart - offset for legacy data
+  const sorted = [...ranges].sort((a, b) => {
+    const aStart = a.videoStart !== undefined ? a.videoStart : a.logStart - offset;
+    const bStart = b.videoStart !== undefined ? b.videoStart : b.logStart - offset;
+    return aStart - bStart;
+  });
+
   let accumulatedCmDuration = 0;
   return sorted.map((range) => {
-    // videoStart is relative to Video 0
-    // LogStart = VideoStart + accumulatedCmDuration + offset
-    // VideoStart = LogStart - accumulatedCmDuration - offset
-    const videoStart = range.logStart - accumulatedCmDuration - offset;
-    const duration = range.logEnd - range.logStart;
+    let videoStart;
+
+    if (range.videoStart !== undefined) {
+      // Primary Source: Video Time
+      videoStart = range.videoStart;
+    } else if (range.logicalStart !== undefined) {
+      // Migration: Convert from ephemeral logicalStart format
+      // logicalStart = videoStart + accBefore
+      videoStart = range.logicalStart - accumulatedCmDuration;
+    } else {
+      // Legacy: Convert from logStart
+      // logStart = videoStart + accBefore + offset
+      videoStart = range.logStart - accumulatedCmDuration - offset;
+    }
+
+    // Recalculate derived values based on current sequence
+    // logStart (Log Time) = videoStart + accumulatedCmDuration + offset
+    const logStart = videoStart + accumulatedCmDuration + offset;
+
+    // logicalStart (Seekbar Time) = videoStart + accumulatedCmDuration
+    const logicalStart = videoStart + accumulatedCmDuration;
+
+    // duration is derived from logEnd (fixed anchor) - logStart (calculated)
+    const duration = range.logEnd - logStart;
     const accBefore = accumulatedCmDuration;
     accumulatedCmDuration += duration;
-    return { ...range, videoStart, accBefore, duration };
+
+    // Return normalized object with videoStart as the preserved anchor
+    return { ...range, videoStart, logStart, logicalStart, accBefore, duration };
   });
 };
 
@@ -220,16 +249,6 @@ export const useCMSystem = (videoDuration) => {
     [cmRanges, logStartTime]
   );
 
-  // Convert logical time (seekbar time) to log time
-  // Logical time = video time + accumulated CM wait time
-  // This is the inverse: given a logical time, find the log time
-  const logicalTimeToLogTime = useCallback(
-    (logicalTime) => {
-      return logicalTime + logStartTime;
-    },
-    [logStartTime]
-  );
-
   const addCmRangeSmart = useCallback(
     (
       startMode,
@@ -241,21 +260,26 @@ export const useCMSystem = (videoDuration) => {
       endDateInput,
       startDateStr
     ) => {
-      let logStart = 0;
+      let logStartInput = 0;
       let logEnd = 0;
 
-      // 1. Calculate Log Start
+      // 1. Calculate Log Start Input (Temporary, to get Video Time)
       if (startMode === 'log') {
-        logStart = parseDateTimeInput(startDateInput, startInput, startDateStr, startTimeStr);
+        logStartInput = parseDateTimeInput(startDateInput, startInput, startDateStr, startTimeStr);
       } else if (startMode === 'video') {
         const logicalTime = parseTimeStr(startInput);
-        logStart = logicalTimeToLogTime(logicalTime);
+        logStartInput = logicalTime + logStartTime;
       }
 
-      // 2. Calculate Log End
+      // 2. Calculate Video Start (The Anchor)
+      // Use existing ranges to find where this log time maps to in Video Time
+      const { videoTime: videoStart } = logTimeToVideoTime(logStartInput);
+
+      // 3. Calculate Log End (Log Time)
+      // Duration is based on the ephemeral logStartInput
       if (endMode === 'duration') {
         const duration = parseTimeStr(endInput);
-        logEnd = logStart + duration;
+        logEnd = logStartInput + duration;
       } else if (endMode === 'log') {
         logEnd = parseDateTimeInput(endDateInput, endInput, startDateStr, startTimeStr);
       } else if (endMode === 'video') {
@@ -263,21 +287,20 @@ export const useCMSystem = (videoDuration) => {
         logEnd = videoTimeToLogTime(videoTime);
       }
 
-      // Normalize Labels to Log Time
-      const labelStart = formatLogTime(logStart, startTimeStr);
+      // Normalize Labels (Display Purpose)
+      const labelStart = formatLogTime(logStartInput, startTimeStr);
       const labelEnd = formatLogTime(logEnd, startTimeStr);
 
       addCmRange({
-        logStart,
-        logEnd,
+        videoStart, // 動画時間で保存（新形式）
+        logEnd, // ログ時間で保存
         labelStart,
         labelEnd,
         startDateStr: startDateInput || '',
         endDateStr: endDateInput || '',
-        videoStart: 0,
       });
     },
-    [addCmRange, logicalTimeToLogTime, videoTimeToLogTime]
+    [addCmRange, logStartTime, logTimeToVideoTime, videoTimeToLogTime]
   );
 
   const updateCmRange = useCallback(
@@ -295,21 +318,38 @@ export const useCMSystem = (videoDuration) => {
       const target = cmRanges[index];
       if (!target) return;
 
-      let logStart = 0;
+      let logStartInput = 0;
       let logEnd = 0;
 
-      // 1. Calculate Log Start
+      // 1. Calculate Log Start Input
       if (startMode === 'log') {
-        logStart = parseDateTimeInput(startDateInput, startInput, startDateStr, startTimeStr);
+        logStartInput = parseDateTimeInput(startDateInput, startInput, startDateStr, startTimeStr);
       } else if (startMode === 'video') {
         const logicalTime = parseTimeStr(startInput);
-        logStart = logicalTimeToLogTime(logicalTime);
+        logStartInput = logicalTime + logStartTime;
       }
 
-      // 2. Calculate Log End
+      // 2. Calculate Video Start
+      // IMPORTANT: When updating, we need to be careful if we are moving the range itself?
+      // logTimeToVideoTime uses current ranges. If we are updating range[i], its current position affects the calculation?
+      // "logTimeToVideoTime" excludes the time inside CM ranges.
+      // If we are just moving the start time of THIS range, we should ideally exclude THIS range from the calculation context
+      // to find the pure video time at that log point?
+      // Actually, logTimeToVideoTime is designed to map any log time to video time.
+      // If logStartInput falls inside another CM, videoTime will be the start of that CM.
+      // If it falls inside THIS CM (which is being updated), it might be tricky.
+
+      // Ideally, we should calculate video time "as if this CM didn't exist" if we are moving it?
+      // But simpler approach: Calculate videoStart based on the input log time using global context.
+      // IF the user specifies a time that is currently inside a CM, they probably mean that log time.
+      // The resulting videoStart will correspond to the video frame at that log time.
+
+      const { videoTime: videoStart } = logTimeToVideoTime(logStartInput);
+
+      // 3. Calculate Log End
       if (endMode === 'duration') {
         const duration = parseTimeStr(endInput);
-        logEnd = logStart + duration;
+        logEnd = logStartInput + duration;
       } else if (endMode === 'log') {
         logEnd = parseDateTimeInput(endDateInput, endInput, startDateStr, startTimeStr);
       } else if (endMode === 'video') {
@@ -317,13 +357,13 @@ export const useCMSystem = (videoDuration) => {
         logEnd = videoTimeToLogTime(videoTime);
       }
 
-      // Normalize Labels to Log Time
-      const labelStart = formatLogTime(logStart, startTimeStr);
+      // Normalize Labels
+      const labelStart = formatLogTime(logStartInput, startTimeStr);
       const labelEnd = formatLogTime(logEnd, startTimeStr);
 
       const updatedRange = {
         ...target,
-        logStart,
+        videoStart, // 動画時間で更新
         logEnd,
         labelStart,
         labelEnd,
@@ -331,13 +371,16 @@ export const useCMSystem = (videoDuration) => {
         endDateStr: endDateInput || '',
       };
 
+      // Remove obsolete logicalStart if present
+      delete updatedRange.logicalStart;
+
       setCmRanges((prev) => {
         const newRanges = [...prev];
         newRanges[index] = updatedRange;
         return recalculateCmVideoTimes(newRanges, logStartTime);
       });
     },
-    [cmRanges, logStartTime, logicalTimeToLogTime, videoTimeToLogTime]
+    [cmRanges, logStartTime, logTimeToVideoTime, videoTimeToLogTime]
   );
 
   return {
