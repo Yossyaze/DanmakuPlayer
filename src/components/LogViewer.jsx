@@ -60,8 +60,8 @@ const LogCommentItemWrapper = React.memo(
 );
 
 const DEFAULT_SETTINGS = {
-  fontSize: 'medium', // small, medium, large, xlarge
-  density: 'comfortable', // compact, comfortable, spacious
+  fontSize: 'small', // small, medium, large, xlarge
+  density: 'compact', // compact, comfortable, spacious
   showImages: true,
   showThumbnails: false,
   showIds: true,

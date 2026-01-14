@@ -57,7 +57,7 @@ chrome.runtime.onInstalled.addListener(() => {
   // HLS stream submenu (will be populated dynamically)
   chrome.contextMenus.create({
     id: 'hls-streams',
-    title: 'HLSストリーム (検出中...)',
+    title: 'ウェブ動画 (検出中...)',
     contexts: ['page'],
     enabled: false,
   });
@@ -228,7 +228,7 @@ async function updateHlsContextMenu(tabId) {
 
   if (!streams || streams.length === 0) {
     chrome.contextMenus.update('hls-streams', {
-      title: 'HLSストリーム (未検出)',
+      title: 'ウェブ動画 (未検出)',
       enabled: false,
     });
     return;
@@ -236,7 +236,7 @@ async function updateHlsContextMenu(tabId) {
 
   // Update parent menu
   chrome.contextMenus.update('hls-streams', {
-    title: `HLSストリーム (${streams.length}件検出)`,
+    title: `ウェブ動画 (${streams.length}件検出)`,
     enabled: true,
   });
 
@@ -302,10 +302,17 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 // Open in DanmakuPlayer
 // ========================================
 
-async function openInPlayer(url, preferProduction = false, referer = '') {
+async function openInPlayer(url, preferDevelopment = null, referer = '') {
   if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
     console.warn('DanmakuPlayer Helper: Invalid URL:', url);
     return;
+  }
+
+  // Resolve preference if not explicitly provided
+  let useDev = preferDevelopment;
+  if (useDev === null || useDev === undefined) {
+    const storage = await chrome.storage.local.get('preferDevelopment');
+    useDev = storage.preferDevelopment || false;
   }
 
   try {
@@ -314,7 +321,28 @@ async function openInPlayer(url, preferProduction = false, referer = '') {
 
     if (tabs.length > 0) {
       // Reuse existing tab
-      const tab = tabs[0];
+      let tab = tabs[0]; // Default fallback
+
+      // Prioritize based on preference
+      if (useDev) {
+        // Try to find Development tab
+        const devTab = tabs.find((t) => t.url.startsWith(APP_URLS.development));
+        const devAltTab = tabs.find((t) => t.url.startsWith(APP_URLS.developmentAlt));
+        if (devTab) {
+          tab = devTab;
+        } else if (devAltTab) {
+          tab = devAltTab;
+        }
+        // If neither found, fallback to whatever is in tabs[0] (likely Production)
+      } else {
+        // Try to find Production tab
+        const prodTab = tabs.find((t) => t.url.startsWith(APP_URLS.production));
+        if (prodTab) {
+          tab = prodTab;
+        }
+        // If not found, fallback to whatever is in tabs[0] (likely Development)
+      }
+
       await chrome.tabs.update(tab.id, { active: true });
       await chrome.windows.update(tab.windowId, { focused: true });
 
@@ -344,7 +372,8 @@ async function openInPlayer(url, preferProduction = false, referer = '') {
       }
     } else {
       // Open new tab
-      const baseUrl = preferProduction ? APP_URLS.production : APP_URLS.development;
+      // Default to Production (preferDevelopment = false) if storage says so
+      const baseUrl = useDev ? APP_URLS.development : APP_URLS.production;
       let target = `${baseUrl}?import=${encodeURIComponent(url)}`;
       if (referer) {
         target += `&referer=${encodeURIComponent(referer)}`;
@@ -361,13 +390,13 @@ async function openInPlayer(url, preferProduction = false, referer = '') {
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === 'open-in-danmaku-player') {
     const targetUrl = info.linkUrl || info.pageUrl;
-    openInPlayer(targetUrl);
+    openInPlayer(targetUrl, null); // Check storage
   } else if (info.menuItemId.startsWith('hls-stream-')) {
     // Handle HLS stream selection
     const index = parseInt(info.menuItemId.replace('hls-stream-', ''));
     const streams = detectedStreams.get(tab.id);
     if (streams && streams[index]) {
-      openInPlayer(streams[index].url, false, streams[index].pageUrl);
+      openInPlayer(streams[index].url, null, streams[index].pageUrl); // Check storage
     }
   }
 });
@@ -377,7 +406,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 // Listen for messages from content scripts or popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'OPEN_IN_PLAYER') {
-    openInPlayer(message.url, message.preferProduction, message.referer);
+    openInPlayer(message.url, message.preferDevelopment, message.referer);
     sendResponse({ success: true });
   } else if (message.type === 'FETCH_URL') {
     // Fetch URL via extension (bypasses CORS)

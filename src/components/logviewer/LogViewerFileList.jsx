@@ -47,7 +47,7 @@ const LogViewerFileList = ({ files, selectedFileId, onSelectFile, onRemoveFile, 
             <div key={file.id} className="relative group">
               <div
                 onClick={() => !isEditing && onSelectFile(file.id)}
-                className={`w-full text-left px-3 py-3 rounded-md text-sm transition-colors pr-9 cursor-pointer ${
+                className={`w-full text-left px-3 py-3 rounded-md text-sm transition-colors cursor-pointer ${
                   selectedFileId === file.id
                     ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30'
                     : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
@@ -81,40 +81,43 @@ const LogViewerFileList = ({ files, selectedFileId, onSelectFile, onRemoveFile, 
                   </div>
                 )}
                 <div className="flex justify-between items-center text-xs text-gray-600 group-hover:text-gray-500 mt-1.5">
-                  <span className="max-w-[70%] break-all">{file.filename || 'log.dat'}</span>
-                  <span>{file.count || 0}</span>
+                  <span className="flex-1 min-w-0 break-all truncate">
+                    {file.filename || 'log.dat'}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <span>{file.count || 0}</span>
+                    {!isEditing && (
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onRenameFile) handleStartEdit(file);
+                          }}
+                          className={`p-0.5 rounded transition-colors ${onRenameFile ? 'text-gray-500 hover:text-blue-400 hover:bg-gray-700/50' : 'text-gray-700 cursor-not-allowed'}`}
+                          title="名前を変更"
+                          disabled={!onRenameFile}
+                        >
+                          <Edit2 size={12} />
+                        </button>
+                        {onRemoveFile && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm('このログファイルを削除しますか？')) {
+                                onRemoveFile(file.id);
+                              }
+                            }}
+                            className="p-0.5 text-gray-500 hover:text-red-400 hover:bg-gray-700/50 rounded transition-colors"
+                            title="削除"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-
-              {!isEditing && (
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onRenameFile) handleStartEdit(file);
-                    }}
-                    className={`p-1.5 rounded transition-colors ${onRenameFile ? 'text-gray-500 hover:text-blue-400 hover:bg-gray-700/50' : 'text-gray-700 cursor-not-allowed'}`}
-                    title="名前を変更"
-                    disabled={!onRenameFile}
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  {onRemoveFile && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (window.confirm('このログファイルを削除しますか？')) {
-                          onRemoveFile(file.id);
-                        }
-                      }}
-                      className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-gray-700/50 rounded transition-colors"
-                      title="削除"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
           );
         })}

@@ -190,7 +190,7 @@ const rawSteps = [
     content: (
       <div>
         <p className="mb-2">これで基本操作の説明は終わりです。</p>
-        <p>DanmakuPlayerをお楽しみください！</p>
+        <p>最低なコメントたちと動画を楽しもう！</p>
       </div>
     ),
     disableBeacon: true,

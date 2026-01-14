@@ -8,6 +8,7 @@ const SidebarFileRow = ({
   handleToggleFileVisibility,
   handleRemoveFile,
   handleRenameFile,
+  firstAbsoluteTime, // 計算済みの最初のコメントのabsoluteTime（Abemaログ用）
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: file.id,
@@ -24,8 +25,39 @@ const SidebarFileRow = ({
     position: 'relative',
   };
 
-  const dateStr = file.startDate
-    ? new Date(file.startDate).toLocaleString('ja-JP', {
+  // 日時の取得: startDate優先、なければfirstAbsoluteTime、なければrawCommentsから計算
+  const getDisplayDate = () => {
+    // 1. startDateが存在する場合（従来ログ）
+    if (file.startDate && file.startDate > 0) {
+      return file.startDate;
+    }
+
+    // 2. 親から渡されたfirstAbsoluteTimeを使用（Abemaログなど）
+    if (firstAbsoluteTime && firstAbsoluteTime > 0) {
+      return firstAbsoluteTime;
+    }
+
+    // 3. rawCommentsから取得を試みる（フォールバック）
+    if (file.rawComments && file.rawComments.length > 0) {
+      const firstComment = file.rawComments[0];
+
+      // absoluteTimeが既に設定されている場合
+      if (firstComment.absoluteTime && firstComment.absoluteTime > 0) {
+        return firstComment.absoluteTime;
+      }
+
+      // rawTimeが絶対時間として有効な場合（2000年以降）
+      if (firstComment.rawTime && firstComment.rawTime > 946684800000) {
+        return firstComment.rawTime;
+      }
+    }
+
+    return null;
+  };
+
+  const displayDate = getDisplayDate();
+  const dateStr = displayDate
+    ? new Date(displayDate).toLocaleString('ja-JP', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -97,36 +129,36 @@ const SidebarFileRow = ({
               </span>
             )}
           </div>
-          {!isEditing && dateStr && (
+          {!isEditing && (
             <span
               className={`text-gray-500 text-[10px] ml-6 ${
                 file.isVisible === false ? 'opacity-30' : ''
               }`}
             >
-              {dateStr} ({file.rawComments.length})
+              {dateStr && `${dateStr} `}({file.rawComments?.length || 0})
             </span>
           )}
         </div>
       </div>
-      <div className="flex flex-col items-center gap-1 shrink-0 pointer-events-auto">
+      <div className="flex items-center gap-0.5 shrink-0 pointer-events-auto">
         {!isEditing && (
           <button
             onClick={() => {
               setEditName(file.title || file.name);
               setIsEditing(true);
             }}
-            className="text-gray-500 hover:text-blue-400 p-1 transition"
+            className="text-gray-500 hover:text-blue-400 p-0.5 transition"
             title="名前を変更"
           >
-            <Edit2 size={14} />
+            <Edit2 size={12} />
           </button>
         )}
         <button
           onClick={() => handleRemoveFile(file.id)}
-          className="text-gray-500 hover:text-red-400 p-1 transition"
+          className="text-gray-500 hover:text-red-400 p-0.5 transition"
           title="削除"
         >
-          <Trash2 size={14} />
+          <Trash2 size={12} />
         </button>
       </div>
     </div>

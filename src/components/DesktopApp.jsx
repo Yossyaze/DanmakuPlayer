@@ -44,9 +44,8 @@ const DesktopApp = () => {
     }
     return {
       showThreadTitle: true,
-      enableTreeView: false,
+      enableTreeView: true,
       showImages: true,
-      imageLayout: 'inline', // 'inline' | 'grouped'
       aaMode: 'auto', // 'auto' | 'off'
     };
   });

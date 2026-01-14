@@ -41,9 +41,9 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
       if (saved) {
         return {
           ...{
-            duration: 5,
-            fontSize: 20,
-            opacity: 0.7,
+            duration: 8,
+            fontSize: 18,
+            opacity: 0.8,
             area: 100,
             imageMode: 'image', // none, image, placeholder
             abeMode: false, // 安倍晋三モード
@@ -55,9 +55,9 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
       console.error('Failed to load danmaku settings', e);
     }
     return {
-      duration: 5,
-      fontSize: 20,
-      opacity: 0.7,
+      duration: 8,
+      fontSize: 18,
+      opacity: 0.8,
       area: 100,
       imageMode: 'image',
       abeMode: false, // 安倍晋三モード

@@ -8,16 +8,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   // Load settings
-  const storage = await chrome.storage.local.get('preferProduction');
-  document.getElementById('prefer-production').checked = storage.preferProduction || false;
+  const storage = await chrome.storage.local.get('preferDevelopment');
+  document.getElementById('prefer-development').checked = storage.preferDevelopment || false;
 
   // Open current page button
   document.getElementById('open-page').addEventListener('click', async () => {
-    const preferProduction = document.getElementById('prefer-production').checked;
+    const preferDevelopment = document.getElementById('prefer-development').checked;
     await chrome.runtime.sendMessage({
       type: 'OPEN_IN_PLAYER',
       url: tab.url,
-      preferProduction,
+      preferDevelopment,
     });
     window.close();
   });
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const streams = response?.streams || [];
 
   if (streams.length === 0) {
-    hlsList.innerHTML = '<p class="empty-message">HLSストリームが検出されていません</p>';
+    hlsList.innerHTML = '<p class="empty-message">ウェブ動画が検出されていません</p>';
   } else {
     hlsList.innerHTML = streams
       .map((streamInfo) => {
@@ -86,11 +86,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const item = btn.closest('.hls-item');
         const url = decodeURIComponent(item.dataset.url);
         const referer = item.dataset.referer ? decodeURIComponent(item.dataset.referer) : '';
-        const preferProduction = document.getElementById('prefer-production').checked;
+        const preferDevelopment = document.getElementById('prefer-development').checked;
         await chrome.runtime.sendMessage({
           type: 'OPEN_IN_PLAYER',
           url,
-          preferProduction,
+          preferDevelopment,
           referer,
         });
         window.close();
@@ -128,11 +128,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const url = decodeURIComponent(item.dataset.url);
         const referer = item.dataset.referer ? decodeURIComponent(item.dataset.referer) : '';
-        const preferProduction = document.getElementById('prefer-production').checked;
+        const preferDevelopment = document.getElementById('prefer-development').checked;
         await chrome.runtime.sendMessage({
           type: 'OPEN_IN_PLAYER',
           url,
-          preferProduction,
+          preferDevelopment,
           referer,
         });
         window.close();
@@ -141,8 +141,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Save settings on change
-  document.getElementById('prefer-production').addEventListener('change', async (e) => {
-    await chrome.storage.local.set({ preferProduction: e.target.checked });
+  document.getElementById('prefer-development').addEventListener('change', async (e) => {
+    await chrome.storage.local.set({ preferDevelopment: e.target.checked });
   });
 
   // Help Toggle

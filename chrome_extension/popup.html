@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
@@ -19,13 +19,11 @@
 
       <section class="section">
         <h2>📺 このページを開く</h2>
-        <button id="open-page" class="btn btn-primary">
-          現在のページをDanmakuPlayerで開く
-        </button>
+        <button id="open-page" class="btn btn-primary">現在のページをDanmakuPlayerで開く</button>
       </section>
 
       <section class="section" id="hls-section">
-        <h2>🎬 検出されたHLSストリーム</h2>
+        <h2>🎬 検出されたウェブ動画</h2>
         <div id="hls-list" class="hls-list">
           <p class="empty-message">検出中...</p>
         </div>
@@ -34,15 +32,13 @@
       <section class="section">
         <h2>⚙️ 設定</h2>
         <div class="setting-row">
-          <label for="prefer-production">本番環境を優先</label>
-          <input type="checkbox" id="prefer-production" />
+          <label for="prefer-development">開発環境を優先</label>
+          <input type="checkbox" id="prefer-development" />
         </div>
       </section>
 
       <footer class="footer">
-        <a href="https://yossyaze.github.io/DanmakuPlayer/" target="_blank"
-          >DanmakuPlayerを開く</a
-        >
+        <a href="https://yossyaze.github.io/DanmakuPlayer/" target="_blank">DanmakuPlayerを開く</a>
       </footer>
 
       <!-- Help Overlay -->
@@ -54,13 +50,19 @@
           </div>
           <div class="help-body">
             <h3>📺 このページを開く</h3>
-            <p>現在見ているウェブページをDanmakuPlayerで開きます。Youtubeやニコニコ動画のURLに対応しています。</p>
-            
-            <h3>🎬 HLSストリーム検出</h3>
-            <p>ページ内の動画(m3u8)を自動検出します。リストをクリックするとプレイヤーで再生できます。</p>
-            
+            <p>
+              現在見ているウェブページをDanmakuPlayerで開きます。Youtubeやニコニコ動画のURLに対応しています。
+            </p>
+
+            <h3>🎬 ウェブ動画検出</h3>
+            <p>
+              ページ内の動画(m3u8)を自動検出します。リストをクリックするとプレイヤーで再生できます。
+            </p>
+
             <h3>⚙️ 設定</h3>
-            <p>「本番環境を優先」: 開発版(localhost)ではなく、公開版のプレイヤーで開くようにします。</p>
+            <p>
+              「開発環境を優先」: 公開版ではなく、開発版(localhost)のプレイヤーで開くようにします。
+            </p>
           </div>
         </div>
       </div>

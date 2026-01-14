@@ -246,6 +246,22 @@ const Sidebar = ({
     return enrichedList;
   }, [comments]);
 
+  // ファイルごとの最初のコメントのabsoluteTimeを計算（Abemaログの日時表示用）
+  const fileFirstAbsoluteTimeMap = useMemo(() => {
+    const map = new Map();
+    if (!allComments || allComments.length === 0) return map;
+
+    // 各ファイルの最初のコメントを見つける
+    allComments.forEach((c) => {
+      if (!c.sourceFileId) return;
+      if (!map.has(c.sourceFileId) && c.absoluteTime && c.absoluteTime > 0) {
+        map.set(c.sourceFileId, c.absoluteTime);
+      }
+    });
+
+    return map;
+  }, [allComments]);
+
   // Image Navigation Helper
   const handleSetZoomedImage = React.useCallback(
     (url) => {
@@ -1043,6 +1059,7 @@ const Sidebar = ({
                           handleToggleFileVisibility={handleToggleFileVisibility}
                           handleRemoveFile={handleRemoveFile}
                           handleRenameFile={handleRenameFile}
+                          firstAbsoluteTime={fileFirstAbsoluteTimeMap.get(file.id)}
                         />
                       ))}
                       {loadedFiles.length === 0 && (
@@ -1251,7 +1268,9 @@ const Sidebar = ({
                       <span className="text-[10px] text-gray-400">動画時間</span>
                       <div className="flex items-center gap-2">
                         <TimeInput
-                          value={videoStartTimeStr || '00:00'}
+                          value={
+                            videoStartTimeStr || (totalDuration >= 3600 ? '00:00:00' : '00:00')
+                          }
                           onChange={setVideoStartTimeStr}
                           showHours={totalDuration >= 3600}
                           placeholder="00:00"
