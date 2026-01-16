@@ -848,6 +848,7 @@ const DesktopLayout = ({
                 onToggleSidebar={() => setShowSidebar(!showSidebar)}
                 onRenameFile={logSystem.handleRenameFile}
                 unlockAbeMode={unlockAbeMode}
+                abeModeUnlocked={abeModeUnlocked}
                 abeMode={abeModeUnlocked && dmSettings.abeMode}
                 onSetEndCardPreview={handleSetEndCardPreview}
               />

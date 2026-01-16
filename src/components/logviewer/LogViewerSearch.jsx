@@ -1,13 +1,17 @@
-import { Filter, Flame, Hash, Image, Search, Type, Video, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { Filter, Flame, Hash, Image, Search, Sparkles, Type, Video, X } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-const FILTER_OPTIONS = [
+// 基本のフィルターオプション（常に表示）
+const BASE_FILTER_OPTIONS = [
   { id: 'image', label: '画像付き', icon: <Image size={14} /> },
   { id: 'popular', label: '人気のコメント', icon: <Flame size={14} /> },
   { id: 'url', label: 'URLを含む', icon: <Hash size={14} /> },
   { id: 'video', label: '動画URLを含む', icon: <Video size={14} /> },
   { id: 'aa', label: 'アスキーアート', icon: <Type size={14} /> },
 ];
+
+// 安倍モード解放後のみ表示するオプション
+const ABE_FILTER_OPTION = { id: 'abe', label: '安倍晋三', icon: <Sparkles size={14} /> };
 
 const LogViewerSearch = ({
   // Search state
@@ -30,11 +34,21 @@ const LogViewerSearch = ({
   setShowResultsPopup,
   // Keyboard handler
   handleSearchKeyDown,
+  // Abe Mode
+  abeModeUnlocked = false,
 }) => {
   const filterMenuRef = useRef(null);
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
   const [showSearchInput, setShowSearchInput] = useState(false);
+
+  // 動的フィルターオプション（安倍モード解放後にオプション追加）
+  const filterOptions = useMemo(() => {
+    if (abeModeUnlocked) {
+      return [...BASE_FILTER_OPTIONS, ABE_FILTER_OPTION];
+    }
+    return BASE_FILTER_OPTIONS;
+  }, [abeModeUnlocked]);
 
   // フィルターメニューの外側クリックで閉じる
   useEffect(() => {
@@ -206,7 +220,7 @@ const LogViewerSearch = ({
             <div className="px-3 py-2 text-xs font-bold text-gray-500 border-b border-gray-800 uppercase tracking-wider">
               絞り込み
             </div>
-            {FILTER_OPTIONS.map((item) => (
+            {filterOptions.map((item) => (
               <button
                 key={item.id}
                 onClick={() => handleFilterSelect(item.id)}

@@ -117,7 +117,8 @@ export const highlightAbeKeywords = (text, React) => {
 };
 
 /**
- * プレーンテキスト用：キーワードが含まれる場合、テキスト全体のisAbeフラグを真にして返す
+ * プレーンテキスト用：キーワードが含まれる場合、テキストを絵文字と非絵文字に分割し、
+ * 絵文字以外の部分にのみisAbe:trueを設定して返す
  * danmakuのテキストノード用
  * @param {string} text - 処理するテキスト
  * @returns {object} - { hasMatch: boolean, parts: Array<{text: string, isAbe: boolean}> }
@@ -125,14 +126,41 @@ export const highlightAbeKeywords = (text, React) => {
 export const parseAbeKeywords = (text) => {
   if (!text) return { hasMatch: false, parts: [{ text: '', isAbe: false }] };
 
-  if (containsAbeKeyword(text)) {
-    return {
-      hasMatch: true,
-      parts: [{ text: text, isAbe: true }],
-    };
+  // 安倍キーワードを含むかチェック
+  if (!containsAbeKeyword(text)) {
+    return { hasMatch: false, parts: [{ text: text, isAbe: false }] };
   }
 
-  return { hasMatch: false, parts: [{ text: text, isAbe: false }] };
+  // 絵文字とそれ以外を分割する正規表現
+  // Unicode Emoji範囲を広くカバー
+  const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu;
+
+  // テキストを絵文字とそれ以外に分割
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = emojiRegex.exec(text)) !== null) {
+    // 絵文字の前のテキスト（虹色適用）
+    if (match.index > lastIndex) {
+      parts.push({ text: text.slice(lastIndex, match.index), isAbe: true });
+    }
+    // 絵文字（虹色なし）
+    parts.push({ text: match[0], isAbe: false });
+    lastIndex = match.index + match[0].length;
+  }
+
+  // 残りのテキスト（虹色適用）
+  if (lastIndex < text.length) {
+    parts.push({ text: text.slice(lastIndex), isAbe: true });
+  }
+
+  // partsが空の場合（絵文字のみ or 処理エラー）
+  if (parts.length === 0) {
+    return { hasMatch: true, parts: [{ text: text, isAbe: true }] };
+  }
+
+  return { hasMatch: true, parts };
 };
 
 /**

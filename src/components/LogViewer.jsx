@@ -99,6 +99,7 @@ const LogViewer = ({
   onToggleSidebar, // Callback to toggle sidebar
   onRenameFile, // New prop
   unlockAbeMode, // Hidden Abe Mode unlock callback
+  abeModeUnlocked = false, // Abe Mode unlocked state (for filter visibility)
   onRemoveFile, // New prop for file deletion
   abeMode, // Abe Mode (Rainbow)
   setZoomedImage,
@@ -548,6 +549,7 @@ const LogViewer = ({
               setShowFilterMenu={setShowFilterMenu}
               setShowResultsPopup={setShowResultsPopup}
               handleSearchKeyDown={handleSearchKeyDown}
+              abeModeUnlocked={abeModeUnlocked}
             />
 
             {/* NG Toggle Button */}

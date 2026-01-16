@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { isProbablyAA } from '../utils/aaUtils';
+import { containsAbeKeyword } from '../utils/abeMode';
 
 /**
  * useLogFilter - 検索クエリとフィルタの状態管理を行うカスタムフック
@@ -166,6 +167,11 @@ export const useLogFilter = (filteredComments = [], unlockAbeMode = null) => {
         case 'aa':
           return filteredComments
             .filter((c) => isProbablyAA(c.text))
+            .sort((a, b) => a.resNum - b.resNum);
+        case 'abe':
+          // 安倍モード対象コメント（安倍関連キーワードを含む）
+          return filteredComments
+            .filter((c) => containsAbeKeyword(c.text))
             .sort((a, b) => a.resNum - b.resNum);
         default:
           return [];
