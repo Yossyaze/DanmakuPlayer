@@ -1,8 +1,10 @@
 import {
   Check, // New
+  Gauge,
   Maximize,
   MessageSquare,
   Minimize,
+  PanelRight,
   Pause,
   Play,
   Settings,
@@ -72,6 +74,8 @@ const VideoControls = ({
   setDmSettings, // New prop
   showDanmaku, // Danmaku visibility toggle
   setShowDanmaku, // Danmaku visibility setter
+  showSidebar, // サイドバー表示状態
+  setShowSidebar, // サイドバー表示の切り替え
   containerRef, // For fullscreen
   abeModeUnlocked = false, // Hidden Abe Mode unlock state
   commentDensity = [], // Array of normalized values (0-1)
@@ -82,6 +86,9 @@ const VideoControls = ({
   currentLevel = -1,
   manualQuality = -1,
   onQualitySelect,
+  // Speed Props
+  playbackRate = 1,
+  onPlaybackRateChange,
   forceRender = false, // New prop to force rendering even without videoSrc
 }) => {
   const seekContainerRef = useRef(null);
@@ -104,6 +111,10 @@ const VideoControls = ({
   // const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Removed internal state
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showQualityMenu, setShowQualityMenu] = useState(false); // New state for quality menu
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false); // 速度選択メニュー
+
+  // 再生速度の選択肢
+  const SPEED_OPTIONS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
   // Watch for fullscreen changes (e.g. user presses Escape)
   useEffect(() => {
@@ -559,6 +570,20 @@ const VideoControls = ({
             </button>
           )}
 
+          {/* Sidebar Toggle */}
+          {setShowSidebar && (
+            <button
+              id="btn-sidebar-toggle"
+              onClick={() => setShowSidebar(!showSidebar)}
+              className={`transition p-1 rounded-full ${
+                showSidebar ? 'text-white bg-blue-500' : 'text-white/50 hover:bg-white/10'
+              }`}
+              title={`サイドバー ${showSidebar ? 'ON' : 'OFF'}`}
+            >
+              <PanelRight size={20} />
+            </button>
+          )}
+
           {/* Settings Button (Danmaku) */}
           {dmSettings && setDmSettings && (
             <div className="relative">
@@ -626,6 +651,46 @@ const VideoControls = ({
                       >
                         <span>{level.height}p</span>
                         {manualQuality === index && <Check size={16} />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Speed Settings Button */}
+          {onPlaybackRateChange && (
+            <div className="relative">
+              <button
+                onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+                className={`transition p-1 rounded-full ${
+                  showSpeedMenu ? 'text-blue-400 bg-white/10' : 'text-white hover:bg-white/10'
+                }`}
+                title="再生速度"
+              >
+                <Gauge size={20} />
+              </button>
+              {/* Speed Menu Popover */}
+              {showSpeedMenu && (
+                <div className="absolute bottom-full right-0 mb-2 w-36 bg-black/90 border border-white/20 rounded-lg shadow-xl overflow-hidden backdrop-blur-sm animate-fade-in z-50">
+                  <div className="py-1">
+                    <div className="px-3 py-2 text-xs font-bold text-gray-400 border-b border-white/10 mb-1">
+                      再生速度
+                    </div>
+                    {SPEED_OPTIONS.map((speed) => (
+                      <button
+                        key={speed}
+                        onClick={() => {
+                          onPlaybackRateChange(speed);
+                          setShowSpeedMenu(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-white/10 transition-colors ${
+                          playbackRate === speed ? 'text-blue-400 font-bold' : 'text-white'
+                        }`}
+                      >
+                        <span>{speed === 1 ? '標準' : `${speed}x`}</span>
+                        {playbackRate === speed && <Check size={16} />}
                       </button>
                     ))}
                   </div>

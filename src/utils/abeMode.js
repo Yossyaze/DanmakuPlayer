@@ -3,7 +3,10 @@
  * 安倍晋三関連のキーワードや語録を虹色で強調表示する
  */
 import {
+  ABE_EXACT_MATCH_KEYWORDS,
+  ABE_EXCLUDE_KEYWORDS,
   ABE_FAMOUS_QUOTES,
+  ABE_NAME_KEYWORDS,
   ABE_NICKNAMES,
   ABE_PATTERNS,
   ABE_RELATED_QUOTES,
@@ -13,35 +16,15 @@ import {
 // Re-export for celebration component
 export { ABE_FAMOUS_QUOTES };
 
-// 名前関連キーワード
-export const ABE_NAME_KEYWORDS = [
-  '安倍晋三',
-  '安倍総理',
-  '安倍首相',
-  '安倍',
-  '晋三',
-  'あべしんぞう',
-  'アベ',
-  'シンゾー',
-  'Abe',
-  'Shinzo',
-  '晋さん',
-  '晋',
-  '山上徹也',
-  '山上',
-  '山神',
-  '徹也',
-  'ヤマガミ',
-];
-
-// すべての固定キーワードを結合
+// すべての固定キーワードを結合（完全一致キーワードは除外）
+const exactMatchSet = new Set(ABE_EXACT_MATCH_KEYWORDS);
 export const ALL_ABE_KEYWORDS = [
   ...ABE_NAME_KEYWORDS,
   ...ABE_FAMOUS_QUOTES,
   ...ABE_RELATED_QUOTES,
   ...ABE_NICKNAMES,
   ...FULL_ABE_QUOTES,
-];
+].filter((kw) => !exactMatchSet.has(kw));
 
 // ボイスファイルリスト
 export const ABE_VOICE_FILES = [
@@ -94,6 +77,21 @@ const ABE_REGEX = buildAbeRegex();
  */
 export const containsAbeKeyword = (text) => {
   if (!text) return false;
+
+  // 除外キーワードチェック（これらを含むテキストは適用外）
+  for (const excludeKw of ABE_EXCLUDE_KEYWORDS) {
+    if (text.includes(excludeKw)) {
+      return false;
+    }
+  }
+
+  // 完全一致キーワードチェック（テキスト全体が一致する場合のみ適用）
+  const trimmedText = text.trim();
+  if (ABE_EXACT_MATCH_KEYWORDS.includes(trimmedText)) {
+    return true;
+  }
+
+  // 通常の部分一致チェック
   // exec/testはステートフルなので、matchを使用（あるいは毎回生成）
   const matches = text.match(ABE_REGEX);
   return matches !== null;

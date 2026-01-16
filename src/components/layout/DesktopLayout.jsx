@@ -340,12 +340,11 @@ const DesktopLayout = ({
       />
 
       {/* Content Area - Video/LogViewer + Sidebar */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div ref={containerRef} className="flex flex-1 min-h-0 overflow-hidden">
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <div className="flex-1 flex overflow-hidden">
             {/* --- Main Content (Video) --- */}
             <div
-              ref={containerRef}
               className="flex-1 flex flex-col min-w-0 relative group"
               style={{
                 visibility: logOnlyMode ? 'hidden' : 'visible',
@@ -793,6 +792,8 @@ const DesktopLayout = ({
                       logStartTime={cmSystem.logStartTime}
                       showDanmaku={showDanmaku}
                       setShowDanmaku={setShowDanmaku}
+                      showSidebar={showSidebar}
+                      setShowSidebar={setShowSidebar}
                       containerRef={containerRef}
                       abeModeUnlocked={abeModeUnlocked}
                       commentDensity={logSystem.commentDensity} // Was it passed?
@@ -806,6 +807,9 @@ const DesktopLayout = ({
                       currentLevel={currentLevel}
                       manualQuality={manualQuality}
                       onQualitySelect={handleQualitySelect}
+                      // Speed Props
+                      playbackRate={player.playbackRate}
+                      onPlaybackRateChange={player.setPlaybackRate}
                       forceRender={forceRender}
                     />
                   </>

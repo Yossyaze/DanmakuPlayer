@@ -222,6 +222,13 @@ const HLSVideo = forwardRef(
       getLevels: () => {
         return hlsRef.current ? hlsRef.current.levels : [];
       },
+      // Playback Rate Control
+      get playbackRate() {
+        return videoRef.current?.playbackRate || 1;
+      },
+      set playbackRate(rate) {
+        if (videoRef.current) videoRef.current.playbackRate = rate;
+      },
     }));
 
     const onReadyRef = useRef(onReady);

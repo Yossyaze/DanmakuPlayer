@@ -11,6 +11,7 @@ export const usePlayer = () => {
   const [videoFilePath, setVideoFilePath] = useState(''); // Full absolute path (for compatibility with Desktop version)
   const [referer, setReferer] = useState(''); // Referer for HLS streams (e.g. from extension)
   const [isReady, setIsReady] = useState(false); // New: Track player readiness
+  const [playbackRate, setPlaybackRate] = useState(1); // 再生速度 (0.25 ~ 2.0)
 
   const isPlayingRef = useRef(false);
 
@@ -29,6 +30,14 @@ export const usePlayer = () => {
       }
     }
   }, [isPlaying]);
+
+  // 再生速度をvideoに適用
+  useEffect(() => {
+    const video = playerRef.current;
+    if (video && video.playbackRate !== undefined) {
+      video.playbackRate = playbackRate;
+    }
+  }, [playbackRate]);
 
   const setPlayingState = useCallback((playing) => {
     setIsPlaying(playing);
@@ -149,5 +158,7 @@ export const usePlayer = () => {
     isPlayingRef, // Expose ref
     referer,
     setReferer,
+    playbackRate,
+    setPlaybackRate,
   };
 };
