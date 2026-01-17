@@ -1,6 +1,7 @@
 import { Ban, Hash, Menu, Settings } from 'lucide-react';
 import React, { useState } from 'react';
 
+import { useContextMenu } from '../hooks/useContextMenu';
 import { useLogFilter } from '../hooks/useLogFilter';
 import { useLogPopup } from '../hooks/useLogPopup';
 import CommentList from './CommentList';
@@ -10,7 +11,6 @@ import LogViewerSearch from './logviewer/LogViewerSearch';
 import LogViewerSearchResults from './logviewer/LogViewerSearchResults';
 import LogViewerNGPanel from './LogViewerNGPanel';
 import LogViewerSettings from './LogViewerSettings';
-import CommentContextMenu from './ui/CommentContextMenu';
 import LogCommentItem from './ui/LogCommentItem';
 
 // Wrapper for LogCommentItem to act as row component for CommentList
@@ -376,15 +376,16 @@ const LogViewer = ({
     [filteredComments, setZoomedImage]
   );
 
+  // グローバルコンテキストメニュー
+  const { openMenu } = useContextMenu();
+
   // Popup & Context Menu Hook (uses filteredComments)
   const {
     popupStack,
-    logContextMenu,
-    setLogContextMenu,
     closePopupAtIndex,
     closePopupsAbove,
     clearPopups,
-    handlePopupRowClick,
+    handlePopupRowClick: originalHandlePopupRowClick,
     handleAnchorClick,
     handleReplyCountClick,
   } = useLogPopup(filteredComments);
@@ -413,6 +414,67 @@ const LogViewer = ({
     setActiveUserId, // New
   } = useLogFilter(filteredComments, unlockAbeMode);
 
+  // handlePopupRowClickをラップしてグローバルコンテキストメニューを使用
+  const handlePopupRowClick = React.useCallback(
+    (e, comment) => {
+      originalHandlePopupRowClick(e, comment, (ev, c) => {
+        openMenu(c, {
+          handlers: {
+            onSeek: onSeekAndPlay,
+            onJumpToComment: (targetComment) => {
+              if (onCommentClick) onCommentClick(targetComment.time);
+              if (commentListRef.current) {
+                commentListRef.current.scrollToResNum(
+                  targetComment.originalResNum || targetComment.resNum,
+                  targetComment.sourceFileId
+                );
+              }
+              clearPopups();
+              setActiveUserId(null);
+              setShowResultsPopup(false);
+            },
+            onSetLogStart,
+            onSetCmStart,
+            onSetCmEnd,
+            onSetEndCardPreview,
+            onAddNgId,
+            onAddNgComment,
+            onToggleAA,
+          },
+          config: {
+            formatTime,
+            logStartTime,
+            totalComments: filteredComments.length,
+            aaMode: logSettings.aaMode,
+            aaOverride: aaOverrideMap[c.id],
+          },
+        });
+      });
+    },
+    [
+      originalHandlePopupRowClick,
+      openMenu,
+      onSeekAndPlay,
+      onCommentClick,
+      commentListRef,
+      clearPopups,
+      setActiveUserId,
+      setShowResultsPopup,
+      onSetLogStart,
+      onSetCmStart,
+      onSetCmEnd,
+      onSetEndCardPreview,
+      onAddNgId,
+      onAddNgComment,
+      onToggleAA,
+      formatTime,
+      logStartTime,
+      filteredComments.length,
+      logSettings.aaMode,
+      aaOverrideMap,
+    ]
+  );
+
   // displayResults is now provided by useLogFilter hook
 
   // Calculate active thread title locally based on filtered comments
@@ -428,28 +490,8 @@ const LogViewer = ({
     if (!active) active = filteredComments[0];
     return active ? active.threadTitle || active.sourceFileId : '';
   }, [filteredComments, currentTime]);
-  // Jump Logic (for Context Menu)
-  const handleJumpToComment = (targetComment) => {
-    if (!targetComment) return;
 
-    // 2. Jump to it (Logical Time)
-    if (onCommentClick) {
-      onCommentClick(targetComment.time);
-    }
-
-    // 3. Scroll to it (Physical Scroll)
-    const resNum = targetComment.originalResNum || targetComment.resNum;
-    const sourceFileId = targetComment.sourceFileId;
-
-    if (commentListRef.current) {
-      commentListRef.current.scrollToResNum(resNum, sourceFileId);
-    }
-
-    // Close Popups (using hook action)
-    clearPopups();
-    setActiveUserId(null); // Clear ID filter if jumping
-    setShowResultsPopup(false);
-  };
+  // handleJumpToComment は useLogPopup の handlePopupRowClick 内でグローバルコンテキストメニュー経由で呼ばれる
 
   const handleIdClick = (userId) => {
     if (onIdClick) {
@@ -674,11 +716,36 @@ const LogViewer = ({
           }}
           onRowClick={(e, comment) => {
             e.stopPropagation();
-            setLogContextMenu({
-              x: e.clientX,
-              y: e.clientY,
-              comment: comment,
-              fromSearch: true,
+            openMenu(comment, {
+              handlers: {
+                onSeek: onSeekAndPlay,
+                onJumpToComment: (targetComment) => {
+                  if (onCommentClick) onCommentClick(targetComment.time);
+                  if (commentListRef.current) {
+                    commentListRef.current.scrollToResNum(
+                      targetComment.originalResNum || targetComment.resNum,
+                      targetComment.sourceFileId
+                    );
+                  }
+                  clearPopups();
+                  setActiveUserId(null);
+                  setShowResultsPopup(false);
+                },
+                onSetLogStart,
+                onSetCmStart,
+                onSetCmEnd,
+                onSetEndCardPreview,
+                onAddNgId,
+                onAddNgComment,
+                onToggleAA,
+              },
+              config: {
+                formatTime,
+                logStartTime,
+                totalComments: filteredComments.length,
+                aaMode: logSettings.aaMode,
+                aaOverride: aaOverrideMap[comment.id],
+              },
             });
           }}
           onIdClick={handleIdClick}
@@ -710,30 +777,7 @@ const LogViewer = ({
         setZoomedImage={handleSetZoomedImage}
       />
 
-      {/* Context Menu (for Popup/Log) */}
-      {logContextMenu && (
-        <CommentContextMenu
-          position={{ x: logContextMenu.x, y: logContextMenu.y }}
-          comment={logContextMenu.comment}
-          totalComments={filteredComments.length}
-          onClose={() => setLogContextMenu(null)}
-          onSeek={onSeekAndPlay}
-          onJumpToComment={handleJumpToComment} // Implemented in this file
-          onSetLogStart={onSetLogStart}
-          onSetCmStart={onSetCmStart}
-          onSetCmEnd={onSetCmEnd}
-          onAddNgId={onAddNgId}
-          onAddNgComment={onAddNgComment}
-          onCopyId={(id) => navigator.clipboard.writeText(id)}
-          onCopyComment={(text) => navigator.clipboard.writeText(text)}
-          formatTime={formatTime}
-          logStartTime={logStartTime}
-          aaMode={logSettings.aaMode}
-          aaOverride={aaOverrideMap[logContextMenu.comment.id]}
-          onToggleAA={onToggleAA}
-          onSetEndCardPreview={onSetEndCardPreview}
-        />
-      )}
+      {/* Context Menu (for Popup/Log) - グローバル管理に移行済み */}
 
       {/* Reuse UserHistoryModal if needed - REMOVED for LogViewer, integrated into SearchResults */}
 

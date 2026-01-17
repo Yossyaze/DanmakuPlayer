@@ -36,13 +36,13 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useContextMenu } from '../hooks/useContextMenu';
 import { playRandomAbeVoice } from '../utils/abeMode';
 import { padTime } from '../utils/sidebarUtils';
 import CommentList from './CommentList';
 import SidebarNGPanel from './sidebar/SidebarNGPanel'; // Import
 import SidebarFileRow from './SidebarFileRow'; // Restore
 import AnchorPopup from './ui/AnchorPopup';
-import CommentContextMenu from './ui/CommentContextMenu';
 import CommentItem from './ui/CommentItem';
 import DateInput from './ui/DateInput';
 import NgList from './ui/NgList';
@@ -156,8 +156,10 @@ const Sidebar = ({
 
   // Unified Popup Stack state for multi-layered popups
   const [popupStack, setPopupStack] = useState([]); // Array of { type: 'anchor'|'reply', comment, position, replies? }
-  const [sidebarContextMenu, setSidebarContextMenu] = useState(null); // { x, y, comment }
   const suppressClickRef = useRef(false); // Flag to suppress onClick after closing layers
+
+  // グローバルコンテキストメニューを使用
+  const { openMenu } = useContextMenu();
 
   // AA Override State (Managed by App via props)
   // const [aaOverrideMap, setAaOverrideMap] = useState({}); // Moved to App
@@ -476,7 +478,7 @@ const Sidebar = ({
   // Clear all popups (for backdrop click)
   const clearPopups = () => {
     setPopupStack([]);
-    setSidebarContextMenu(null);
+    // グローバルコンテキストメニューはProvider側で管理
   };
 
   // Keyboard listener for Escape to close popup
@@ -486,15 +488,14 @@ const Sidebar = ({
         if (popupStack.length > 0) {
           e.stopPropagation(); // Prevent other handlers
           handleClosePopup();
-        } else if (sidebarContextMenu) {
-          setSidebarContextMenu(null);
         }
+        // グローバルコンテキストメニューはProvider側でEscapeを処理
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [popupStack.length, sidebarContextMenu]);
+  }, [popupStack.length]);
 
   // Context menu "Jump to Comment" action
   const handleJumpToComment = (targetComment) => {
@@ -509,7 +510,7 @@ const Sidebar = ({
 
     // Close Popups
     setPopupStack([]); // Clear all popups on jump
-    setSidebarContextMenu(null);
+    // グローバルコンテキストメニューはProvider側でcloseMenuが呼ばれる
     if (userHistoryId) onCloseUserHistory();
   };
 
@@ -525,10 +526,29 @@ const Sidebar = ({
       return;
     }
 
-    setSidebarContextMenu({
-      x: e.clientX,
-      y: e.clientY,
-      comment: comment,
+    // グローバルコンテキストメニューを開く
+    openMenu(comment, {
+      maxWidth: sidebarWidth,
+      handlers: {
+        onSeek: (time) => {
+          setIsAutoScroll(true);
+          onSeekAndPlay(time);
+        },
+        onJumpToComment: handleJumpToComment,
+        onSetLogStart: handleSetLogStart,
+        onSetCmStart: handleSetCmStart,
+        onSetCmEnd: handleSetCmEnd,
+        onSetEndCardPreview,
+        onAddNgId,
+        onAddNgComment,
+        onToggleAA,
+      },
+      config: {
+        formatTime,
+        logStartTime,
+        aaMode,
+        aaOverride: aaOverrideMap[comment.id],
+      },
     });
   };
 
@@ -1773,55 +1793,7 @@ const Sidebar = ({
         </>
       )}
 
-      {/* Context Menu for Sidebar */}
-      {sidebarContextMenu && (
-        <CommentContextMenu
-          position={{ x: sidebarContextMenu.x, y: sidebarContextMenu.y }}
-          comment={sidebarContextMenu.comment} // Pass the comment object
-          onClose={() => setSidebarContextMenu(null)}
-          onJumpToComment={handleJumpToComment}
-          onSeek={(time) => {
-            setIsAutoScroll(true); // Force Auto Mode locally immediately
-            onSeekAndPlay(time); // Seek, play, and exit log mode
-            setSidebarContextMenu(null);
-          }}
-          onSetLogStart={(comment) => {
-            handleSetLogStart(comment);
-            setSidebarContextMenu(null);
-          }}
-          onSetCmStart={(time) => {
-            handleSetCmStart(time);
-            setSidebarContextMenu(null);
-          }}
-          onSetCmEnd={(time) => {
-            handleSetCmEnd(time);
-            setSidebarContextMenu(null);
-          }}
-          onAddNgId={(userId) => {
-            onAddNgId(userId);
-            setSidebarContextMenu(null);
-          }}
-          onAddNgComment={(commentId) => {
-            onAddNgComment(commentId);
-            setSidebarContextMenu(null);
-          }}
-          onCopyId={(id) => {
-            navigator.clipboard.writeText(id).then(() => {
-              // alert?
-            });
-          }}
-          onCopyComment={(text) => {
-            navigator.clipboard.writeText(text);
-          }}
-          onSetEndCardPreview={onSetEndCardPreview}
-          formatTime={formatTime}
-          logStartTime={logStartTime}
-          aaMode={aaMode}
-          aaOverride={aaOverrideMap[sidebarContextMenu.comment.id]}
-          onToggleAA={onToggleAA}
-          maxWidth={sidebarWidth} // サイドバーの横幅に合わせる
-        />
-      )}
+      {/* Context Menu for Sidebar - グローバル管理に移行済み */}
 
       {/* Image Zoom Modal removed - now global */}
     </div>

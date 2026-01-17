@@ -42,7 +42,8 @@ export const useLogPopup = (filteredComments = []) => {
   }, []);
 
   // Popup Item Click -> Open Context Menu
-  const handlePopupRowClick = useCallback((e, comment) => {
+  // onOpenContextMenu が提供されている場合はそれを使用、なければローカルstate
+  const handlePopupRowClick = useCallback((e, comment, onOpenContextMenu) => {
     e.stopPropagation();
 
     // Check suppress flag and reset it
@@ -53,11 +54,17 @@ export const useLogPopup = (filteredComments = []) => {
       return;
     }
 
-    setLogContextMenu({
-      x: e.clientX,
-      y: e.clientY,
-      comment: comment,
-    });
+    if (onOpenContextMenu) {
+      // グローバルコンテキストメニューを使用
+      onOpenContextMenu(e, comment);
+    } else {
+      // フォールバック: ローカルstate
+      setLogContextMenu({
+        x: e.clientX,
+        y: e.clientY,
+        comment: comment,
+      });
+    }
   }, []);
 
   // Anchor Click -> Open Anchor Popup

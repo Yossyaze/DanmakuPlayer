@@ -1,7 +1,7 @@
-import { Calendar, X } from 'lucide-react';
-import React, { useMemo, useRef, useState } from 'react';
+import { X } from 'lucide-react';
+import React, { useMemo, useRef } from 'react';
 
-import CommentContextMenu from './ui/CommentContextMenu';
+import { useContextMenu } from '../hooks/useContextMenu';
 import CommentItem from './ui/CommentItem';
 
 const UserHistoryModal = ({
@@ -27,8 +27,14 @@ const UserHistoryModal = ({
   settings = {}, // Allow passing settings
   currentTime, // Add currentTime for LogCommentItem
   RowComponent = null, // Optional custom row component (e.g., LogCommentItem)
+  aaMode,
+  aaOverrideMap = {},
+  onToggleAA,
+  onSetEndCardPreview,
+  maxWidth, // コンテキストメニューの最大横幅
 }) => {
-  const [contextMenu, setContextMenu] = useState(null);
+  // グローバルコンテキストメニューを使用
+  const { openMenu, menuState } = useContextMenu();
   const containerRef = useRef(null);
 
   // Filter comments by userId and enrich with userIndex/userTotal
@@ -54,11 +60,26 @@ const UserHistoryModal = ({
     // If popup is active, don't open context menu. Just allow propagation to close popup.
     if (isPopupActive) return;
 
-    // e.stopPropagation(); // Removed to allow click-outside detection
-    setContextMenu({
-      x: e.clientX, // Keep x/y for potential future use, though currently unused by CommentContextMenu
-      y: e.clientY,
-      comment,
+    // グローバルコンテキストメニューを開く
+    openMenu(comment, {
+      maxWidth,
+      handlers: {
+        onSeek,
+        onSetLogStart,
+        onSetCmStart,
+        onSetCmEnd,
+        onSetEndCardPreview,
+        onAddNgId,
+        onAddNgComment,
+        onToggleAA,
+      },
+      config: {
+        formatTime,
+        logStartTime,
+        totalComments,
+        aaMode,
+        aaOverride: aaOverrideMap[comment.id],
+      },
     });
   };
 
@@ -104,7 +125,7 @@ const UserHistoryModal = ({
                     totalComments={totalComments}
                     onClick={(e) => handleRowClick(e, comment)}
                     // Context menu check for bg color
-                    className={`${contextMenu?.comment?.id === comment.id ? 'bg-gray-800!' : ''}`}
+                    className={`${menuState?.comment?.id === comment.id ? 'bg-gray-800!' : ''}`}
                     onIdClick={undefined}
                     setZoomedImage={setZoomedImage}
                     showImages={settings.showImages !== false}
@@ -121,44 +142,7 @@ const UserHistoryModal = ({
           )}
         </div>
 
-        {/* Local Context Menu */}
-        {contextMenu && (
-          <div className="fixed inset-0 z-100 pointer-events-none">
-            <CommentContextMenu
-              comment={contextMenu.comment}
-              onClose={() => setContextMenu(null)}
-              onSeek={(time) => {
-                onSeek(time);
-                setContextMenu(null);
-              }}
-              onSetLogStart={(c) => {
-                onSetLogStart?.(c);
-                setContextMenu(null);
-              }}
-              onSetCmStart={(t) => {
-                onSetCmStart?.(t);
-                setContextMenu(null);
-              }}
-              onSetCmEnd={(t) => {
-                onSetCmEnd?.(t);
-                setContextMenu(null);
-              }}
-              onAddNgId={(id) => {
-                onAddNgId(id);
-                setContextMenu(null);
-              }}
-              onAddNgComment={(txt) => {
-                onAddNgComment(txt);
-                setContextMenu(null);
-              }}
-              formatTime={formatTime}
-              logStartTime={logStartTime}
-              totalComments={totalComments}
-              onCopyId={(id) => navigator.clipboard.writeText(id)}
-              onCopyComment={(text) => navigator.clipboard.writeText(text)}
-            />
-          </div>
-        )}
+        {/* Context Menu - グローバル管理に移行済み */}
       </div>
     );
   }
@@ -208,7 +192,7 @@ const UserHistoryModal = ({
                     totalComments={totalComments}
                     onClick={(e) => handleRowClick(e, comment)}
                     className={`px-6 py-3 ${
-                      contextMenu?.comment?.id === comment.id ? 'bg-gray-800!' : ''
+                      menuState?.comment?.id === comment.id ? 'bg-gray-800!' : ''
                     }`}
                     setZoomedImage={setZoomedImage}
                     showImages={settings.showImages !== false}
@@ -225,44 +209,7 @@ const UserHistoryModal = ({
           )}
         </div>
 
-        {/* Local Context Menu */}
-        {contextMenu && (
-          <div className="absolute inset-0 z-50 pointer-events-none">
-            <CommentContextMenu
-              comment={contextMenu.comment}
-              onClose={() => setContextMenu(null)}
-              onSeek={(time) => {
-                onSeek(time);
-                setContextMenu(null);
-              }}
-              onSetLogStart={(c) => {
-                onSetLogStart?.(c);
-                setContextMenu(null);
-              }}
-              onSetCmStart={(t) => {
-                onSetCmStart?.(t);
-                setContextMenu(null);
-              }}
-              onSetCmEnd={(t) => {
-                onSetCmEnd?.(t);
-                setContextMenu(null);
-              }}
-              onAddNgId={(id) => {
-                onAddNgId(id);
-                setContextMenu(null);
-              }}
-              onAddNgComment={(txt) => {
-                onAddNgComment(txt);
-                setContextMenu(null);
-              }}
-              formatTime={formatTime}
-              logStartTime={logStartTime}
-              totalComments={totalComments}
-              onCopyId={(id) => navigator.clipboard.writeText(id)}
-              onCopyComment={(text) => navigator.clipboard.writeText(text)}
-            />
-          </div>
-        )}
+        {/* Context Menu - グローバル管理に移行済み */}
       </div>
     </div>
   );

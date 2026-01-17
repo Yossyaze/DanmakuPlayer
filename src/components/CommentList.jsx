@@ -10,7 +10,7 @@ import React, {
 import { Virtuoso } from 'react-virtuoso';
 
 import useCommentTree from '../hooks/useCommentTree';
-import CommentContextMenu from './ui/CommentContextMenu';
+import { useContextMenu } from '../hooks/useContextMenu';
 import CommentRow from './ui/CommentRow';
 
 const CommentList = forwardRef(
@@ -67,7 +67,9 @@ const CommentList = forwardRef(
     const virtusoScrollerRef = useRef(null);
     const lastAutoScrollTimeRef = useRef(0); // Timestamp of last auto-scroll trigger
     const [highlightedCommentId, setHighlightedCommentId] = useState(null); // State for temporary highlight
-    const [contextMenu, setContextMenu] = useState(null); // { x, y, comment }
+
+    // グローバルコンテキストメニューを使用
+    const { openMenu } = useContextMenu();
 
     // Use custom hook for tree construction
     const treeRoots = useCommentTree(comments, enableTreeView);
@@ -173,9 +175,7 @@ const CommentList = forwardRef(
           setIsAutoScroll(false);
         }
         // Don't close context menu on mousedown (let click capture handle it to prevent immediate re-opening)
-        if (contextMenu && e?.type !== 'mousedown') {
-          setContextMenu(null);
-        }
+        // グローバルメニューは別のレイヤーで管理されるため、ここでは何もしない
       };
 
       // Use wheel/touchmove/keydown to strictly identify user intent
@@ -194,7 +194,7 @@ const CommentList = forwardRef(
         scrollerElement.removeEventListener('keydown', handleInteraction, opts);
         scrollerElement.removeEventListener('mousedown', handleInteraction, opts);
       };
-    }, [isAutoScroll, setIsAutoScroll, contextMenu, scrollerElement]);
+    }, [isAutoScroll, setIsAutoScroll, scrollerElement]);
 
     // Expose scroll functionality
     const scrollToResNum = useCallback(
@@ -280,13 +280,49 @@ const CommentList = forwardRef(
         if (isPopupActive) return;
 
         // e.stopPropagation(); // Removed to allow click-outside detection for popups
-        setContextMenu({
-          x: e.clientX,
-          y: e.clientY,
-          comment: node,
+        // グローバルコンテキストメニューを開く
+        setIsAutoScroll(true); // Force Auto Mode locally immediately
+        openMenu(node, {
+          maxWidth: contextMenuMaxWidth,
+          handlers: {
+            onSeek: onSeekAndPlay || onCommentClick,
+            onSetLogStart,
+            onSetCmStart,
+            onSetCmEnd,
+            onSetEndCardPreview,
+            onAddNgId,
+            onAddNgComment,
+            onToggleAA,
+          },
+          config: {
+            formatTime,
+            logStartTime,
+            totalComments: comments.length,
+            aaMode,
+            aaOverride: aaOverrideMap[node.id],
+          },
         });
       },
-      [isPopupActive]
+      [
+        isPopupActive,
+        openMenu,
+        contextMenuMaxWidth,
+        onSeekAndPlay,
+        onCommentClick,
+        onSetLogStart,
+        onSetCmStart,
+        onSetCmEnd,
+        onSetEndCardPreview,
+        onAddNgId,
+        onAddNgComment,
+        onToggleAA,
+        formatTime,
+        logStartTime,
+        comments.length,
+        aaMode,
+        aaOverrideMap,
+        setIsAutoScroll,
+      ]
     );
 
     const itemContent = useCallback(
@@ -409,56 +445,6 @@ const CommentList = forwardRef(
               }}
             />
           </div>
-        )}
-
-        {/* Context Menu */}
-        {contextMenu && (
-          <CommentContextMenu
-            x={contextMenu.x}
-            y={contextMenu.y}
-            comment={contextMenu.comment}
-            totalComments={comments.length}
-            onClose={() => setContextMenu(null)}
-            onSeek={(time) => {
-              setIsAutoScroll(true); // Force Auto Mode locally immediately
-              // Use onSeekAndPlay if available (includes play + exit log mode), otherwise fallback to onCommentClick
-              if (onSeekAndPlay) {
-                onSeekAndPlay(time);
-              } else {
-                onCommentClick(time);
-              }
-              setContextMenu(null);
-            }}
-            onSetLogStart={(comment) => {
-              onSetLogStart(comment);
-              setContextMenu(null);
-            }}
-            onSetCmStart={(time) => {
-              onSetCmStart(time);
-              setContextMenu(null);
-            }}
-            onSetCmEnd={(time) => {
-              onSetCmEnd(time);
-              setContextMenu(null);
-            }}
-            onSetEndCardPreview={(time) => {
-              if (onSetEndCardPreview) onSetEndCardPreview(time);
-              setContextMenu(null);
-            }}
-            onAddNgId={onAddNgId}
-            onAddNgComment={onAddNgComment}
-            formatTime={formatTime}
-            logStartTime={logStartTime}
-            aaMode={aaMode}
-            aaOverride={aaOverrideMap[contextMenu.comment.id]}
-            onToggleAA={(comment, isAA) => {
-              onToggleAA && onToggleAA(comment, isAA);
-              setContextMenu(null);
-            }}
-            onCopyId={(id) => navigator.clipboard.writeText(id)}
-            onCopyComment={(text) => navigator.clipboard.writeText(text)}
-            maxWidth={contextMenuMaxWidth}
-          />
         )}
       </div>
     );
