@@ -57,7 +57,12 @@ const escapeRegex = (string) => {
 const buildAbeRegex = () => {
   const sortedFixed = [...new Set(ALL_ABE_KEYWORDS)].sort((a, b) => b.length - a.length);
   const escaped = sortedFixed.map((k) => {
-    const esc = escapeRegex(k);
+    const esc = escapeRegex(k)
+      .replace(/、/g, '、?')
+      .replace(/。/g, '。?')
+      .replace(/[\s\u3000]/g, '\\s*')
+      .replace(/[!！]/g, '[!！]?')
+      .replace(/(\\\?|？)/g, '[?？]?');
     // 英数字のみのキーワードは単語境界(\b)で囲む（abema 等の誤検知防止）
     if (/^[A-Za-z0-9\s]+$/.test(k)) {
       return `\\b${esc}\\b`;
