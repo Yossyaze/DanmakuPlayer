@@ -323,15 +323,27 @@ const Sidebar = ({
   }, []);
 
   // Anchor Click Handler (for >>resNum)
-  const handleAnchorClick = (e, targetResNum, isNested = false) => {
+  // sourceFileIdOrNested: 文字列の場合はsourceFileId、booleanの場合はisNestedフラグとして扱う
+  const handleAnchorClick = (
+    e,
+    targetResNum,
+    sourceFileIdOrNested = false,
+    isNestedArg = false
+  ) => {
     if (e) {
       e.stopPropagation();
       e.preventDefault();
     }
 
-    // Find target comment
+    // 引数の型によってsourceFileIdとisNestedを判定
+    const sourceFileId = typeof sourceFileIdOrNested === 'string' ? sourceFileIdOrNested : null;
+    const isNested = typeof sourceFileIdOrNested === 'boolean' ? sourceFileIdOrNested : isNestedArg;
+
+    // Find target comment (sourceFileIdが指定されている場合はそれも考慮)
     const targetComment = enrichedComments.find(
-      (c) => (c.originalResNum || c.resNum) === targetResNum
+      (c) =>
+        (c.originalResNum || c.resNum) === targetResNum &&
+        (!sourceFileId || c.sourceFileId === sourceFileId)
     );
     if (targetComment) {
       const baseRect = e?.target?.getBoundingClientRect() || {
@@ -504,14 +516,16 @@ const Sidebar = ({
     const resNum = targetComment.originalResNum || targetComment.resNum;
     const sourceFileId = targetComment.sourceFileId;
 
-    if (commentListRef.current) {
-      commentListRef.current.scrollToResNum(resNum, sourceFileId);
-    }
-
-    // Close Popups
+    // Close Popups and UserHistory first
     setPopupStack([]); // Clear all popups on jump
-    // グローバルコンテキストメニューはProvider側でcloseMenuが呼ばれる
     if (userHistoryId) onCloseUserHistory();
+
+    // Scroll AFTER state updates (use setTimeout to ensure re-render)
+    setTimeout(() => {
+      if (commentListRef.current) {
+        commentListRef.current.scrollToResNum(resNum, sourceFileId);
+      }
+    }, 50);
   };
 
   // Click handler for the comment INSIDE the popup -> Open Context Menu
@@ -1638,7 +1652,9 @@ const Sidebar = ({
           showThreadTitle={showThreadTitle}
           onCommentClick={(time) => onCommentClick && onCommentClick(time)}
           onSeekAndPlay={onSeekAndPlay}
-          onAnchorClick={(e, resNum) => handleAnchorClick(e, resNum, false)}
+          onAnchorClick={(e, resNum, sourceFileId) =>
+            handleAnchorClick(e, resNum, sourceFileId, false)
+          }
           logStartTime={logStartTime}
           formatTime={customFormatTime}
           isAutoScroll={localIsAutoScroll}
@@ -1671,6 +1687,7 @@ const Sidebar = ({
             comments={allComments}
             onClose={onCloseUserHistory}
             onSeek={onSeekAndPlay}
+            onJumpToComment={handleJumpToComment}
             onAddNgId={onAddNgId}
             onAddNgComment={onAddNgComment}
             onSetLogStart={handleSetLogStart}
@@ -1755,7 +1772,9 @@ const Sidebar = ({
                   showImages: showImages,
                 }}
                 setZoomedImage={handleSetZoomedImage}
-                onAnchorClick={(e, resNum) => handleAnchorClick(e, resNum, true)}
+                onAnchorClick={(e, resNum, sourceFileId) =>
+                  handleAnchorClick(e, resNum, sourceFileId, true)
+                }
                 onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
                 onIdClick={onIdClick}
                 RowComponent={CommentItem}
@@ -1783,7 +1802,9 @@ const Sidebar = ({
                   showImages: showImages,
                 }}
                 setZoomedImage={handleSetZoomedImage}
-                onAnchorClick={(e, resNum) => handleAnchorClick(e, resNum, true)}
+                onAnchorClick={(e, resNum, sourceFileId) =>
+                  handleAnchorClick(e, resNum, sourceFileId, true)
+                }
                 onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
                 onIdClick={onIdClick}
                 RowComponent={CommentItem}
