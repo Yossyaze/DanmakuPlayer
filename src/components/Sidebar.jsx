@@ -42,13 +42,12 @@ import { padTime } from '../utils/sidebarUtils';
 import CommentList from './CommentList';
 import SidebarNGPanel from './sidebar/SidebarNGPanel'; // Import
 import SidebarFileRow from './SidebarFileRow'; // Restore
-import AnchorPopup from './ui/AnchorPopup';
+import CommentPopup from './ui/CommentPopup';
 import CommentItem from './ui/CommentItem';
 import DateInput from './ui/DateInput';
 import NgList from './ui/NgList';
-import ReplyListPopup from './ui/ReplyListPopup';
+
 import TimeInput from './ui/TimeInput';
-import UserHistoryModal from './UserHistoryModal';
 
 const Sidebar = ({
   sidebarWidth,
@@ -1680,46 +1679,43 @@ const Sidebar = ({
           contextMenuMaxWidth="var(--sidebar-width)" // サイドバーの横幅に合わせる (CSS変数)
         />
 
-        {/* User History Modal (Inside relative container) */}
+        {/* User History Popup (Inside relative container) */}
         {userHistoryId && (
-          <UserHistoryModal
-            userId={userHistoryId}
-            comments={allComments}
-            onClose={onCloseUserHistory}
-            onSeek={onSeekAndPlay}
-            onJumpToComment={handleJumpToComment}
-            onAddNgId={onAddNgId}
-            onAddNgComment={onAddNgComment}
-            onSetLogStart={handleSetLogStart}
-            onSetCmStart={handleSetCmStart}
-            onSetCmEnd={handleSetCmEnd}
-            onSetEndCardPreview={onSetEndCardPreview}
-            onAddNgWord={onAddNgWord}
-            onIdClick={onIdClick}
-            isPopupActive={popupStack.length > 0}
-            aaMode={aaMode}
-            onToggleAA={onToggleAA}
-            aaOverrideMap={aaOverrideMap}
-            // Pass Date/Time strings for dynamic display calculation
-            startDateStr={startDateStr}
-            startTimeStr={startTimeStr}
-            formatTime={formatTime}
-            logStartTime={logStartTime}
-            totalComments={comments.length}
-            isSidebarMode={true}
-            className="h-full border-none"
-            setZoomedImage={handleSetZoomedImage}
-            onAnchorClick={handleAnchorClick}
-            onAnchorMouseEnter={() => {}} // Removed
-            onAnchorMouseLeave={() => {}} // Removed
-            settings={{
-              fontSize: dmSettings.fontSize,
-              density: dmSettings.density,
-              showImages,
-            }}
-            currentTime={currentTime} // Pass currentTime
-            maxWidth="var(--sidebar-width)" // コンテキストメニューの横幅をサイドバーに合わせる (CSS変数)
-          />
+          <div className="absolute inset-0 z-40 bg-gray-900 flex flex-col">
+            <CommentPopup
+              type="userHistory"
+              userId={userHistoryId}
+              allComments={allComments}
+              onClose={onCloseUserHistory}
+              onSeek={onSeekAndPlay}
+              onJumpToComment={handleJumpToComment}
+              onAddNgId={onAddNgId}
+              onAddNgComment={onAddNgComment}
+              onSetLogStart={handleSetLogStart}
+              onSetCmStart={handleSetCmStart}
+              onSetCmEnd={handleSetCmEnd}
+              onSetEndCardPreview={onSetEndCardPreview}
+              onIdClick={onIdClick}
+              aaMode={aaMode}
+              onToggleAA={onToggleAA}
+              aaOverrideMap={aaOverrideMap}
+              formatTime={formatTime}
+              logStartTime={logStartTime}
+              totalComments={comments.length}
+              setZoomedImage={handleSetZoomedImage}
+              onAnchorClick={handleAnchorClick}
+              settings={{
+                fontSize: dmSettings.fontSize,
+                density: dmSettings.density,
+                showImages,
+              }}
+              currentTime={currentTime}
+              maxWidth="var(--sidebar-width)"
+              RowComponent={CommentItem}
+              popupClassName="relative! fixed-none! h-full w-full border-none! rounded-none!"
+              style={{ position: 'relative', top: 0, left: 0 }}
+            />
+          </div>
         )}
 
         {/* Sync Button */}
@@ -1753,68 +1749,43 @@ const Sidebar = ({
           />
 
           {/* Popup stack */}
-          {popupStack.map((popup, index) =>
-            popup.type === 'anchor' ? (
-              <AnchorPopup
-                key={`${index}-${popup.comment.id}`}
-                comment={popup.comment}
-                position={popup.position}
-                parentRect={popup.parentRect}
-                onClose={() => closePopupAtIndex(index)}
-                onPopupClick={() => closePopupsAbove(index)}
-                isTopmost={index === popupStack.length - 1}
-                onClick={(e) => handlePopupRowClick(e, popup.comment)}
-                formatTime={formatTime}
-                logStartTime={logStartTime}
-                settings={{
-                  fontSize: 'small',
-                  density: 'compact',
-                  showImages: showImages,
-                }}
-                setZoomedImage={handleSetZoomedImage}
-                onAnchorClick={(e, resNum, sourceFileId) =>
-                  handleAnchorClick(e, resNum, sourceFileId, true)
-                }
-                onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
-                onIdClick={onIdClick}
-                RowComponent={CommentItem}
-                totalComments={comments.length}
-                customWidth={`calc(var(--sidebar-width) - ${10 + 5 * index}px)`}
-                minX={containerLeft + 5 * (index + 1)}
-                style={{ zIndex: 60 + index * 10 }}
-              />
-            ) : (
-              <ReplyListPopup
-                key={`${index}-${popup.comment.id}`}
-                comments={popup.replies}
-                parentComment={popup.comment}
-                position={popup.position}
-                parentRect={popup.parentRect}
-                onClose={() => closePopupAtIndex(index)}
-                onPopupClick={() => closePopupsAbove(index)}
-                isTopmost={index === popupStack.length - 1}
-                onClick={handlePopupRowClick}
-                formatTime={formatTime}
-                logStartTime={logStartTime}
-                settings={{
-                  fontSize: 'small',
-                  density: 'compact',
-                  showImages: showImages,
-                }}
-                setZoomedImage={handleSetZoomedImage}
-                onAnchorClick={(e, resNum, sourceFileId) =>
-                  handleAnchorClick(e, resNum, sourceFileId, true)
-                }
-                onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
-                onIdClick={onIdClick}
-                RowComponent={CommentItem}
-                totalComments={comments.length}
-                customWidth={`calc(var(--sidebar-width) - ${10 + 5 * index}px)`}
-                minX={containerLeft + 5 * (index + 1)}
-                style={{ zIndex: 60 + index * 10 }}
-              />
-            )
-          )}
+          {popupStack.map((popup, index) => (
+            <CommentPopup
+              key={`${index}-${popup.comment.id}`}
+              type={popup.type}
+              comment={popup.type === 'anchor' ? popup.comment : undefined}
+              comments={popup.type === 'reply' ? popup.replies : undefined}
+              parentComment={popup.type === 'reply' ? popup.comment : undefined}
+              position={popup.position}
+              parentRect={popup.parentRect}
+              onClose={() => closePopupAtIndex(index)}
+              onPopupClick={() => closePopupsAbove(index)}
+              isTopmost={index === popupStack.length - 1}
+              onClick={
+                popup.type === 'anchor'
+                  ? (e) => handlePopupRowClick(e, popup.comment)
+                  : handlePopupRowClick
+              }
+              formatTime={formatTime}
+              logStartTime={logStartTime}
+              settings={{
+                fontSize: 'small',
+                density: 'compact',
+                showImages: showImages,
+              }}
+              setZoomedImage={handleSetZoomedImage}
+              onAnchorClick={(e, resNum, sourceFileId) =>
+                handleAnchorClick(e, resNum, sourceFileId, true)
+              }
+              onReplyCountClick={(e, c) => handleReplyCountClick(e, c, true)}
+              onIdClick={onIdClick}
+              RowComponent={CommentItem}
+              totalComments={comments.length}
+              customWidth={`calc(var(--sidebar-width) - ${10 + 5 * index}px)`}
+              minX={containerLeft + 5 * (index + 1)}
+              style={{ zIndex: 60 + index * 10 }}
+            />
+          ))}
         </>
       )}
 

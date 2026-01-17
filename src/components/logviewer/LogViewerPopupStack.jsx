@@ -1,11 +1,11 @@
 import React from 'react';
 
-import AnchorPopup from '../ui/AnchorPopup';
+import CommentPopup from '../ui/CommentPopup';
 import LogCommentItem from '../ui/LogCommentItem';
-import ReplyListPopup from '../ui/ReplyListPopup';
 
 /**
  * LogViewerPopupStack - アンカー/返信ポップアップのスタック管理
+ * CommentPopup統合版
  */
 const LogViewerPopupStack = ({
   popupStack,
@@ -48,62 +48,36 @@ const LogViewerPopupStack = ({
       />
 
       {/* Popup stack */}
-      {popupStack.map((popup, index) =>
-        popup.type === 'anchor' ? (
-          <AnchorPopup
-            key={`${index}-${popup.comment.id}`}
-            comment={popup.comment}
-            position={popup.position}
-            parentRect={popup.parentRect}
-            onClose={() => onCloseAtIndex && onCloseAtIndex(index)}
-            onPopupClick={() => onCloseAbove && onCloseAbove(index)}
-            isTopmost={index === popupStack.length - 1}
-            onClick={(e) => onPopupRowClick(e, popup.comment)}
-            formatTime={formatTime}
-            logStartTime={logStartTime}
-            settings={logSettings}
-            setZoomedImage={setZoomedImage}
-            onAnchorClick={(e, resNum, sourceFileId) =>
-              onAnchorClick(e, resNum, sourceFileId, true)
-            }
-            onReplyCountClick={(e, c) => onReplyCountClick(e, c, true)}
-            onIdClick={onIdClick}
-            totalComments={filteredCommentsCount}
-            customWidth={containerWidth - 10 * (index + 1)}
-            style={{ zIndex: baseZIndex + index * 10 }}
-            minX={containerLeft + 10 * (index + 1)}
-            aaOverrideMap={aaOverrideMap}
-            RowComponent={LogCommentItem}
-          />
-        ) : (
-          <ReplyListPopup
-            key={`${index}-${popup.comment.id}`}
-            comments={popup.replies}
-            parentComment={popup.comment}
-            position={popup.position}
-            parentRect={popup.parentRect}
-            onClose={() => onCloseAtIndex && onCloseAtIndex(index)}
-            onPopupClick={() => onCloseAbove && onCloseAbove(index)}
-            isTopmost={index === popupStack.length - 1}
-            onClick={onPopupRowClick}
-            formatTime={formatTime}
-            logStartTime={logStartTime}
-            settings={logSettings}
-            setZoomedImage={setZoomedImage}
-            onAnchorClick={(e, resNum, sourceFileId) =>
-              onAnchorClick(e, resNum, sourceFileId, true)
-            }
-            onReplyCountClick={(e, c) => onReplyCountClick(e, c, true)}
-            onIdClick={onIdClick}
-            totalComments={filteredCommentsCount}
-            customWidth={containerWidth - 10 * (index + 1)}
-            style={{ zIndex: baseZIndex + index * 10 }}
-            minX={containerLeft + 10 * (index + 1)}
-            aaOverrideMap={aaOverrideMap}
-            RowComponent={LogCommentItem}
-          />
-        )
-      )}
+      {popupStack.map((popup, index) => (
+        <CommentPopup
+          key={`${index}-${popup.comment.id}`}
+          type={popup.type}
+          comment={popup.type === 'anchor' ? popup.comment : undefined}
+          comments={popup.type === 'reply' ? popup.replies : undefined}
+          parentComment={popup.type === 'reply' ? popup.comment : undefined}
+          position={popup.position}
+          parentRect={popup.parentRect}
+          onClose={() => onCloseAtIndex && onCloseAtIndex(index)}
+          onPopupClick={() => onCloseAbove && onCloseAbove(index)}
+          isTopmost={index === popupStack.length - 1}
+          onClick={
+            popup.type === 'anchor' ? (e) => onPopupRowClick(e, popup.comment) : onPopupRowClick
+          }
+          formatTime={formatTime}
+          logStartTime={logStartTime}
+          settings={logSettings}
+          setZoomedImage={setZoomedImage}
+          onAnchorClick={(e, resNum, sourceFileId) => onAnchorClick(e, resNum, sourceFileId, true)}
+          onReplyCountClick={(e, c) => onReplyCountClick(e, c, true)}
+          onIdClick={onIdClick}
+          totalComments={filteredCommentsCount}
+          customWidth={containerWidth - 10 * (index + 1)}
+          style={{ zIndex: baseZIndex + index * 10 }}
+          minX={containerLeft + 10 * (index + 1)}
+          aaOverrideMap={aaOverrideMap}
+          RowComponent={LogCommentItem}
+        />
+      ))}
     </>
   );
 };
