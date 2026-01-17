@@ -739,7 +739,7 @@ const DesktopLayout = ({
                   <>
                     {/* Danmaku Settings Popover (Lifted up for Z-Index Control) */}
                     {showDanmakuSettings && (
-                      <div className="absolute inset-0 z-[70] pointer-events-none">
+                      <div className="absolute inset-0 z-70 pointer-events-none">
                         {/* Wrap in a container to match positioning context if needed, 
                             but the popover itself positions absolute bottom-12 right-0
                             relative to this container (video area).

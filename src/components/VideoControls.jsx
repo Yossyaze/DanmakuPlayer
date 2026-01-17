@@ -77,7 +77,6 @@ const VideoControls = ({
   showSidebar, // サイドバー表示状態
   setShowSidebar, // サイドバー表示の切り替え
   containerRef, // For fullscreen
-  abeModeUnlocked = false, // Hidden Abe Mode unlock state
   commentDensity = [], // Array of normalized values (0-1)
   onScrub, // New prop for optimized scrubbing (video relative time)
   onToggleSettings, // New prop
@@ -93,17 +92,11 @@ const VideoControls = ({
 }) => {
   const seekContainerRef = useRef(null);
 
-  // Debug log for comment density
-  useEffect(() => {
-    if (commentDensity.length > 0) {
-      const maxVal = Math.max(...commentDensity);
-      // console.log(
-      //   `[VideoControls] Graph Rendering: ${commentDensity.length} points, Max Density: ${maxVal}`
-      // );
-    } else {
-      //   console.log('[VideoControls] No comment density data available.');
-    }
-  }, [commentDensity]);
+  // HLSストリームかどうかを判定（サムネイルプレビュー非対応）
+  const isHLS = videoSrc && (videoSrc.includes('.m3u8') || videoSrc.startsWith('blob:'));
+
+  // コメント密度のデバッグログは無効化
+  // useEffect(() => { ... }, [commentDensity]);
 
   const settingsBtnRef = useRef(null);
   const lastSeekTimeRef = useRef(0);
@@ -211,7 +204,6 @@ const VideoControls = ({
     } else {
       handleSeek({ target: { value: newTime } });
     }
-    lastSeekTimeRef.current = performance.now();
 
     const onMouseMove = (moveEvent) => {
       if (!seekContainerRef.current) return;
@@ -283,7 +275,6 @@ const VideoControls = ({
     } else {
       handleSeek({ target: { value: newTime } });
     }
-    lastSeekTimeRef.current = performance.now();
 
     const onTouchMove = (moveEvent) => {
       moveEvent.preventDefault(); // Prevent scrolling
@@ -348,7 +339,7 @@ const VideoControls = ({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-transparent transition-opacity duration-300 z-[40] ${
+      className={`absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-transparent transition-opacity duration-300 z-40 ${
         visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
       onClick={(e) => e.stopPropagation()} // Prevent click from bubbling to video container (which toggles play)
@@ -428,23 +419,26 @@ const VideoControls = ({
               </svg>
             </div>
           )}
-          {/* Thumbnail Preview (Moved inside seek container for easier positioning) */}
+          {/* Thumbnail Preview (HLSストリーム時は動画のみ非表示) */}
           <div
-            className="absolute bottom-20 transform -translate-x-1/2 pointer-events-none transition-opacity duration-200 z-50 flex flex-col items-center w-52 min-w-52"
+            className="absolute bottom-20 transform -translate-x-1/2 pointer-events-none transition-opacity duration-200 z-50 flex flex-col items-center"
             style={{
               left: `${hoverPos}px`, // Use pixels
               opacity: hoverTime !== null ? 1 : 0,
               visibility: hoverTime !== null ? 'visible' : 'hidden',
             }}
           >
-            <video
-              ref={previewVideoRef}
-              src={videoSrc || null}
-              className="w-full rounded-lg shadow-xl border-2 border-white/20 bg-black object-cover aspect-video"
-              muted
-              preload="auto"
-              disablePictureInPicture
-            />
+            {/* ローカルファイルの場合のみサムネイル動画を表示 */}
+            {!isHLS && (
+              <video
+                ref={previewVideoRef}
+                src={videoSrc || null}
+                className="w-52 min-w-52 rounded-lg shadow-xl border-2 border-white/20 bg-black object-cover aspect-video"
+                muted
+                preload="auto"
+                disablePictureInPicture
+              />
+            )}
             <div className="text-xs font-mono mt-1 text-white bg-black/70 px-2 py-0.5 rounded">
               {formatTime(hoverTime || 0)}
             </div>

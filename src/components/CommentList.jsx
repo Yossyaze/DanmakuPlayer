@@ -57,6 +57,7 @@ const CommentList = forwardRef(
       debugId = 'unknown', // DEBUG: identifier for this instance
       startDateStr, // New prop
       startTimeStr, // New prop
+      contextMenuMaxWidth, // コンテキストメニューの最大横幅
     },
     ref
   ) => {
@@ -456,6 +457,7 @@ const CommentList = forwardRef(
             }}
             onCopyId={(id) => navigator.clipboard.writeText(id)}
             onCopyComment={(text) => navigator.clipboard.writeText(text)}
+            maxWidth={contextMenuMaxWidth}
           />
         )}
       </div>

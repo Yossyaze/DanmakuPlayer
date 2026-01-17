@@ -1638,6 +1638,7 @@ const Sidebar = ({
           aaMode={aaMode}
           aaOverrideMap={aaOverrideMap}
           onToggleAA={onToggleAA}
+          contextMenuMaxWidth={sidebarWidth} // サイドバーの横幅に合わせる
         />
 
         {/* User History Modal (Inside relative container) */}
@@ -1818,6 +1819,7 @@ const Sidebar = ({
           aaMode={aaMode}
           aaOverride={aaOverrideMap[sidebarContextMenu.comment.id]}
           onToggleAA={onToggleAA}
+          maxWidth={sidebarWidth} // サイドバーの横幅に合わせる
         />
       )}
 
