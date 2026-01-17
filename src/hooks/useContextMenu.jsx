@@ -58,66 +58,81 @@ export const ContextMenuProvider = ({ children }) => {
 
       {/* グローバルなコンテキストメニュー */}
       {menuState && (
-        <CommentContextMenu
-          comment={menuState.comment}
-          maxWidth={menuState.maxWidth}
-          onClose={closeMenu}
-          // ナビゲーション
-          onSeek={(time) => {
-            menuState.handlers.onSeek?.(time);
-            closeMenu();
-          }}
-          onJumpToComment={(comment) => {
-            menuState.handlers.onJumpToComment?.(comment);
-            closeMenu();
-          }}
-          // 時間設定
-          onSetLogStart={(comment) => {
-            menuState.handlers.onSetLogStart?.(comment);
-            closeMenu();
-          }}
-          onSetCmStart={(time) => {
-            menuState.handlers.onSetCmStart?.(time);
-            closeMenu();
-          }}
-          onSetCmEnd={(time) => {
-            menuState.handlers.onSetCmEnd?.(time);
-            closeMenu();
-          }}
-          onSetEndCardPreview={(time) => {
-            menuState.handlers.onSetEndCardPreview?.(time);
-            closeMenu();
-          }}
-          // NG管理
-          onAddNgId={(userId) => {
-            menuState.handlers.onAddNgId?.(userId);
-            closeMenu();
-          }}
-          onAddNgComment={(commentId) => {
-            menuState.handlers.onAddNgComment?.(commentId);
-            closeMenu();
-          }}
-          // コピー
-          onCopyId={(id) => {
-            navigator.clipboard.writeText(id);
-            closeMenu();
-          }}
-          onCopyComment={(text) => {
-            navigator.clipboard.writeText(text);
-            closeMenu();
-          }}
-          // AA表示
-          aaMode={menuState.config.aaMode}
-          aaOverride={menuState.config.aaOverride}
-          onToggleAA={(comment, isAA) => {
-            menuState.handlers.onToggleAA?.(comment, isAA);
-            closeMenu();
-          }}
-          // 表示設定
-          formatTime={menuState.config.formatTime}
-          logStartTime={menuState.config.logStartTime}
-          totalComments={menuState.config.totalComments}
-        />
+        <>
+          {/* 1. 全画面クリック検知用（透明） */}
+          <div className="fixed inset-0 z-90" onClick={closeMenu} />
+
+          {/* 2. 暗転用レイヤー（視覚効果のみ） */}
+          <div
+            className="fixed bg-black/50 z-91 pointer-events-none"
+            style={
+              menuState.maxWidth
+                ? { top: 0, bottom: 0, right: 0, width: menuState.maxWidth }
+                : { inset: 0 }
+            }
+          />
+
+          <CommentContextMenu
+            comment={menuState.comment}
+            maxWidth={menuState.maxWidth}
+            onClose={closeMenu}
+            // ナビゲーション
+            onSeek={(time) => {
+              menuState.handlers.onSeek?.(time);
+              closeMenu();
+            }}
+            onJumpToComment={(comment) => {
+              menuState.handlers.onJumpToComment?.(comment);
+              closeMenu();
+            }}
+            // 時間設定
+            onSetLogStart={(comment) => {
+              menuState.handlers.onSetLogStart?.(comment);
+              closeMenu();
+            }}
+            onSetCmStart={(time) => {
+              menuState.handlers.onSetCmStart?.(time);
+              closeMenu();
+            }}
+            onSetCmEnd={(time) => {
+              menuState.handlers.onSetCmEnd?.(time);
+              closeMenu();
+            }}
+            onSetEndCardPreview={(time) => {
+              menuState.handlers.onSetEndCardPreview?.(time);
+              closeMenu();
+            }}
+            // NG管理
+            onAddNgId={(userId) => {
+              menuState.handlers.onAddNgId?.(userId);
+              closeMenu();
+            }}
+            onAddNgComment={(commentId) => {
+              menuState.handlers.onAddNgComment?.(commentId);
+              closeMenu();
+            }}
+            // コピー
+            onCopyId={(id) => {
+              navigator.clipboard.writeText(id);
+              closeMenu();
+            }}
+            onCopyComment={(text) => {
+              navigator.clipboard.writeText(text);
+              closeMenu();
+            }}
+            // AA表示
+            aaMode={menuState.config.aaMode}
+            aaOverride={menuState.config.aaOverride}
+            onToggleAA={(comment, isAA) => {
+              menuState.handlers.onToggleAA?.(comment, isAA);
+              closeMenu();
+            }}
+            // 表示設定
+            formatTime={menuState.config.formatTime}
+            logStartTime={menuState.config.logStartTime}
+            totalComments={menuState.config.totalComments}
+          />
+        </>
       )}
     </ContextMenuContext.Provider>
   );

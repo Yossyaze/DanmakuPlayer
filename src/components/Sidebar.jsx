@@ -1019,6 +1019,9 @@ const Sidebar = ({
           <span>設定</span>
         </button>
 
+        {/* Separator */}
+        <div className="w-px bg-gray-600" />
+
         {/* NG Tab */}
         <button
           onClick={toggleNgPanel}
@@ -1698,6 +1701,7 @@ const Sidebar = ({
               showImages,
             }}
             currentTime={currentTime} // Pass currentTime
+            maxWidth={sidebarWidth} // コンテキストメニューの横幅をサイドバーに合わせる
           />
         )}
 

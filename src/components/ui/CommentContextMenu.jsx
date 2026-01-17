@@ -79,7 +79,7 @@ const CommentContextMenu = ({
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()} // Prevent auto-scroll disable logic in CommentList
       >
-        <div className="bg-gray-950 border-b border-gray-700 border-l-4 border-l-blue-500">
+        <div className="bg-gray-900 border-b border-gray-700 border-l-4 border-l-blue-500">
           <CommentItem
             comment={comment}
             formatTime={formatTime}
