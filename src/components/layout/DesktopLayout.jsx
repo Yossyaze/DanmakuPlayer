@@ -186,6 +186,7 @@ const DesktopLayout = ({
   onDanmakuSettingsOpened, // チュートリアル用：弾幕設定が開いた時のコールバック
   onStartTutorial,
   setIsBuffering, // バッファリング状態管理
+  isBuffering = false, // バッファリング状態
 }) => {
   // Sync Sidebar Width to CSS Variable for Context Menu
   React.useEffect(() => {
@@ -710,6 +711,7 @@ const DesktopLayout = ({
                       onTruncationClick={handleTruncationIndicatorClick}
                       isEnabled={dmSettings.enabled && showDanmaku && !logOnlyMode}
                       isPlaying={playerIsPlaying || showEndCard}
+                      isBuffering={isBuffering}
                       abeMode={dmSettings.abeMode}
                     />
                   </div>

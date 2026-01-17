@@ -15,20 +15,22 @@ const DanmakuLayer = ({
   onTruncationClick,
   isEnabled = true,
   isPlaying = false,
+  isBuffering = false, // バッファリング中かどうか
   abeMode = false, // 安倍晋三モード
 }) => {
   // State for Placeholder Hover
   const [hoveredImage, setHoveredImage] = React.useState(null);
 
-  // Set --play-state CSS variable on mount and when isPlaying changes
+  // Set --play-state CSS variable on mount and when isPlaying/isBuffering changes
   // This ensures correct animation state after remount (e.g., exiting log mode)
   React.useEffect(() => {
     if (containerRef.current) {
-      const state = isPlaying ? 'running' : 'paused';
+      // バッファリング中は再生中でもアニメーションを停止
+      const state = isPlaying && !isBuffering ? 'running' : 'paused';
       containerRef.current.style.setProperty('--play-state', state);
-      // console.log('[DanmakuLayer] Setting --play-state:', state);
+      // console.log('[DanmakuLayer] Setting --play-state:', state, { isPlaying, isBuffering });
     }
-  }, [containerRef, isPlaying]);
+  }, [containerRef, isPlaying, isBuffering]);
 
   if (mode === 'sidebar') return null;
 

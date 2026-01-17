@@ -68,11 +68,14 @@ const DesktopApp = () => {
   // AA Override State (Shared between Sidebar and Overlay)
   const [aaOverrideMap, setAaOverrideMap] = useState({}); // { [commentId]: boolean }
 
-  // バッファリング状態（ウェブ動画がロード中かどうか）を ref で管理
-  // フレームループで参照するため、再レンダリングを避けるために ref を使用
+  // バッファリング状態（ウェブ動画がロード中かどうか）
+  // ref: フレームループでの高頻度参照用（再レンダリングを避ける）
+  // state: DanmakuLayer のアニメーション停止トリガー用（UI更新）
   const isBufferingRef = useRef(false);
+  const [isBuffering, setIsBufferingState] = useState(false);
   const setIsBuffering = useCallback((value) => {
     isBufferingRef.current = value;
+    setIsBufferingState(value);
     if (value) {
       console.log('[Buffering] Video buffering started');
     } else {
@@ -738,6 +741,7 @@ const DesktopApp = () => {
         logo={logo}
         // バッファリング状態管理
         setIsBuffering={setIsBuffering}
+        isBuffering={isBuffering}
         // End Card
         endCardSettings={endCardSettings}
         showEndCard={showEndCard}
