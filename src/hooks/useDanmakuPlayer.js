@@ -13,7 +13,12 @@ import { useTimeSync } from './useTimeSync';
 
 // Main Hook
 // enableTreeView: boolean - Passed from UI settings to control tree processing
-export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => {
+// isBufferingRef: React ref - バッファリング状態を参照するための ref（ウェブ動画用）
+export const useDanmakuPlayer = (
+  enableTreeView = false,
+  aaOverrideMap = {},
+  isBufferingRef = null
+) => {
   // --- Custom Hooks ---
   const player = usePlayer();
   const cmSystem = useCMSystem(player.duration);
@@ -538,6 +543,13 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
   // --- Main Loop ---
   const processDanmakuFrame = useCallback(
     function frameLoop() {
+      // バッファリング中は時間を進めない（前フレームの時間を維持）
+      // ただし、ループは継続して再開を待つ
+      if (isBufferingRef?.current && player.isPlaying) {
+        animationFrameRef.current = requestAnimationFrame(frameLoop);
+        return;
+      }
+
       if (!player.videoRef.current) return;
 
       const p = player.videoRef.current;
@@ -717,6 +729,7 @@ export const useDanmakuPlayer = (enableTreeView = false, aaOverrideMap = {}) => 
       player,
       showEndCard,
       aaOverrideMap,
+      isBufferingRef,
     ]
   );
 

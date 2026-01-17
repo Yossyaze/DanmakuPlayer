@@ -185,6 +185,7 @@ const DesktopLayout = ({
   forceShowDanmakuSettings, // チュートリアル用：強制的に弾幕設定を開く
   onDanmakuSettingsOpened, // チュートリアル用：弾幕設定が開いた時のコールバック
   onStartTutorial,
+  setIsBuffering, // バッファリング状態管理
 }) => {
   // Sync Sidebar Width to CSS Variable for Context Menu
   React.useEffect(() => {
@@ -541,6 +542,8 @@ const DesktopLayout = ({
                         if (!isWaiting) player.setPlayingState(false);
                       }}
                       onPlay={() => player.setPlayingState(true)}
+                      onWaiting={() => setIsBuffering?.(true)}
+                      onPlaying={() => setIsBuffering?.(false)}
                       onError={(e) => {
                         console.error('HLSVideo: onError', e);
                         // HLS Network Error (CORS code 0 or HTTP 403) -> Retry with proxy
@@ -615,6 +618,8 @@ const DesktopLayout = ({
                         }
                       }}
                       onPlay={() => player.setPlayingState(true)}
+                      onWaiting={() => setIsBuffering?.(true)}
+                      onPlaying={() => setIsBuffering?.(false)}
                       onError={(e) => console.error('NativeVideo: onError', e.nativeEvent)}
                     />
                   ) : (

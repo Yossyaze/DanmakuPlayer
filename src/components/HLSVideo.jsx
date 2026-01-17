@@ -158,6 +158,8 @@ const HLSVideo = forwardRef(
       onError,
       onDuration,
       onReady,
+      onWaiting, // バッファリング開始時
+      onPlaying, // バッファリング終了（再生可能）
       volume = 1,
       muted = false,
       className = '',
@@ -414,6 +416,14 @@ const HLSVideo = forwardRef(
         onEnded={onEnded}
         onPause={onPause}
         onPlay={onPlay}
+        onWaiting={(e) => {
+          console.log('HLSVideo: onWaiting (buffering)');
+          if (onWaiting) onWaiting(e);
+        }}
+        onPlaying={(e) => {
+          console.log('HLSVideo: onPlaying (buffer ready)');
+          if (onPlaying) onPlaying(e);
+        }}
         onError={(e) => {
           console.error('HLSVideo: onError', e.nativeEvent);
           if (onError) onError(e);

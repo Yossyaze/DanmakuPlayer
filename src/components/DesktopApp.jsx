@@ -68,6 +68,18 @@ const DesktopApp = () => {
   // AA Override State (Shared between Sidebar and Overlay)
   const [aaOverrideMap, setAaOverrideMap] = useState({}); // { [commentId]: boolean }
 
+  // バッファリング状態（ウェブ動画がロード中かどうか）を ref で管理
+  // フレームループで参照するため、再レンダリングを避けるために ref を使用
+  const isBufferingRef = useRef(false);
+  const setIsBuffering = useCallback((value) => {
+    isBufferingRef.current = value;
+    if (value) {
+      console.log('[Buffering] Video buffering started');
+    } else {
+      console.log('[Buffering] Video buffering ended');
+    }
+  }, []);
+
   const handleToggleAA = useCallback((comment, isCurrentlyAA) => {
     setAaOverrideMap((prev) => {
       // Directly set to the opposite of current display state
@@ -129,7 +141,7 @@ const DesktopApp = () => {
     setShowEndCard,
     showAbeUnlockCelebration,
     closeAbeUnlockCelebration,
-  } = useDanmakuPlayer(enableTreeView, aaOverrideMap);
+  } = useDanmakuPlayer(enableTreeView, aaOverrideMap, isBufferingRef);
 
   const { danmakuContainerRef, resetDanmaku, syncLastProcessedTime } = danmaku;
   // --- Local UI State (Purely View related) ---
@@ -724,6 +736,8 @@ const DesktopApp = () => {
         handleMouseMove={handleMouseMove}
         handleMouseLeave={handleMouseLeave}
         logo={logo}
+        // バッファリング状態管理
+        setIsBuffering={setIsBuffering}
         // End Card
         endCardSettings={endCardSettings}
         showEndCard={showEndCard}
