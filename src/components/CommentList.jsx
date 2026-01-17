@@ -281,7 +281,7 @@ const CommentList = forwardRef(
 
         // e.stopPropagation(); // Removed to allow click-outside detection for popups
         // グローバルコンテキストメニューを開く
-        setIsAutoScroll(true); // Force Auto Mode locally immediately
+        // setIsAutoScroll(true); // User requested to NOT force auto-scroll
         openMenu(node, {
           maxWidth: contextMenuMaxWidth,
           handlers: {

@@ -75,7 +75,11 @@ const CommentContextMenu = ({
       <div
         ref={menuRef}
         className={`absolute bottom-0 bg-gray-800 border-t border-gray-700 shadow-2xl animate-slide-up pointer-events-auto no-scroll-lock ${maxWidth ? 'right-0' : 'left-0'}`}
-        style={maxWidth ? { width: `${maxWidth}px` } : { width: '100%' }}
+        style={
+          maxWidth
+            ? { width: typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth }
+            : { width: '100%' }
+        }
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()} // Prevent auto-scroll disable logic in CommentList
       >

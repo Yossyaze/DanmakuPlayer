@@ -186,6 +186,11 @@ const DesktopLayout = ({
   onDanmakuSettingsOpened, // チュートリアル用：弾幕設定が開いた時のコールバック
   onStartTutorial,
 }) => {
+  // Sync Sidebar Width to CSS Variable for Context Menu
+  React.useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`);
+  }, [sidebarWidth]);
+
   const [showDanmakuSettings, setShowDanmakuSettings] = React.useState(false);
 
   // チュートリアル用：外部から弾幕設定ポップオーバーを制御

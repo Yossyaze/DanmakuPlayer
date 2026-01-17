@@ -1661,7 +1661,7 @@ const Sidebar = ({
           aaMode={aaMode}
           aaOverrideMap={aaOverrideMap}
           onToggleAA={onToggleAA}
-          contextMenuMaxWidth={sidebarWidth} // サイドバーの横幅に合わせる
+          contextMenuMaxWidth="var(--sidebar-width)" // サイドバーの横幅に合わせる (CSS変数)
         />
 
         {/* User History Modal (Inside relative container) */}
@@ -1701,7 +1701,7 @@ const Sidebar = ({
               showImages,
             }}
             currentTime={currentTime} // Pass currentTime
-            maxWidth={sidebarWidth} // コンテキストメニューの横幅をサイドバーに合わせる
+            maxWidth="var(--sidebar-width)" // コンテキストメニューの横幅をサイドバーに合わせる (CSS変数)
           />
         )}
 
@@ -1760,7 +1760,7 @@ const Sidebar = ({
                 onIdClick={onIdClick}
                 RowComponent={CommentItem}
                 totalComments={comments.length}
-                customWidth={sidebarWidth - 10 - 5 * index}
+                customWidth={`calc(var(--sidebar-width) - ${10 + 5 * index}px)`}
                 minX={containerLeft + 5 * (index + 1)}
                 style={{ zIndex: 60 + index * 10 }}
               />
@@ -1788,7 +1788,7 @@ const Sidebar = ({
                 onIdClick={onIdClick}
                 RowComponent={CommentItem}
                 totalComments={comments.length}
-                customWidth={sidebarWidth - 10 - 5 * index}
+                customWidth={`calc(var(--sidebar-width) - ${10 + 5 * index}px)`}
                 minX={containerLeft + 5 * (index + 1)}
                 style={{ zIndex: 60 + index * 10 }}
               />

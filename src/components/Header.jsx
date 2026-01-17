@@ -35,7 +35,7 @@ const Header = ({
   onOpenEndCardSettings, // New prop
 }) => {
   return (
-    <div className="bg-gray-800 py-1 px-2 flex items-center shrink-0 z-20 relative shadow-md gap-4 overflow-x-auto">
+    <div className="bg-gray-800 py-1 px-2 flex items-center shrink-0 z-95 relative shadow-md gap-4 overflow-x-auto">
       {/* Left: Logo & Title */}
       <div className="flex items-center gap-4 shrink-0">
         <h1 className="text-white font-bold text-lg tracking-wider flex items-baseline gap-2 select-none">
