@@ -81,10 +81,14 @@ export const ContextMenuProvider = ({ children }) => {
               menuState.handlers.onSeek?.(time);
               closeMenu();
             }}
-            onJumpToComment={(comment) => {
-              menuState.handlers.onJumpToComment?.(comment);
-              closeMenu();
-            }}
+            onJumpToComment={
+              menuState.handlers.onJumpToComment
+                ? (comment) => {
+                    menuState.handlers.onJumpToComment(comment);
+                    closeMenu();
+                  }
+                : undefined
+            }
             // 時間設定
             onSetLogStart={(comment) => {
               menuState.handlers.onSetLogStart?.(comment);

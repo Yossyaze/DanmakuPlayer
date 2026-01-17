@@ -32,6 +32,7 @@ const UserHistoryModal = ({
   onToggleAA,
   onSetEndCardPreview,
   maxWidth, // コンテキストメニューの最大横幅
+  onJumpToComment, // 「このコメントへ移動」ハンドラー
 }) => {
   // グローバルコンテキストメニューを使用
   const { openMenu, menuState } = useContextMenu();
@@ -65,6 +66,7 @@ const UserHistoryModal = ({
       maxWidth,
       handlers: {
         onSeek,
+        onJumpToComment,
         onSetLogStart,
         onSetCmStart,
         onSetCmEnd,
