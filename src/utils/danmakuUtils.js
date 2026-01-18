@@ -119,3 +119,30 @@ export const formatTime = (seconds) => {
 
   return isNegative ? `-${timeStr}` : timeStr;
 };
+
+/**
+ * ログファイル別弾幕カラーパレット
+ * 色相環に沿った順序（赤→オレンジ→黄→緑→シアン→青→紫→ピンク）
+ */
+export const LOG_FILE_COLORS = [
+  '#FFFFFF', // 白（デフォルト、index 0）
+  '#FF6666', // 赤
+  '#FFAA66', // オレンジ
+  '#FFDD66', // 黄色
+  '#AAFF66', // 黄緑
+  '#66FF99', // 緑
+  '#66FFDD', // シアン
+  '#66DDFF', // 水色
+  '#6699FF', // 青
+  '#AA66FF', // 紫
+  '#FF66AA', // ピンク
+];
+
+/**
+ * ファイルのカラーインデックスから色を取得（循環）
+ * @param {number} fileColorIndex - ファイルのカラーインデックス
+ * @returns {string} - 色のHexコード
+ */
+export const getLogFileColor = (fileColorIndex) => {
+  return LOG_FILE_COLORS[fileColorIndex % LOG_FILE_COLORS.length];
+};

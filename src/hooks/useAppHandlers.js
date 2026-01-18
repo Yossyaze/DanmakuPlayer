@@ -73,9 +73,13 @@ export function useAppHandlers({
   const handleSeekAndPlay = useCallback(
     (time) => {
       setLogOnlyMode(false);
-      // resetDanmaku(time); // REMOVED: Managed by performSeek/processDanmaku to avoid blink
-      handleCommentClick(time);
-      requestPlay();
+      // Use setTimeout to allow layout to settle before seeking/playing.
+      // This is crucial when switching from LogOnlyMode (container width 0) to VideoMode (full width).
+      // Without this delay, danmaku calculations use width=0, leading to extremely slow movement.
+      setTimeout(() => {
+        handleCommentClick(time);
+        requestPlay();
+      }, 50);
     },
     [handleCommentClick, requestPlay, setLogOnlyMode]
   );

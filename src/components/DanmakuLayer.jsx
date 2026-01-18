@@ -241,7 +241,14 @@ const DanmakuItem = React.memo(
                     height:
                       node.height || `${settings.fontSize * (settings.imageHeightLines || 4)}px`,
                   }}
-                  onClick={onImageClick ? () => onImageClick(node.content) : undefined}
+                  onClick={
+                    onImageClick
+                      ? (e) => {
+                          e.stopPropagation();
+                          onImageClick(node.content);
+                        }
+                      : undefined
+                  }
                 >
                   <img
                     src={node.content}

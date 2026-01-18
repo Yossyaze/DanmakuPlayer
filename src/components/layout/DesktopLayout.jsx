@@ -1,4 +1,4 @@
-import { FileInput, FilePen, FileVideo, Link, Save, Tv } from 'lucide-react';
+import { FileInput, FilePen, FileVideo, Link, Loader2, Save, Tv } from 'lucide-react';
 import React from 'react';
 import YouTube from 'react-youtube';
 
@@ -667,6 +667,7 @@ const DesktopLayout = ({
                           if (event.data === 1) {
                             // Playing
                             if (!player.isPlaying) player.setPlayingState(true);
+                            setIsBuffering?.(false);
                           } else if (event.data === 2) {
                             // Paused
                             const isWaiting = cmSystem.cmStateRef.current.isWaiting;
@@ -683,6 +684,9 @@ const DesktopLayout = ({
                             // Ended
                             player.setPlayingState(false);
                             setShowEndCard(true);
+                          } else if (event.data === 3) {
+                            // Buffering
+                            setIsBuffering?.(true);
                           }
                         }}
                         onError={(e) => {
@@ -707,7 +711,13 @@ const DesktopLayout = ({
                       onAnimationEnd={handleAnimationEnd}
                       aaMode={aaMode}
                       aaOverrideMap={aaOverrideMap}
-                      onImageClick={(url) => setZoomedImage(url)}
+                      onImageClick={(url) => {
+                        setZoomedImage(url);
+                        // Force pause when clicking an image
+                        if (player.isPlaying) {
+                          player.setPlayingState(false);
+                        }
+                      }}
                       onTruncationClick={handleTruncationIndicatorClick}
                       isEnabled={dmSettings.enabled && showDanmaku && !logOnlyMode}
                       isPlaying={playerIsPlaying || showEndCard}
@@ -718,6 +728,16 @@ const DesktopLayout = ({
 
                   {/* Global Image Display Modal is rendered at root level */}
                   {/* Removed local inline Expanded Danmaku Image Modal */}
+
+                  {/* Buffering Indicator */}
+                  {isBuffering && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 pointer-events-none animate-fade-in">
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 size={48} className="text-white animate-spin" />
+                        <span className="text-white font-bold drop-shadow-md">Loading...</span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* CM Wait Overlay */}
                   {cmSystem.isWaitingCm && (
@@ -1059,6 +1079,7 @@ const DesktopLayout = ({
               setZoomedImage={setZoomedImage}
               loadedFiles={logSystem.loadedFiles}
               handleToggleFileVisibility={logSystem.handleToggleFileVisibility}
+              handleFileColorChange={logSystem.handleFileColorChange}
               setAllFilesVisibility={logSystem.setAllFilesVisibility}
               handleRemoveFile={logSystem.handleRemoveFile}
               handleRenameFile={logSystem.handleRenameFile}

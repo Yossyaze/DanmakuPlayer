@@ -52,6 +52,7 @@ export const useDanmakuPlayer = (
             area: 100,
             imageMode: 'image', // none, image, placeholder
             abeMode: false, // 安倍晋三モード
+            logColors: false, // ログ別色分け
           },
           ...JSON.parse(saved),
         };
@@ -66,6 +67,7 @@ export const useDanmakuPlayer = (
       area: 100,
       imageMode: 'image',
       abeMode: false, // 安倍晋三モード
+      logColors: false, // ログ別色分け
     };
   });
   // End Card Settings State
@@ -205,7 +207,11 @@ export const useDanmakuPlayer = (
   }, [cmSystem, logSystem, player, timeSyncInitializedRef]);
 
   // --- Danmaku Tree Logic (delegated to useDanmakuTree) ---
-  const danmakuComments = useDanmakuTree(logSystem.visibleComments, enableTreeView);
+  const danmakuComments = useDanmakuTree(
+    logSystem.visibleComments,
+    enableTreeView,
+    dmSettings.logColors // ログ別色分けの有効化フラグ
+  );
 
   const performSeek = useCallback(
     (targetLogTime) => {

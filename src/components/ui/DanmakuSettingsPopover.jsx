@@ -278,6 +278,36 @@ const DanmakuSettingsPopover = ({
             );
           })()}
 
+          {/* ログ別色分け設定 */}
+          <div className="space-y-1 pt-2 border-t border-gray-700">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🎨</span>
+                <div>
+                  <label className="text-xs text-gray-400">ログ別色分け</label>
+                  <p className="text-[10px] text-gray-600">ファイルごとに色を変更</p>
+                </div>
+              </div>
+              <button
+                onClick={() =>
+                  setDmSettings({
+                    ...dmSettings,
+                    logColors: !dmSettings.logColors,
+                  })
+                }
+                className={`relative w-12 h-6 rounded-full transition-all ${
+                  dmSettings.logColors ? 'bg-blue-600' : 'bg-gray-700'
+                }`}
+              >
+                <span
+                  className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${
+                    dmSettings.logColors ? 'left-7' : 'left-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
           {/* Abe Mode Setting (Hidden Feature) */}
           {abeModeUnlocked && (
             <div className="space-y-1 pt-2 border-t border-gray-700">

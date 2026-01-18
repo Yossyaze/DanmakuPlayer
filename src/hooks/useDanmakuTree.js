@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 
+import { getLogFileColor } from '../utils/danmakuUtils';
+
 /**
  * useDanmakuTree - 弾幕表示用のツリー構造を構築するカスタムフック
  *
@@ -10,9 +12,10 @@ import { useMemo } from 'react';
  *
  * @param {Array} sourceComments - ソースコメント配列
  * @param {boolean} enableTreeView - ツリービューが有効かどうか
+ * @param {boolean} enableLogColors - ログ別色分けが有効かどうか
  * @returns {Array} 弾幕用に処理されたコメント配列
  */
-export function useDanmakuTree(sourceComments, enableTreeView) {
+export function useDanmakuTree(sourceComments, enableTreeView, enableLogColors = false) {
   return useMemo(() => {
     if (!enableTreeView || !sourceComments || sourceComments.length === 0) {
       // ツリービュー無効時でも depth=0 を設定
@@ -120,9 +123,13 @@ export function useDanmakuTree(sourceComments, enableTreeView) {
       };
 
       if (node.parentId) {
+        // ツリー表示で見やすくするために先頭のアンカーを除去
+        // マッチ: 先頭にある >>123, ＞＞123, &gt;&gt;123
+        const cleanText = finalNode.text.replace(/^\s*(?:>>|＞＞|&gt;&gt;)\s*\d+(?:\s+)?/, '');
+
         // ツリービューの視覚的な強調
         const indentSpaces = '　'.repeat(Math.max(0, meta.depth - 1)); // 全角スペース
-        finalNode.text = `${indentSpaces}└ ${finalNode.text}`;
+        finalNode.text = `${indentSpaces}└ ${cleanText}`;
         finalNode.style = {
           ...finalNode.style,
           transform: 'scale(0.8)',
@@ -132,9 +139,13 @@ export function useDanmakuTree(sourceComments, enableTreeView) {
         // 返信数に基づく親ノードのフォーマット
         const replyCount = node.children.length;
         if (replyCount >= 5) {
-          finalNode.color = '#ff4d4d'; // 赤
+          finalNode.color = '#ff4d4d'; // 赤（人気）
         } else if (replyCount >= 1) {
-          finalNode.color = '#4ade80'; // 緑
+          finalNode.color = '#4ade80'; // 緑（返信あり）
+        } else if (enableLogColors) {
+          // ログ別色分け（返信なしのコメントのみに適用）
+          // カスタムカラー > 自動カラー
+          finalNode.color = node.fileCustomColor || getLogFileColor(node.fileColorIndex ?? 0);
         }
       }
 
@@ -154,5 +165,5 @@ export function useDanmakuTree(sourceComments, enableTreeView) {
 
     // 時間でソート
     return processed.sort((a, b) => a.time - b.time);
-  }, [sourceComments, enableTreeView]);
+  }, [sourceComments, enableTreeView, enableLogColors]);
 }

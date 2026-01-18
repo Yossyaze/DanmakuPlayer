@@ -4,6 +4,7 @@ import {
   Maximize,
   MessageSquare,
   Minimize,
+  MonitorPlay, // New
   PanelRight,
   Pause,
   Play,
@@ -604,7 +605,7 @@ const VideoControls = ({
                 }`}
                 title="画質設定"
               >
-                <Settings size={20} />
+                <MonitorPlay size={20} />
               </button>
               {/* Quality Menu Popover */}
               {showQualityMenu && (

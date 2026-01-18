@@ -18,6 +18,9 @@ const CommentContent = ({
   const { textContent, imageUrls } = useMemo(() => {
     if (!text) return { textContent: null, imageUrls: [] };
 
+    // 文頭のアンカーを除去（ツリー表示時の返信コメント用）
+    // 削除：サイドバー等では表示するため
+
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     // Match >>123 or &gt;&gt;123
     const anchorRegex = /(&gt;&gt;\d+|>>\d+)/g;

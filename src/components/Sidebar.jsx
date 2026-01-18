@@ -98,6 +98,7 @@ const Sidebar = ({
   setSkipSeconds,
   handleUrlLoad,
   handleToggleFileVisibility,
+  handleFileColorChange, // カスタムカラー変更用
   setAllFilesVisibility, // 全表示/非表示用
   handleReorderFiles,
   urlInput,
@@ -1116,6 +1117,7 @@ const Sidebar = ({
                           handleToggleFileVisibility={handleToggleFileVisibility}
                           handleRemoveFile={handleRemoveFile}
                           handleRenameFile={handleRenameFile}
+                          onColorChange={handleFileColorChange}
                           firstAbsoluteTime={fileFirstAbsoluteTimeMap.get(file.id)}
                         />
                       ))}
@@ -1177,6 +1179,31 @@ const Sidebar = ({
                     OFF
                   </button>
                 </div>
+              </div>
+
+              {/* ログ別色分け設定 */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">🎨</span>
+                  <span className="text-gray-400 text-xs">ログ別色分け</span>
+                </div>
+                <button
+                  onClick={() =>
+                    setDmSettings({
+                      ...dmSettings,
+                      logColors: !dmSettings.logColors,
+                    })
+                  }
+                  className={`relative w-10 h-5 rounded-full transition-colors ${
+                    dmSettings.logColors ? 'bg-blue-600' : 'bg-gray-700'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${
+                      dmSettings.logColors ? 'left-5.5' : 'left-0.5'
+                    }`}
+                  />
+                </button>
               </div>
 
               {/* Abe Mode Setting (Hidden Feature) */}

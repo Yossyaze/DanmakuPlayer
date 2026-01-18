@@ -290,6 +290,7 @@ export const useLogSystem = () => {
               id: fileId,
               isVisible: true,
               count: parsed.rawComments.length,
+              colorIndex: prev.length, // ログ別色分け用インデックス
             },
           ]);
 
@@ -395,11 +396,19 @@ export const useLogSystem = () => {
     );
   }, []);
 
+  // ファイルのカスタムカラーを変更
+  const handleFileColorChange = useCallback((fileId, color) => {
+    setLoadedFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, customColor: color } : f)));
+  }, []);
+
   const addLoadedFiles = useCallback(
     (newFiles) => {
-      const processedFiles = newFiles.map((f) => ({
+      // 既存ファイル数を取得してcolorIndexを計算
+      const startIndex = loadedFiles.length;
+      const processedFiles = newFiles.map((f, idx) => ({
         ...f,
         isVisible: true,
+        colorIndex: startIndex + idx, // ログ別色分け用インデックス
       }));
 
       const newComments = processedFiles.flatMap((file) =>
@@ -432,18 +441,15 @@ export const useLogSystem = () => {
         }
       }
     },
-    [startDateStr, startTimeStr]
+    [startDateStr, startTimeStr, loadedFiles.length]
   );
 
   const loadProject = useCallback((projectLoadedFiles) => {
-    // Ensure isVisible is true for all files
-    const processedFiles = projectLoadedFiles.map((f) => ({
+    // Ensure isVisible is true for all files, and assign colorIndex
+    const processedFiles = projectLoadedFiles.map((f, idx) => ({
       ...f,
       isVisible: true,
-      // For older projects, rawComments may not have isKnownAA
-      // but AA check is somewhat expensive, so maybe ok to do on fly if missing?
-      // Or just re-calc here if we want to be safe.
-      // But re-calc is done in newComments logic below anyway for comments array.
+      colorIndex: f.colorIndex ?? idx, // 既存のcolorIndexを優先、なければインデックス
     }));
 
     // Reconstruct comments from the files
@@ -591,6 +597,8 @@ export const useLogSystem = () => {
         time: vpos, // Compatible with player
         absoluteTime: absoluteTime,
         dateDisplay: dateDisplay,
+        fileColorIndex: file?.colorIndex ?? 0, // ログ別色分け用
+        fileCustomColor: file?.customColor || null, // カスタムカラー
       });
     });
 
@@ -695,6 +703,8 @@ export const useLogSystem = () => {
           time: vpos,
           absoluteTime: absoluteTime,
           dateDisplay: dateDisplay,
+          fileColorIndex: file?.colorIndex ?? 0, // ログ別色分け用
+          fileCustomColor: file?.customColor || null, // カスタムカラー
         };
       })
       .sort((a, b) => a.vpos - b.vpos);
@@ -726,6 +736,7 @@ export const useLogSystem = () => {
     setAllFilesVisibility,
     handleRemoveFile,
     handleRenameFile,
+    handleFileColorChange,
     handleReorderFiles,
     addLoadedFiles,
     loadProject,
