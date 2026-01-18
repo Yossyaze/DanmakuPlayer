@@ -98,6 +98,7 @@ const Sidebar = ({
   setSkipSeconds,
   handleUrlLoad,
   handleToggleFileVisibility,
+  setAllFilesVisibility, // 全表示/非表示用
   handleReorderFiles,
   urlInput,
   setUrlInput,
@@ -1064,17 +1065,37 @@ const Sidebar = ({
                   <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                     ログ読み込み
                   </h4>
-                  <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded flex items-center gap-1 transition-colors">
-                    <Upload size={12} />
-                    ファイルを選択
-                    <input
-                      type="file"
-                      accept=".txt,.dat,.json"
-                      multiple
-                      onChange={handleLogFileChange}
-                      className="hidden"
-                    />
-                  </label>
+                  <div className="flex items-center gap-1">
+                    {loadedFiles.length > 0 && (
+                      <>
+                        <button
+                          onClick={() => setAllFilesVisibility(true)}
+                          title="全て表示"
+                          className="text-gray-400 hover:text-blue-400 transition-colors p-1"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button
+                          onClick={() => setAllFilesVisibility(false)}
+                          title="全て非表示"
+                          className="text-gray-400 hover:text-gray-200 transition-colors p-1"
+                        >
+                          <EyeOff size={14} />
+                        </button>
+                      </>
+                    )}
+                    <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded flex items-center gap-1 transition-colors">
+                      <Upload size={12} />
+                      ファイルを選択
+                      <input
+                        type="file"
+                        accept=".txt,.dat,.json"
+                        multiple
+                        onChange={handleLogFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 </div>
 
                 <DndContext

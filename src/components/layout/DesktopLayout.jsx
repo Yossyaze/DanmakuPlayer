@@ -1059,6 +1059,7 @@ const DesktopLayout = ({
               setZoomedImage={setZoomedImage}
               loadedFiles={logSystem.loadedFiles}
               handleToggleFileVisibility={logSystem.handleToggleFileVisibility}
+              setAllFilesVisibility={logSystem.setAllFilesVisibility}
               handleRemoveFile={logSystem.handleRemoveFile}
               handleRenameFile={logSystem.handleRenameFile}
               danmakuContainerRef={danmakuContainerRef}

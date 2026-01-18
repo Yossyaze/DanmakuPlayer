@@ -323,6 +323,11 @@ export const useLogSystem = () => {
     );
   }, []);
 
+  // 全ファイルの表示/非表示を一括で設定
+  const setAllFilesVisibility = useCallback((visible) => {
+    setLoadedFiles((prev) => prev.map((f) => ({ ...f, isVisible: visible })));
+  }, []);
+
   const handleRemoveFile = useCallback(
     (fileId) => {
       // 1. ファイルリストから削除
@@ -718,6 +723,7 @@ export const useLogSystem = () => {
     removeNgWord,
     handleUrlLoad,
     handleToggleFileVisibility,
+    setAllFilesVisibility,
     handleRemoveFile,
     handleRenameFile,
     handleReorderFiles,
