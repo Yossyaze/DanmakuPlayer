@@ -1066,24 +1066,24 @@ const Sidebar = ({
                     ログ読み込み
                   </h4>
                   <div className="flex items-center gap-1">
-                    {loadedFiles.length > 0 && (
-                      <>
-                        <button
-                          onClick={() => setAllFilesVisibility(true)}
-                          title="全て表示"
-                          className="text-gray-400 hover:text-blue-400 transition-colors p-1"
-                        >
-                          <Eye size={14} />
-                        </button>
-                        <button
-                          onClick={() => setAllFilesVisibility(false)}
-                          title="全て非表示"
-                          className="text-gray-400 hover:text-gray-200 transition-colors p-1"
-                        >
-                          <EyeOff size={14} />
-                        </button>
-                      </>
-                    )}
+                    {loadedFiles.length > 0 &&
+                      (() => {
+                        // 全て表示中かどうかをチェック
+                        const allVisible = loadedFiles.every((f) => f.isVisible !== false);
+                        return (
+                          <button
+                            onClick={() => setAllFilesVisibility(!allVisible)}
+                            title={allVisible ? '全て非表示' : '全て表示'}
+                            className={`transition-colors p-1 ${
+                              allVisible
+                                ? 'text-blue-400 hover:text-gray-400'
+                                : 'text-gray-400 hover:text-blue-400'
+                            }`}
+                          >
+                            {allVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                        );
+                      })()}
                     <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded flex items-center gap-1 transition-colors">
                       <Upload size={12} />
                       ファイルを選択
