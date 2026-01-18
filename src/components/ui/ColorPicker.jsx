@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
+import { Z_INDEX } from '../../constants/zIndex';
 import { LOG_FILE_COLORS } from '../../utils/danmakuUtils';
 
 /**
@@ -48,7 +49,7 @@ const ColorPicker = ({ selected, onSelect, onClose, triggerRef }) => {
       style={{
         top: position.top,
         left: position.left,
-        zIndex: 9999, // 最高レベルのz-index
+        zIndex: Z_INDEX.colorPicker,
       }}
       onClick={(e) => e.stopPropagation()}
     >

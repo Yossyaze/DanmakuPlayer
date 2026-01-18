@@ -43,6 +43,7 @@ import NgList from '../components/ui/NgList';
 import { useAppHandlers } from '../hooks/useAppHandlers';
 import { useDanmakuPlayer } from '../hooks/useDanmakuPlayer';
 import { formatTime } from '../utils/danmakuUtils';
+import { Z_INDEX } from '../constants/zIndex';
 
 /**
  * Sortable file row component for drag-and-drop reordering
@@ -56,7 +57,7 @@ const MobileSortableFileRow = ({ file, onRemove }) => {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 50 : 'auto',
+    zIndex: isDragging ? Z_INDEX.floating : 'auto',
     position: 'relative',
   };
 
@@ -531,7 +532,7 @@ const MobileApp = () => {
         >
           {/* Top Controls - Left side (弾幕, ミュート, 設定) */}
           <div
-            className={`absolute top-2 left-2 z-30 flex gap-1 transition-opacity ${
+            className={`absolute top-2 left-2 z-controls flex gap-1 transition-opacity ${
               showControlsOverlay || !player.videoSrc
                 ? 'opacity-100 duration-150'
                 : 'opacity-0 pointer-events-none duration-500'
@@ -578,7 +579,7 @@ const MobileApp = () => {
 
           {/* Top Controls - Right side (モード切替) */}
           <div
-            className={`absolute top-2 right-2 z-30 transition-opacity ${
+            className={`absolute top-2 right-2 z-controls transition-opacity ${
               showControlsOverlay || !player.videoSrc
                 ? 'opacity-100 duration-150'
                 : 'opacity-0 pointer-events-none duration-500'
@@ -600,7 +601,7 @@ const MobileApp = () => {
           {/* Danmaku Settings Popover - Visible when settings button is clicked */}
           {showControlsOverlay && showDanmakuSettings && (
             <div
-              className="absolute top-14 left-2 z-40 w-64 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl p-3 text-white"
+              className="absolute top-14 left-2 z-panel w-64 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl p-3 text-white"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-700">
@@ -739,7 +740,7 @@ const MobileApp = () => {
           )}
           {/* Project Controls - fade animation (top center-right, avoiding mode toggle) */}
           <div
-            className={`absolute top-12 right-2 z-30 flex gap-1 transition-opacity ${
+            className={`absolute top-12 right-2 z-controls flex gap-1 transition-opacity ${
               showControlsOverlay || !player.videoSrc
                 ? 'opacity-100 duration-150'
                 : 'opacity-0 pointer-events-none duration-500'
@@ -793,7 +794,7 @@ const MobileApp = () => {
           {/* Time Display and Fullscreen Button - fade animation */}
           {player.videoSrc && (
             <div
-              className={`absolute bottom-8 left-2 right-2 z-30 flex items-center justify-between transition-opacity ${
+              className={`absolute bottom-8 left-2 right-2 z-controls flex items-center justify-between transition-opacity ${
                 showControlsOverlay
                   ? 'opacity-100 duration-150'
                   : 'opacity-0 pointer-events-none duration-500'
@@ -818,7 +819,7 @@ const MobileApp = () => {
           {/* Center Play/Pause - fade animation */}
           {player.videoSrc && (
             <div
-              className={`absolute inset-0 flex items-center justify-center z-20 transition-opacity ${
+              className={`absolute inset-0 flex items-center justify-center z-touch transition-opacity ${
                 showControlsOverlay
                   ? 'opacity-100 duration-150'
                   : 'opacity-0 pointer-events-none duration-500'
@@ -951,7 +952,7 @@ const MobileApp = () => {
           {player.videoSrc && (
             <div
               ref={seekContainerRef}
-              className="absolute bottom-0 left-0 right-0 h-6 touch-none flex items-end z-20"
+              className="absolute bottom-0 left-0 right-0 h-6 touch-none flex items-end z-touch"
               onTouchStart={(e) => {
                 e.stopPropagation();
                 handleSeekTouchStart(e);
@@ -1172,7 +1173,7 @@ const MobileApp = () => {
                 {!isAutoScroll && logSystem.visibleComments?.length > 0 && (
                   <button
                     onClick={handleSyncButton}
-                    className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-full shadow-lg transition-all z-30 animate-bounce"
+                    className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-full shadow-lg transition-all z-controls animate-bounce"
                     title="現在のコメントへ追従"
                   >
                     <ArrowDown size={20} />
@@ -1546,7 +1547,7 @@ const MobileApp = () => {
 
       {/* File Reorder Modal */}
       {showFileReorderModal && (
-        <div className="fixed inset-0 z-60 bg-gray-950 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed inset-0 z-modal bg-gray-950 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <GripVertical size={20} className="text-blue-400" />

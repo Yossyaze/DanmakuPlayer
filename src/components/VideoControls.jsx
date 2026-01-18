@@ -340,7 +340,7 @@ const VideoControls = ({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-transparent transition-opacity duration-300 z-40 ${
+      className={`absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/90 to-transparent transition-opacity duration-300 z-panel ${
         visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
       onClick={(e) => e.stopPropagation()} // Prevent click from bubbling to video container (which toggles play)
@@ -360,7 +360,7 @@ const VideoControls = ({
           {/* Comment Momentum Graph (Hover Only) */}
           {/* Resize Handle (Invisible but draggable) */}
           <div
-            className="absolute bottom-full left-0 right-0 h-2 cursor-ns-resize z-40 hover:bg-white/10 transition-colors"
+            className="absolute bottom-full left-0 right-0 h-2 cursor-ns-resize z-panel hover:bg-white/10 transition-colors"
             onMouseDown={handleMouseDown}
           />
           {commentDensity.length > 0 && (
@@ -382,7 +382,7 @@ const VideoControls = ({
                 height="100%"
                 viewBox="0 0 200 64"
                 preserveAspectRatio="none"
-                className="relative w-full h-full overflow-visible z-10"
+                className="relative w-full h-full overflow-visible z-ui-base"
               >
                 <defs>
                   <linearGradient id="momentumGradient" x1="0" y1="0" x2="0" y2="1">
@@ -422,7 +422,7 @@ const VideoControls = ({
           )}
           {/* Thumbnail Preview (HLSストリーム時は動画のみ非表示) */}
           <div
-            className="absolute bottom-20 transform -translate-x-1/2 pointer-events-none transition-opacity duration-200 z-50 flex flex-col items-center"
+            className="absolute bottom-20 transform -translate-x-1/2 pointer-events-none transition-opacity duration-200 z-floating flex flex-col items-center"
             style={{
               left: `${hoverPos}px`, // Use pixels
               opacity: hoverTime !== null ? 1 : 0,
@@ -609,7 +609,7 @@ const VideoControls = ({
               </button>
               {/* Quality Menu Popover */}
               {showQualityMenu && (
-                <div className="absolute bottom-full right-0 mb-2 w-48 bg-black/90 border border-white/20 rounded-lg shadow-xl overflow-hidden backdrop-blur-sm animate-fade-in z-50">
+                <div className="absolute bottom-full right-0 mb-2 w-48 bg-black/90 border border-white/20 rounded-lg shadow-xl overflow-hidden backdrop-blur-sm animate-fade-in z-floating">
                   <div className="py-1">
                     <div className="px-3 py-2 text-xs font-bold text-gray-400 border-b border-white/10 mb-1">
                       画質を選択
@@ -668,7 +668,7 @@ const VideoControls = ({
               </button>
               {/* Speed Menu Popover */}
               {showSpeedMenu && (
-                <div className="absolute bottom-full right-0 mb-2 w-36 bg-black/90 border border-white/20 rounded-lg shadow-xl overflow-hidden backdrop-blur-sm animate-fade-in z-50">
+                <div className="absolute bottom-full right-0 mb-2 w-36 bg-black/90 border border-white/20 rounded-lg shadow-xl overflow-hidden backdrop-blur-sm animate-fade-in z-floating">
                   <div className="py-1">
                     <div className="px-3 py-2 text-xs font-bold text-gray-400 border-b border-white/10 mb-1">
                       再生速度

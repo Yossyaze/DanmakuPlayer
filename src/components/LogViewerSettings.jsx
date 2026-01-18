@@ -27,7 +27,7 @@ const LogViewerSettings = ({ settings, onSettingsChange, onClose, style }) => {
   return (
     <div
       ref={panelRef}
-      className="absolute z-50 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl w-72 animate-fade-in"
+      className="absolute z-floating bg-gray-900 border border-gray-700 rounded-lg shadow-2xl w-72 animate-fade-in"
       style={style}
     >
       {/* Header */}

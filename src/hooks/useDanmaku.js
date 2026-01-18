@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { parseCommentToNodes } from '../utils/danmakuProcessor';
 import { measureTextWidth } from '../utils/danmakuUtils';
+import { Z_INDEX } from '../constants/zIndex';
 
 export const useDanmaku = (settings, isPlaying) => {
   const [activeDanmaku, setActiveDanmaku] = useState([]);
@@ -428,7 +429,7 @@ export const useDanmaku = (settings, isPlaying) => {
               duration: commentDuration,
               animationDelay: `${animationDelay}s`, // Add animationDelay
               opacity: finalOpacity / settings.opacity, // DanmakuLayer multiplies this by settings.opacity
-              zIndex: isRound2 ? 0 : 10, // Round 2 behind Round 1
+              zIndex: isRound2 ? Z_INDEX.danmakuRound2 : Z_INDEX.danmakuRound1, // Round 2 behind Round 1
             });
           }
         });
@@ -476,7 +477,7 @@ export const useDanmaku = (settings, isPlaying) => {
                 color: '#888888',
                 isTruncationIndicator: true,
                 opacity: isRound2 ? 0.7 : 1, // Match parent opacity factor
-                zIndex: isRound2 ? 0 : 10,
+                zIndex: isRound2 ? Z_INDEX.danmakuRound2 : Z_INDEX.danmakuRound1,
               });
             }
           }

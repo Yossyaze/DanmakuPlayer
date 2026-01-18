@@ -544,7 +544,7 @@ const LogViewer = ({
         className="flex-1 flex flex-col min-w-0 min-h-0 bg-gray-900 border-x border-gray-800 shadow-xl relative"
       >
         {/* Thread Title Header */}
-        <div className="shrink-0 bg-gray-800/80 backdrop-blur border-b border-gray-700 py-1.5 px-2 shadow-sm z-10 sticky top-0 flex flex-wrap items-center justify-between gap-2">
+        <div className="shrink-0 bg-gray-800/80 backdrop-blur border-b border-gray-700 py-1.5 px-2 shadow-sm z-ui-base sticky top-0 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {/* Hamburger Menu Button */}
             {onToggleSidebar && (

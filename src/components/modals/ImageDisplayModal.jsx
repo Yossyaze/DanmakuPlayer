@@ -7,6 +7,7 @@ import {
   X,
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import { Z_INDEX } from '../../constants/zIndex';
 
 /**
  * ImageDisplayModal - 拡大画像を表示するモーダル
@@ -106,7 +107,8 @@ const ImageDisplayModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 animate-fade-in"
+      className="fixed inset-0 flex items-center justify-center bg-black/80 animate-fade-in"
+      style={{ zIndex: Z_INDEX.imageViewer }}
       onClick={onClose}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -193,7 +195,7 @@ const ImageDisplayModal = ({
       {/* Grid View Overlay */}
       {showGrid && imageList && (
         <div
-          className="absolute inset-x-0 bottom-0 top-16 bg-black/90 p-4 overflow-y-auto animate-slide-up z-50 rounded-t-xl border-t border-gray-800"
+          className="absolute inset-x-0 bottom-0 top-16 bg-black/90 p-4 overflow-y-auto animate-slide-up z-floating rounded-t-xl border-t border-gray-800"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">

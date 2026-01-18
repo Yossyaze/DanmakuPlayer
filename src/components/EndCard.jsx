@@ -1,5 +1,6 @@
 import { RotateCcw, X } from 'lucide-react';
 import React, { useMemo } from 'react';
+import { Z_INDEX } from '../constants/zIndex';
 
 const EndCard = ({ settings, onClose, onReplay }) => {
   const imageUrl = useMemo(() => {
@@ -21,7 +22,8 @@ const EndCard = ({ settings, onClose, onReplay }) => {
 
   return (
     <div
-      className="absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center animate-fade-in group"
+      className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center animate-fade-in group"
+      style={{ zIndex: Z_INDEX.endCard }}
       onClick={(e) => e.stopPropagation()}
     >
       {/* Background with blur effect */}

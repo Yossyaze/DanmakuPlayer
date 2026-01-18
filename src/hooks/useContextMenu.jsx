@@ -60,11 +60,11 @@ export const ContextMenuProvider = ({ children }) => {
       {menuState && (
         <>
           {/* 1. 全画面クリック検知用（透明） */}
-          <div className="fixed inset-0 z-90" onClick={closeMenu} />
+          <div className="fixed inset-0 z-context-backdrop" onClick={closeMenu} />
 
           {/* 2. 暗転用レイヤー（視覚効果のみ） */}
           <div
-            className="fixed bg-black/50 z-91 pointer-events-none"
+            className="fixed bg-black/50 z-context pointer-events-none"
             style={
               menuState.maxWidth
                 ? { top: 0, bottom: 0, right: 0, width: menuState.maxWidth }

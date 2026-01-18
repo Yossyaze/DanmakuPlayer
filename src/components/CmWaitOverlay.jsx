@@ -35,7 +35,7 @@ const CmWaitOverlay = ({
   const logTimeStr = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
   return (
-    <div className="absolute bottom-16 right-4 bg-black/80 text-white p-4 rounded border border-yellow-500/50 backdrop-blur-sm z-50 flex flex-col gap-2 min-w-[200px]">
+    <div className="absolute bottom-16 right-4 bg-black/80 text-white p-4 rounded border border-yellow-500/50 backdrop-blur-sm z-floating flex flex-col gap-2 min-w-[200px]">
       <div className="text-yellow-400 font-bold flex items-center gap-2">
         <span className="animate-pulse">●</span> CM待機中
       </div>

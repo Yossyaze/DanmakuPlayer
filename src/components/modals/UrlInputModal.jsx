@@ -1,4 +1,5 @@
 import React from 'react';
+import { Z_INDEX } from '../../constants/zIndex';
 
 const UrlInputModal = ({ isOpen, onClose, videoUrlInput, setVideoUrlInput, onSubmit }) => {
   if (!isOpen) return null;
@@ -11,7 +12,10 @@ const UrlInputModal = ({ isOpen, onClose, videoUrlInput, setVideoUrlInput, onSub
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-100">
+    <div
+      className="fixed inset-0 bg-black/80 flex items-center justify-center"
+      style={{ zIndex: Z_INDEX.modal }}
+    >
       <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 w-96">
         <h3 className="text-lg font-bold text-white mb-4">動画URLを開く</h3>
         <form onSubmit={handleSubmit} className="space-y-4">

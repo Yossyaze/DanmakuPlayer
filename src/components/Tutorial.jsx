@@ -2,6 +2,8 @@ import { Download, ExternalLink } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import Joyride, { ACTIONS, EVENTS, STATUS } from 'react-joyride';
 
+import { Z_INDEX } from '../constants/zIndex';
+
 const EXTENSION_DOWNLOAD_URL = './extension.zip';
 
 const rawSteps = [
@@ -273,7 +275,7 @@ const Tutorial = ({ run, onFinish, onStepChange, advanceStep }) => {
           overlayColor: 'rgba(0, 0, 0, 0.6)',
           primaryColor: '#3b82f6',
           textColor: '#ffffff',
-          zIndex: 10000,
+          zIndex: Z_INDEX.tutorialHighlight,
         },
         tooltip: {
           border: '1px solid rgba(255, 255, 255, 0.2)',

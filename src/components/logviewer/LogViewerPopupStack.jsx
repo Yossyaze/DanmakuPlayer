@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { Z_INDEX } from '../../constants/zIndex';
 import CommentPopup from '../ui/CommentPopup';
 import LogCommentItem from '../ui/LogCommentItem';
 
@@ -27,15 +28,15 @@ const LogViewerPopupStack = ({
 }) => {
   if (popupStack.length === 0) return null;
 
-  // Base z-index for the first popup is 60
-  const baseZIndex = 60;
+  // Base z-index for the first popup is Z_INDEX.popupStack (60)
+  const baseZIndex = Z_INDEX.popupStack;
 
   return (
     <>
       {/* Single backdrop for all popups - z-index below all popups */}
       <div
         className="fixed inset-0 bg-black/0 cursor-default"
-        style={{ zIndex: baseZIndex - 1 }}
+        style={{ zIndex: Z_INDEX.backdrop }}
         onMouseDown={(e) => {
           e.stopPropagation();
           onBackdropClick && onBackdropClick();

@@ -4,6 +4,7 @@ import { Edit2, Eye, EyeOff, GripVertical, Trash2 } from 'lucide-react';
 import React from 'react';
 
 import { getLogFileColor } from '../utils/danmakuUtils';
+import { Z_INDEX } from '../constants/zIndex';
 import ColorPicker from './ui/ColorPicker';
 
 const SidebarFileRow = ({
@@ -27,7 +28,7 @@ const SidebarFileRow = ({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 50 : 'auto',
+    zIndex: isDragging ? Z_INDEX.floating : 'auto',
     position: 'relative',
   };
 

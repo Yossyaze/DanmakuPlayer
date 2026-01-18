@@ -69,7 +69,7 @@ const CommentContextMenu = ({
   }, [comment.text, aaMode, aaOverride]);
 
   return (
-    <div className="fixed inset-0 z-100 pointer-events-none overflow-hidden">
+    <div className="fixed inset-0 z-context pointer-events-none overflow-hidden">
       {/* Backdrop removed to allow scroll-through */}
 
       <div

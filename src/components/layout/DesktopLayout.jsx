@@ -313,7 +313,7 @@ const DesktopLayout = ({
       >
         {/* File Drop Overlay */}
         {isDragOver && (
-          <div className="absolute inset-0 z-100 bg-black/80 backdrop-blur-sm flex items-center justify-center pointer-events-none m-4 border-4 border-blue-500/50 border-dashed rounded-2xl animate-fade-in">
+          <div className="absolute inset-0 z-modal bg-black/80 backdrop-blur-sm flex items-center justify-center pointer-events-none m-4 border-4 border-blue-500/50 border-dashed rounded-2xl animate-fade-in">
             <div className="text-center">
               <FileVideo size={64} className="mx-auto text-blue-400 mb-4 animate-bounce" />
               <p className="text-3xl font-bold text-white mb-2">ファイルをドロップ</p>
@@ -731,7 +731,7 @@ const DesktopLayout = ({
 
                   {/* Buffering Indicator */}
                   {isBuffering && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 pointer-events-none animate-fade-in">
+                    <div className="absolute inset-0 z-floating flex items-center justify-center bg-black/50 pointer-events-none animate-fade-in">
                       <div className="flex flex-col items-center gap-2">
                         <Loader2 size={48} className="text-white animate-spin" />
                         <span className="text-white font-bold drop-shadow-md">Loading...</span>
@@ -773,7 +773,7 @@ const DesktopLayout = ({
                     <>
                       {/* Danmaku Settings Popover (Lifted up for Z-Index Control) */}
                       {showDanmakuSettings && (
-                        <div className="absolute inset-0 z-70 pointer-events-none">
+                        <div className="absolute inset-0 z-high pointer-events-none">
                           {/* Wrap in a container to match positioning context if needed, 
                             but the popover itself positions absolute bottom-12 right-0
                             relative to this container (video area).

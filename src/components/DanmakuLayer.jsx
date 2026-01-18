@@ -2,6 +2,7 @@ import React from 'react';
 
 import { isProbablyAA } from '../utils/aaUtils';
 import { parseAbeKeywords } from '../utils/abeMode';
+import { Z_INDEX } from '../constants/zIndex';
 
 const DanmakuLayer = ({
   containerRef,
@@ -37,7 +38,8 @@ const DanmakuLayer = ({
   return (
     <div
       ref={containerRef}
-      className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-[51]"
+      className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden"
+      style={{ zIndex: Z_INDEX.danmakuLayer }}
       // Note: --play-state is now managed within this component
     >
       {activeDanmaku.map((dm) => (

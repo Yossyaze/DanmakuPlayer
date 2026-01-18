@@ -4,6 +4,7 @@ import React, { useLayoutEffect, useMemo, useRef } from 'react';
 import { useContextMenu } from '../../hooks/useContextMenu';
 import CommentItem from './CommentItem';
 import LogCommentItem from './LogCommentItem';
+import { Z_INDEX } from '../../constants/zIndex';
 
 /**
  * CommentPopup - 統合コメントポップアップコンポーネント
@@ -269,7 +270,7 @@ const CommentPopup = ({
             ? `${customWidth}px`
             : customWidth
           : undefined,
-        zIndex: style.zIndex || 70,
+        zIndex: style.zIndex || Z_INDEX.popup,
         ...style,
       }}
       onMouseDown={(e) => {
