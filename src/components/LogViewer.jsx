@@ -544,7 +544,10 @@ const LogViewer = ({
         className="flex-1 flex flex-col min-w-0 min-h-0 bg-gray-900 border-x border-gray-800 shadow-xl relative"
       >
         {/* Thread Title Header */}
-        <div className="shrink-0 bg-gray-800/80 backdrop-blur border-b border-gray-700 py-1.5 px-2 shadow-sm z-ui-base sticky top-0 flex flex-wrap items-center justify-between gap-2">
+        <div
+          className="shrink-0 bg-gray-800/80 backdrop-blur border-b border-gray-700 py-1.5 px-2 shadow-sm sticky top-0 flex flex-wrap items-center justify-between gap-2"
+          style={{ zIndex: 10 }}
+        >
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {/* Hamburger Menu Button */}
             {onToggleSidebar && (
@@ -627,31 +630,31 @@ const LogViewer = ({
             >
               <Settings size={20} />
             </button>
-
-            {/* Settings Panel */}
-            {showSettings && (
-              <LogViewerSettings
-                settings={logSettings}
-                onSettingsChange={handleSettingsChange}
-                onClose={() => setShowSettings(false)}
-                style={{ top: '100%', right: 0, marginTop: '0.5rem' }}
-              />
-            )}
-
-            {/* NG Panel */}
-            {showNgPanel && (
-              <LogViewerNGPanel
-                onClose={() => setShowNgPanel(false)}
-                style={{ top: '100%', right: 0, marginTop: '0.5rem' }}
-                ngSettings={ngSettings}
-                removeNgId={removeNgId}
-                removeNgComment={removeNgComment}
-                allComments={allComments || comments}
-                onIdClick={handleIdClick}
-              />
-            )}
           </div>
         </div>
+
+        {/* Settings Panel - outside header to avoid stacking context */}
+        {showSettings && (
+          <LogViewerSettings
+            settings={logSettings}
+            onSettingsChange={handleSettingsChange}
+            onClose={() => setShowSettings(false)}
+            style={{ top: '42px', right: '8px' }}
+          />
+        )}
+
+        {/* NG Panel - outside header to avoid stacking context */}
+        {showNgPanel && (
+          <LogViewerNGPanel
+            onClose={() => setShowNgPanel(false)}
+            style={{ top: '42px', right: '8px' }}
+            ngSettings={ngSettings}
+            removeNgId={removeNgId}
+            removeNgComment={removeNgComment}
+            allComments={allComments || comments}
+            onIdClick={handleIdClick}
+          />
+        )}
 
         <CommentList
           key={selectedFileId} // Force remount when file changes for independent scroll

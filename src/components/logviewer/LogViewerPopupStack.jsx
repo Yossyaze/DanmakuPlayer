@@ -36,7 +36,7 @@ const LogViewerPopupStack = ({
       {/* Single backdrop for all popups - z-index below all popups */}
       <div
         className="fixed inset-0 bg-black/0 cursor-default"
-        style={{ zIndex: Z_INDEX.backdrop }}
+        style={{ zIndex: Z_INDEX.popupBackdrop }}
         onMouseDown={(e) => {
           e.stopPropagation();
           onBackdropClick && onBackdropClick();

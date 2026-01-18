@@ -35,6 +35,7 @@ import {
   X,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Z_INDEX } from '../constants/zIndex';
 
 import { useContextMenu } from '../hooks/useContextMenu';
 import { playRandomAbeVoice } from '../utils/abeMode';
@@ -1784,7 +1785,7 @@ const Sidebar = ({
           {/* Single backdrop for all popups */}
           <div
             className="fixed inset-0 bg-black/0 cursor-default"
-            style={{ zIndex: 59 }}
+            style={{ zIndex: Z_INDEX.popupBackdrop }}
             onMouseDown={(e) => {
               e.stopPropagation();
               clearPopups();
@@ -1831,7 +1832,7 @@ const Sidebar = ({
               totalComments={comments.length}
               customWidth={`calc(var(--sidebar-width) - ${10 + 5 * index}px)`}
               minX={containerLeft + 5 * (index + 1)}
-              style={{ zIndex: 60 + index * 10 }}
+              style={{ zIndex: Z_INDEX.popupStack + index * 10 }}
             />
           ))}
         </>

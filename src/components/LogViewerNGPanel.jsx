@@ -1,5 +1,6 @@
 import { Ban, Regex, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import { Z_INDEX } from '../constants/zIndex';
 
 import NgList from './ui/NgList';
 
@@ -35,8 +36,8 @@ const LogViewerNGPanel = ({
   return (
     <div
       ref={panelRef}
-      className="absolute z-floating bg-gray-900 border border-gray-700 rounded-lg shadow-2xl w-72 animate-fade-in"
-      style={style}
+      className="absolute bg-gray-900 border border-gray-700 rounded-lg shadow-2xl w-72 animate-fade-in"
+      style={{ zIndex: Z_INDEX.floating, ...style }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
