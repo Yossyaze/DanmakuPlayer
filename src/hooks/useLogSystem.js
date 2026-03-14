@@ -149,11 +149,13 @@ export const useLogSystem = () => {
       };
 
       const tryFetch = async (targetUrl) => {
-        // Check if URL is from 5ch (requires extension fetch due to strict access control)
-        const is5chUrl = targetUrl.includes('.5ch.net');
+        const isExternalUrl =
+          targetUrl.startsWith('http') &&
+          !targetUrl.includes('localhost') &&
+          !targetUrl.includes('127.0.0.1');
 
-        // Try extension fetch first for 5ch URLs (via content script)
-        if (is5chUrl) {
+        // Try extension fetch first for external URLs if available
+        if (isExternalUrl) {
           try {
             const response = await new Promise((resolve, reject) => {
               const requestId = `fetch_${Date.now()}_${Math.random()}`;
@@ -187,11 +189,11 @@ export const useLogSystem = () => {
                 '*'
               );
 
-              // Timeout after 15 seconds
+              // Timeout after 10 seconds for general URLs
               setTimeout(() => {
                 window.removeEventListener('message', handleResponse);
                 reject(new Error('Extension fetch timeout'));
-              }, 15000);
+              }, 10000);
             });
 
             // Decode base64 to ArrayBuffer
@@ -203,22 +205,38 @@ export const useLogSystem = () => {
             console.log('Fetched via extension:', targetUrl);
             return bytes.buffer;
           } catch (extErr) {
-            console.warn('Extension fetch failed, trying CORS proxy:', extErr);
-            // Fall through to CORS proxy
+            console.warn('Extension fetch failed, trying CORS proxies:', extErr);
           }
         }
 
-        // Use CORS proxy for external URLs
-        let fetchUrl = targetUrl;
-        if (
-          targetUrl.startsWith('http') &&
-          !targetUrl.includes('localhost') &&
-          !targetUrl.includes('127.0.0.1')
-        ) {
-          fetchUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+        // Fallback or No Extension: Try multiple CORS proxies
+        if (isExternalUrl) {
+          const proxies = [
+            (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+            (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+            (url) => `https://thingproxy.freeboard.io/fetch/${url}`,
+          ];
+
+          let lastErr = null;
+          for (const getProxyUrl of proxies) {
+            try {
+              const fetchUrl = getProxyUrl(targetUrl);
+              console.log('Trying CORS proxy:', fetchUrl);
+              const response = await fetch(fetchUrl);
+              if (response.ok) {
+                return await response.arrayBuffer();
+              }
+              console.warn(`Proxy ${fetchUrl} returned ${response.status}`);
+            } catch (err) {
+              console.warn(`Proxy fetch failed:`, err);
+              lastErr = err;
+            }
+          }
+          throw lastErr || new Error('All CORS proxies failed');
         }
 
-        const response = await fetch(fetchUrl);
+        // Local URLs
+        const response = await fetch(targetUrl);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return response.arrayBuffer();
       };
