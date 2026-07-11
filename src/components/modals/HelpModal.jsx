@@ -22,6 +22,7 @@ import {
   X,
 } from 'lucide-react';
 import React, { useState } from 'react';
+
 import { Z_INDEX } from '../../constants/zIndex';
 
 const HelpModal = ({ isOpen, onClose, onStartTutorial }) => {

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { Z_INDEX } from '../constants/zIndex';
 import { parseCommentToNodes } from '../utils/danmakuProcessor';
 import { measureTextWidth } from '../utils/danmakuUtils';
-import { Z_INDEX } from '../constants/zIndex';
 
 export const useDanmaku = (settings, isPlaying) => {
   const [activeDanmaku, setActiveDanmaku] = useState([]);

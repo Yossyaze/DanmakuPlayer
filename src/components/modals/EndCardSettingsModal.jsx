@@ -1,5 +1,5 @@
 import { FileImage, Link, Pipette, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { formatTime } from '../../utils/danmakuUtils';
 import TimeInput from '../ui/TimeInput';
@@ -12,44 +12,34 @@ const EndCardSettingsModal = ({
   logComments, // Array of comments to search for images
   currentTime, // New prop
   logStartTime = 0, // Offset for Log vs Logical time
-  videoTimeToLogTime, // Function to convert video time to log time
-  logTimeToVideoTime, // Function to convert log time to video time
   startTimeStr, // "HH:MM:SS" string of log start time
   totalDuration,
 }) => {
   const [localSettings, setLocalSettings] = useState(settings);
   const [activeTab, setActiveTab] = useState(settings.type);
   const [inputMode, setInputMode] = useState('logical'); // 'logical' (Video Time) or 'log' (Log Time)
-  const [logImages, setLogImages] = useState([]);
-
-  // Sync with incoming settings when opening
-  useEffect(() => {
-    if (isOpen) {
-      setLocalSettings(settings);
-      setActiveTab(settings.type);
-    }
-  }, [isOpen, settings]);
 
   // Extract images from log comments
-  useEffect(() => {
-    if (isOpen && activeTab === 'log' && logComments) {
-      const images = [];
-      const seen = new Set();
-      // Regex copied from useDanmakuPlayer check logic
-      const regex = /(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|svg)(\?[^\s]*)?)/gi;
+  const logImages = useMemo(() => {
+    if (!isOpen || activeTab !== 'log' || !logComments) return [];
 
-      logComments.forEach((c) => {
-        const matches = c.text.matchAll(regex);
-        for (const match of matches) {
-          const url = match[1];
-          if (!seen.has(url)) {
-            seen.add(url);
-            images.push({ url, commentId: c.id, time: c.time });
-          }
+    const images = [];
+    const seen = new Set();
+    // Regex copied from useDanmakuPlayer check logic
+    const regex = /(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|svg)(\?[^\s]*)?)/gi;
+
+    logComments.forEach((c) => {
+      const matches = c.text.matchAll(regex);
+      for (const match of matches) {
+        const url = match[1];
+        if (!seen.has(url)) {
+          seen.add(url);
+          images.push({ url, commentId: c.id, time: c.time });
         }
-      });
-      setLogImages(images);
-    }
+      }
+    });
+
+    return images;
   }, [isOpen, activeTab, logComments]);
 
   const handleSave = () => {

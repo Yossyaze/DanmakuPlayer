@@ -40,10 +40,10 @@ import LogViewer from '../components/LogViewer';
 import VideoRequestModal from '../components/modals/VideoRequestModal';
 import AbeModeUnlockCelebration from '../components/ui/AbeModeUnlockCelebration';
 import NgList from '../components/ui/NgList';
+import { Z_INDEX } from '../constants/zIndex';
 import { useAppHandlers } from '../hooks/useAppHandlers';
 import { useDanmakuPlayer } from '../hooks/useDanmakuPlayer';
 import { formatTime } from '../utils/danmakuUtils';
-import { Z_INDEX } from '../constants/zIndex';
 
 /**
  * Sortable file row component for drag-and-drop reordering
@@ -1628,10 +1628,12 @@ const MobileApp = () => {
       />
 
       {/* --- Abe Mode Unlock Celebration --- */}
-      <AbeModeUnlockCelebration
-        isVisible={showAbeUnlockCelebration}
-        onClose={closeAbeUnlockCelebration}
-      />
+      {showAbeUnlockCelebration && (
+        <AbeModeUnlockCelebration
+          isVisible={showAbeUnlockCelebration}
+          onClose={closeAbeUnlockCelebration}
+        />
+      )}
     </div>
   );
 };

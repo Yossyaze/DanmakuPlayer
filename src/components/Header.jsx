@@ -4,7 +4,6 @@ import {
   FileInput,
   FilePen,
   FileVideo,
-  Image, // Import
   Link as LinkIcon,
   MessageSquare,
   PanelRight,
@@ -32,7 +31,6 @@ const Header = ({
   onOpenUrlModal,
   onOpenHelp,
   onReset, // New prop
-  onOpenEndCardSettings, // New prop
 }) => {
   return (
     <div className="bg-gray-800 py-1 px-2 flex items-center shrink-0 z-high-priority relative shadow-md gap-4 overflow-x-auto">

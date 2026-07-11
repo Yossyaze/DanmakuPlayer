@@ -1,10 +1,10 @@
 import { X } from 'lucide-react';
 import React, { useLayoutEffect, useMemo, useRef } from 'react';
 
-import { useContextMenu } from '../../hooks/useContextMenu';
+import { Z_INDEX } from '../../constants/zIndex';
+import { useContextMenu } from '../../hooks/useContextMenuContext';
 import CommentItem from './CommentItem';
 import LogCommentItem from './LogCommentItem';
-import { Z_INDEX } from '../../constants/zIndex';
 
 /**
  * CommentPopup - 統合コメントポップアップコンポーネント

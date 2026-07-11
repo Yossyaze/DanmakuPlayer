@@ -181,7 +181,7 @@ export const useLogFilter = (filteredComments = [], unlockAbeMode = null) => {
     if (!activeSearchQuery.trim()) return [];
     const query = activeSearchQuery.trim().toLowerCase();
     return filteredComments.filter((c) => c.text && c.text.toLowerCase().includes(query));
-  }, [filteredComments, activeSearchQuery, activeFilter]);
+  }, [filteredComments, activeSearchQuery, activeFilter, activeUserId]);
 
   return {
     // State

@@ -1,5 +1,6 @@
 import { AlignLeft, Eye, Image as ImageIcon, LayoutList, Type, X } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
+
 import { Z_INDEX } from '../constants/zIndex';
 
 const LogViewerSettings = ({ settings, onSettingsChange, onClose, style }) => {

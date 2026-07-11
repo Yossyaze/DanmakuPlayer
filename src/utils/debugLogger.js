@@ -82,7 +82,7 @@ export const sendExtensionLog = (message) => {
     }).catch(() => {
       // Ignore errors when backend is not available
     });
-  } catch (e) {
+  } catch {
     // Failsafe
   }
 };

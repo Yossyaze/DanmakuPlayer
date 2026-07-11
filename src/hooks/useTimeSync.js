@@ -1,12 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export const useTimeSync = ({
-  videoStartTimeStr,
-  logSystem,
-  cmSystem,
-  setCurrentTime,
-  currentTime,
-}) => {
+export const useTimeSync = ({ videoStartTimeStr, logSystem, cmSystem, setCurrentTime }) => {
   const timeSyncInitializedRef = useRef(false);
   const hasEverInitializedRef = useRef(false); // Track if we've ever done initial sync
 
@@ -91,7 +85,7 @@ export const useTimeSync = ({
       } else if (prevOffset !== offset) {
         // Re-init with offset change: adjust currentTime by delta
         const delta = offset - prevOffset;
-        setCurrentTime(currentTime + delta);
+        setCurrentTime((prevCurrentTime) => prevCurrentTime + delta);
       }
       // If offset is the same (log start time change only), just skip - don't reset currentTime
 

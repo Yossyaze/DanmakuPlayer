@@ -26,9 +26,8 @@ const AbeModeUnlockCelebration = ({ isVisible, onClose }) => {
   useEffect(() => {
     if (isVisible) {
       // 少し遅延してコンテンツを表示（アニメーション用）
-      setTimeout(() => setShowContent(true), 100);
-    } else {
-      setShowContent(false);
+      const timerId = setTimeout(() => setShowContent(true), 100);
+      return () => clearTimeout(timerId);
     }
   }, [isVisible]);
 

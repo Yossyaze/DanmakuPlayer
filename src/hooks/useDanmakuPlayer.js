@@ -26,6 +26,8 @@ export const useDanmakuPlayer = (
 
   // --- Local State ---
   const [currentTime, setCurrentTime] = useState(0);
+  const currentTimeRef = useRef(0);
+  currentTimeRef.current = currentTime;
 
   const { abeModeUnlocked, showAbeUnlockCelebration, unlockAbeMode, closeAbeUnlockCelebration } =
     useAbeMode();
@@ -38,7 +40,6 @@ export const useDanmakuPlayer = (
     logSystem,
     cmSystem,
     setCurrentTime,
-    currentTime,
   });
   const [dmSettings, setDmSettings] = useState(() => {
     try {
@@ -295,10 +296,11 @@ export const useDanmakuPlayer = (
   // When layout-affecting settings change, force re-calculation of current frame
   useEffect(() => {
     // Only trigger if we have comments to process
-    if (logSystem.visibleComments.length > 0) {
+    const visibleCommentCount = logSystem.visibleComments.length;
+    if (visibleCommentCount > 0) {
       // console.log('[useDanmakuPlayer] Layout settings changed, forcing reflow');
       processDanmaku(
-        currentTime,
+        currentTimeRef.current,
         danmakuComments,
         imageValidityMapRef.current,
         true, // force refresh (treat as seek/scrub)
@@ -314,10 +316,9 @@ export const useDanmakuPlayer = (
     dmSettings.opacity,
     // Other dependencies
     processDanmaku,
-    // currentTime, // REMOVED: Preventing re-calc on every frame
     danmakuComments,
     aaOverrideMap,
-    // logSystem.visibleComments.length // REMOVED: Focus on settings changes
+    logSystem.visibleComments.length,
   ]);
 
   const handleSeek = useCallback(

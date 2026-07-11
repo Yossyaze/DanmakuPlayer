@@ -2,6 +2,7 @@ import { FileInput, FilePen, FileVideo, Link, Loader2, Save, Tv } from 'lucide-r
 import React from 'react';
 import YouTube from 'react-youtube';
 
+import { ContextMenuProvider } from '../../hooks/useContextMenu';
 import { isHlsUrl } from '../../utils/hlsUtils';
 import CmWaitOverlay from '../CmWaitOverlay';
 import DanmakuLayer from '../DanmakuLayer';
@@ -20,7 +21,6 @@ import Sidebar from '../Sidebar';
 import AbeModeUnlockCelebration from '../ui/AbeModeUnlockCelebration';
 import DanmakuSettingsPopover from '../ui/DanmakuSettingsPopover';
 import VideoControls from '../VideoControls';
-import { ContextMenuProvider } from '../../hooks/useContextMenu';
 
 const DesktopLayout = ({
   // Refs
@@ -1001,19 +1001,19 @@ const DesktopLayout = ({
             projectDirPath={projectDirPath}
           />
 
-          <EndCardSettingsModal
-            isOpen={showEndCardSettingsModal}
-            onClose={() => setShowEndCardSettingsModal(false)}
-            settings={endCardSettings}
-            onSettingsChange={handleSettingsChange}
-            logComments={logSystem.visibleComments} // Use visible comments for finding images
-            currentTime={currentTime - cmSystem.logStartTime}
-            logStartTime={cmSystem.logStartTime}
-            videoTimeToLogTime={cmSystem.videoTimeToLogTime}
-            logTimeToVideoTime={cmSystem.logTimeToVideoTime}
-            startTimeStr={logSystem.startTimeStr}
-            totalDuration={cmSystem.getTotalDuration}
-          />
+          {showEndCardSettingsModal && (
+            <EndCardSettingsModal
+              isOpen={showEndCardSettingsModal}
+              onClose={() => setShowEndCardSettingsModal(false)}
+              settings={endCardSettings}
+              onSettingsChange={handleSettingsChange}
+              logComments={logSystem.visibleComments} // Use visible comments for finding images
+              currentTime={currentTime - cmSystem.logStartTime}
+              logStartTime={cmSystem.logStartTime}
+              startTimeStr={logSystem.startTimeStr}
+              totalDuration={cmSystem.getTotalDuration}
+            />
+          )}
 
           {/* --- Sidebar (Right) --- */}
 
@@ -1132,10 +1132,12 @@ const DesktopLayout = ({
           />
 
           {/* --- Abe Mode Unlock Celebration --- */}
-          <AbeModeUnlockCelebration
-            isVisible={showAbeUnlockCelebration}
-            onClose={closeAbeUnlockCelebration}
-          />
+          {showAbeUnlockCelebration && (
+            <AbeModeUnlockCelebration
+              isVisible={showAbeUnlockCelebration}
+              onClose={closeAbeUnlockCelebration}
+            />
+          )}
 
           {/* --- Global Image Display Modal --- */}
           <ImageDisplayModal

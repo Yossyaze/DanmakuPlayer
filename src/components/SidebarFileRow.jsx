@@ -3,8 +3,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { Edit2, Eye, EyeOff, GripVertical, Trash2 } from 'lucide-react';
 import React from 'react';
 
-import { getLogFileColor } from '../utils/danmakuUtils';
 import { Z_INDEX } from '../constants/zIndex';
+import { getLogFileColor } from '../utils/danmakuUtils';
 import ColorPicker from './ui/ColorPicker';
 
 const SidebarFileRow = ({

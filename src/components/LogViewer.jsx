@@ -1,7 +1,7 @@
 import { Ban, Hash, Menu, Settings } from 'lucide-react';
 import React, { useState } from 'react';
 
-import { useContextMenu } from '../hooks/useContextMenu';
+import { useContextMenu } from '../hooks/useContextMenuContext';
 import { useLogFilter } from '../hooks/useLogFilter';
 import { useLogPopup } from '../hooks/useLogPopup';
 import CommentList from './CommentList';

@@ -1,7 +1,7 @@
 import { Ban, Regex, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
-import { Z_INDEX } from '../constants/zIndex';
 
+import { Z_INDEX } from '../constants/zIndex';
 import NgList from './ui/NgList';
 
 const LogViewerNGPanel = ({

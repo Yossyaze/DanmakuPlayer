@@ -35,19 +35,18 @@ import {
   X,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Z_INDEX } from '../constants/zIndex';
 
-import { useContextMenu } from '../hooks/useContextMenu';
+import { Z_INDEX } from '../constants/zIndex';
+import { useContextMenu } from '../hooks/useContextMenuContext';
 import { playRandomAbeVoice } from '../utils/abeMode';
 import { padTime } from '../utils/sidebarUtils';
 import CommentList from './CommentList';
 import SidebarNGPanel from './sidebar/SidebarNGPanel'; // Import
 import SidebarFileRow from './SidebarFileRow'; // Restore
-import CommentPopup from './ui/CommentPopup';
 import CommentItem from './ui/CommentItem';
+import CommentPopup from './ui/CommentPopup';
 import DateInput from './ui/DateInput';
 import NgList from './ui/NgList';
-
 import TimeInput from './ui/TimeInput';
 
 const Sidebar = ({

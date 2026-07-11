@@ -1,5 +1,6 @@
 import { RotateCcw, X } from 'lucide-react';
 import React, { useMemo } from 'react';
+
 import { Z_INDEX } from '../constants/zIndex';
 
 const EndCard = ({ settings, onClose, onReplay }) => {

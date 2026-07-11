@@ -4,13 +4,14 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react';
 import { Virtuoso } from 'react-virtuoso';
 
 import useCommentTree from '../hooks/useCommentTree';
-import { useContextMenu } from '../hooks/useContextMenu';
+import { useContextMenu } from '../hooks/useContextMenuContext';
 import CommentRow from './ui/CommentRow';
 
 const CommentList = forwardRef(
@@ -62,7 +63,7 @@ const CommentList = forwardRef(
     ref
   ) => {
     // Default row component if not provided
-    const RowToRender = RowComponent || CommentRow;
+    const RowToRender = useMemo(() => RowComponent || CommentRow, [RowComponent]);
     const virtuosoRef = useRef(null);
     const virtusoScrollerRef = useRef(null);
     const lastAutoScrollTimeRef = useRef(0); // Timestamp of last auto-scroll trigger
@@ -321,99 +322,66 @@ const CommentList = forwardRef(
         comments.length,
         aaMode,
         aaOverrideMap,
-        setIsAutoScroll,
       ]
     );
 
-    const itemContent = useCallback(
-      (index, node) => {
-        const currentDepth = node.depth || 0;
-        const nextDepth = index < treeRoots.length - 1 ? treeRoots[index + 1]?.depth || 0 : 0;
-        const isLastItem = index === treeRoots.length - 1;
+    const itemContent = (index, node) => {
+      const currentDepth = node.depth || 0;
+      const nextDepth = index < treeRoots.length - 1 ? treeRoots[index + 1]?.depth || 0 : 0;
+      const isLastItem = index === treeRoots.length - 1;
 
-        // Check if depth decreases to next item
-        const depthDecreases = !isLastItem && nextDepth < currentDepth;
+      // Check if depth decreases to next item
+      const depthDecreases = !isLastItem && nextDepth < currentDepth;
 
-        // Border logic:
-        // - When depth decreases: use complement border only (to extend to next depth)
-        // - Otherwise: use normal border-b
-        const borderClass = isLastItem ? '' : depthDecreases ? '' : 'border-b border-gray-700';
+      // Border logic:
+      // - When depth decreases: use complement border only (to extend to next depth)
+      // - Otherwise: use normal border-b
+      const borderClass = isLastItem ? '' : depthDecreases ? '' : 'border-b border-gray-700';
 
-        return (
-          <>
-            <RowToRender
-              node={node}
-              isActive={
-                activeCommentId === node.id || (enableTreeView && node.rootId === activeCommentId)
-              }
-              isHighlighted={highlightedCommentId === node.id}
-              currentTime={currentTime}
-              rootTime={enableTreeView && rootTimeMap ? rootTimeMap.get(node.rootId) : undefined}
-              showThreadTitle={showThreadTitle}
-              visibleThreadTitles={visibleThreadTitles}
-              onCommentClick={onCommentClick}
-              onAnchorClick={handleAnchorClick}
-              onAnchorMouseEnter={onAnchorMouseEnter}
-              onAnchorMouseLeave={onAnchorMouseLeave}
-              onUrlLoad={onUrlLoad}
-              showImages={showImages}
-              imageLayout={imageLayout}
-              setZoomedImage={setZoomedImage}
-              logStartTime={logStartTime}
-              onRowClick={handleRowClick}
-              totalComments={comments.length}
-              onIdClick={onIdClick}
-              formatTime={formatTime}
-              aaMode={aaMode}
-              aaOverride={aaOverrideMap[node.id]}
-              className={borderClass}
-              startDateStr={startDateStr} // Pass to Row
-              startTimeStr={startTimeStr} // Pass to Row
-              {...extraRowProps}
+      return (
+        <>
+          <RowToRender
+            node={node}
+            isActive={
+              activeCommentId === node.id || (enableTreeView && node.rootId === activeCommentId)
+            }
+            isHighlighted={highlightedCommentId === node.id}
+            currentTime={currentTime}
+            rootTime={enableTreeView && rootTimeMap ? rootTimeMap.get(node.rootId) : undefined}
+            showThreadTitle={showThreadTitle}
+            visibleThreadTitles={visibleThreadTitles}
+            onCommentClick={onCommentClick}
+            onAnchorClick={handleAnchorClick}
+            onAnchorMouseEnter={onAnchorMouseEnter}
+            onAnchorMouseLeave={onAnchorMouseLeave}
+            onUrlLoad={onUrlLoad}
+            showImages={showImages}
+            imageLayout={imageLayout}
+            setZoomedImage={setZoomedImage}
+            logStartTime={logStartTime}
+            onRowClick={handleRowClick}
+            totalComments={comments.length}
+            onIdClick={onIdClick}
+            formatTime={formatTime}
+            aaMode={aaMode}
+            aaOverride={aaOverrideMap[node.id]}
+            className={borderClass}
+            startDateStr={startDateStr} // Pass to Row
+            startTimeStr={startTimeStr} // Pass to Row
+            {...extraRowProps}
+          />
+          {/* Complement border when depth decreases - extends to next item's depth */}
+          {depthDecreases && (
+            <div
+              className="border-b border-gray-700"
+              style={{
+                marginLeft: `${Math.max(nextDepth * indentSize, 0)}px`,
+              }}
             />
-            {/* Complement border when depth decreases - extends to next item's depth */}
-            {depthDecreases && (
-              <div
-                className="border-b border-gray-700"
-                style={{
-                  marginLeft: `${Math.max(nextDepth * indentSize, 0)}px`,
-                }}
-              />
-            )}
-          </>
-        );
-      },
-      [
-        activeCommentId,
-        highlightedCommentId,
-        currentTime,
-        handleAnchorClick,
-        onAnchorMouseEnter,
-        onAnchorMouseLeave,
-        onUrlLoad,
-        showImages,
-        setZoomedImage,
-        logStartTime,
-        handleRowClick,
-        comments.length,
-        onIdClick,
-        showThreadTitle,
-        visibleThreadTitles,
-        onCommentClick,
-        extraRowProps,
-        formatTime,
-        aaMode,
-        aaOverrideMap,
-        enableTreeView,
-        rootTimeMap,
-        treeRoots,
-        imageLayout,
-        indentSize,
-        startDateStr, // Added dependency
-        startTimeStr, // Added dependency
-        RowToRender, // Added dependency for React Compiler
-      ]
-    );
+          )}
+        </>
+      );
+    };
 
     const handleScrollerRef = useCallback((ref) => {
       virtusoScrollerRef.current = ref;

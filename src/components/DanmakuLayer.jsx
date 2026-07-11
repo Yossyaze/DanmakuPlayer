@@ -1,8 +1,8 @@
 import React from 'react';
 
+import { Z_INDEX } from '../constants/zIndex';
 import { isProbablyAA } from '../utils/aaUtils';
 import { parseAbeKeywords } from '../utils/abeMode';
-import { Z_INDEX } from '../constants/zIndex';
 
 const DanmakuLayer = ({
   containerRef,

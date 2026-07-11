@@ -1,16 +1,16 @@
 import { useMemo } from 'react';
 
 const useCommentTree = (comments, enableTreeView) => {
-  const buildTree = (inputComments) => {
+  return useMemo(() => {
     // 0. 仮想化用フラットリスト（ツリー無効時）
     if (!enableTreeView) {
-      return inputComments.map((c) => ({ ...c, depth: 0, children: [] }));
+      return comments.map((c) => ({ ...c, depth: 0, children: [] }));
     }
 
     // 1. ノードの準備とマッピング
     // IDの重複排除も兼ねてMapを作成
     const nodeMap = new Map();
-    inputComments.forEach((c) => {
+    comments.forEach((c) => {
       // 既存のchildren等はリセットして新しいオブジェクトを作る
       // parentId: null で初期化し、後で親が見つかったらセットする
       nodeMap.set(c.id, { ...c, children: [], parentId: null });
@@ -89,9 +89,7 @@ const useCommentTree = (comments, enableTreeView) => {
     flatten(roots, 0);
 
     return flattened;
-  };
-
-  return useMemo(() => buildTree(comments), [comments, enableTreeView]);
+  }, [comments, enableTreeView]);
 };
 
 export default useCommentTree;
