@@ -50,6 +50,20 @@ describe('parseLogFile', () => {
     });
   });
 
+  it('文字列入力がHTMLでない場合はテキストログとして解析できる', async () => {
+    const text = ['URLログ', '1 : Alice 2025/10/12(日) 10:00:00.00 ID:user1', '本文'].join('\n');
+
+    const result = await parseLogFile(text, 'url-text-1');
+
+    expect(result.title).toBe('URLログ');
+    expect(result.rawComments[0]).toMatchObject({
+      id: 'url-text-1-1',
+      name: 'Alice',
+      userId: 'user1',
+      text: '本文',
+    });
+  });
+
   it('datログのHTMLタグとエンティティを本文として読める', () => {
     const datText =
       'Alice<>sage<>2025/10/12(日) 10:00:00.00 ID:user1<>body&lt;br&gt;<br>&gt;&gt;2<>dat title';

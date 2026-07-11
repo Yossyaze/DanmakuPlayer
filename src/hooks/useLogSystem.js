@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { isProbablyAA } from '../utils/aaUtils';
-import { parseDatBuffer, parseLogFile } from '../utils/logParser';
+import { isVideoFileUrl, loadLogFromUrl } from '../utils/logUrlLoader';
 
 export const useLogSystem = () => {
   const [loadedFiles, setLoadedFiles] = useState([]);
@@ -88,206 +88,13 @@ export const useLogSystem = () => {
 
       if (!url) return;
 
-      // Simple check for video URL
-      if (url.match(/\.(mp4|webm|ogg)$/i)) {
+      // 動画URLはログとして読み込まない
+      if (isVideoFileUrl(url)) {
         return;
       }
 
-      // Helper to resolve .dat URLs from thread URLs
-      const resolveDatUrls = (inputUrl) => {
-        let board = null;
-        let id = null;
-        let server = null;
-
-        // Pattern 1: 5ch.net - https://[server].5ch.net/test/read.cgi/[board]/[id]/
-        const fivechMatch = inputUrl.match(
-          /https?:\/\/([^.]+\.5ch\.net)\/test\/read\.cgi\/([^/]+)\/(\d+)/
-        );
-        if (fivechMatch) {
-          server = fivechMatch[1];
-          board = fivechMatch[2];
-          id = fivechMatch[3];
-
-          const candidates = [];
-          // 1. Current Thread: https://[server]/[board]/dat/[id].dat
-          candidates.push(`https://${server}/${board}/dat/${id}.dat`);
-          // 2. Past Log (oyster): https://[server]/[board]/oyster/[id first 4 digits]/[id].dat
-          if (id.length >= 4) {
-            candidates.push(`https://${server}/${board}/oyster/${id.slice(0, 4)}/${id}.dat`);
-          }
-          return candidates;
-        }
-
-        // Pattern 2: bbs.eddibb.cc/board/id or bbs.eddibb.cc/test/read.cgi/board/id
-        const eddibbMatch = inputUrl.match(/bbs\.eddibb\.cc\/(?:test\/read\.cgi\/)?([^/]+)\/(\d+)/);
-        if (eddibbMatch) {
-          board = eddibbMatch[1];
-          id = eddibbMatch[2];
-        }
-
-        // Pattern 3: kyodemo.net/sdemo/r/e_e_board/id
-        const kyodemoMatch = inputUrl.match(/kyodemo\.net\/sdemo\/r\/e_e_([^/]+)\/(\d+)/);
-        if (kyodemoMatch) {
-          board = kyodemoMatch[1];
-          id = kyodemoMatch[2];
-        }
-
-        if (board && id) {
-          const candidates = [];
-          // 1. Current Thread
-          candidates.push(`https://bbs.eddibb.cc/${board}/dat/${id}.dat`);
-          // 2. Past Log (kako)
-          // /board/kako/1763/17638/1763886647.dat
-          if (id.length >= 5) {
-            candidates.push(
-              `https://bbs.eddibb.cc/${board}/kako/${id.slice(0, 4)}/${id.slice(0, 5)}/${id}.dat`
-            );
-          }
-          return candidates;
-        }
-        return [inputUrl];
-      };
-
-      const tryFetch = async (targetUrl) => {
-        const isExternalUrl =
-          targetUrl.startsWith('http') &&
-          !targetUrl.includes('localhost') &&
-          !targetUrl.includes('127.0.0.1');
-
-        // Try extension fetch first for external URLs if available
-        if (isExternalUrl) {
-          try {
-            const response = await new Promise((resolve, reject) => {
-              const requestId = `fetch_${Date.now()}_${Math.random()}`;
-
-              const handleResponse = (event) => {
-                if (event.source !== window) return;
-                if (
-                  event.data?.type === 'DANMAKU_FETCH_RESPONSE' &&
-                  event.data?.requestId === requestId
-                ) {
-                  window.removeEventListener('message', handleResponse);
-                  if (event.data.error) {
-                    reject(new Error(event.data.error));
-                  } else if (event.data.data) {
-                    resolve(event.data);
-                  } else {
-                    reject(new Error('No data received'));
-                  }
-                }
-              };
-
-              window.addEventListener('message', handleResponse);
-
-              // Send request to content script
-              window.postMessage(
-                {
-                  type: 'DANMAKU_FETCH_REQUEST',
-                  requestId,
-                  url: targetUrl,
-                },
-                '*'
-              );
-
-              // Timeout after 10 seconds for general URLs
-              setTimeout(() => {
-                window.removeEventListener('message', handleResponse);
-                reject(new Error('Extension fetch timeout'));
-              }, 10000);
-            });
-
-            // Decode base64 to ArrayBuffer
-            const binaryString = atob(response.data);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            console.log('Fetched via extension:', targetUrl);
-            return bytes.buffer;
-          } catch (extErr) {
-            console.warn('Extension fetch failed, trying CORS proxies:', extErr);
-          }
-        }
-
-        // Fallback or No Extension: Try multiple CORS proxies
-        if (isExternalUrl) {
-          const proxies = [
-            (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-            (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-            (url) => `https://thingproxy.freeboard.io/fetch/${url}`,
-          ];
-
-          let lastErr = null;
-          for (const getProxyUrl of proxies) {
-            try {
-              const fetchUrl = getProxyUrl(targetUrl);
-              console.log('Trying CORS proxy:', fetchUrl);
-              const response = await fetch(fetchUrl);
-              if (response.ok) {
-                return await response.arrayBuffer();
-              }
-              console.warn(`Proxy ${fetchUrl} returned ${response.status}`);
-            } catch (err) {
-              console.warn(`Proxy fetch failed:`, err);
-              lastErr = err;
-            }
-          }
-          throw lastErr || new Error('All CORS proxies failed');
-        }
-
-        // Local URLs
-        const response = await fetch(targetUrl);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return response.arrayBuffer();
-      };
-
       try {
-        const candidates = resolveDatUrls(url);
-        let buffer = null;
-        let usedUrl = url;
-        let lastError = null;
-
-        // Try candidates sequentially
-        for (const candidate of candidates) {
-          try {
-            console.log('Trying to fetch:', candidate);
-            buffer = await tryFetch(candidate);
-            usedUrl = candidate;
-            break; // Success
-          } catch (err) {
-            console.warn('Fetch failed for:', candidate, err);
-            lastError = err;
-          }
-        }
-
-        if (!buffer) {
-          throw lastError || new Error('All fetch attempts failed');
-        }
-
-        let parsed;
-        // Check if it's a .dat file (either by extension or if we resolved it to one)
-        // If we resolved to a .dat URL, treat it as .dat
-        if (usedUrl.endsWith('.dat')) {
-          // Use parseDatBuffer for .dat files (Shift_JIS)
-          // Extract ID from URL for filename/ID
-          const idMatch = usedUrl.match(/\/(\d+)\.dat$/);
-          const name = idMatch ? `${idMatch[1]}.dat` : usedUrl.split('/').pop();
-          parsed = parseDatBuffer(buffer, name);
-        } else {
-          // Assume UTF-8 text or HTML, but detect encoding
-          let text;
-          try {
-            // Try UTF-8 first
-            const utf8Decoder = new TextDecoder('utf-8', { fatal: true });
-            text = utf8Decoder.decode(buffer);
-          } catch {
-            console.log('UTF-8 decode failed, falling back to windows-31j');
-            // Fallback to CP932 (Shift_JIS)
-            const sjisDecoder = new TextDecoder('windows-31j');
-            text = sjisDecoder.decode(buffer);
-          }
-          parsed = await parseLogFile(text);
-        }
+        const { parsed } = await loadLogFromUrl(url);
 
         if (parsed) {
           const fileId = Date.now().toString();

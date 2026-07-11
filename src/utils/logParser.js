@@ -374,7 +374,10 @@ export const parseLogFile = async (input, forcedId = null) => {
     }
   } else if (typeof input === 'string') {
     // Assume input is HTML content string
-    const { parsed, title, startDate } = parseHtml(input, fileId);
+    let { parsed, title, startDate } = parseHtml(input, fileId);
+    if (parsed.length === 0) {
+      ({ parsed, title, startDate } = parseTxt(input, fileId));
+    }
     return {
       id: fileId,
       name: title, // Use title as name for URL logs
