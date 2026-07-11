@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 
-import DesktopApp from './components/DesktopApp';
 import { useIsMobile } from './hooks/useMediaQuery';
-import MobileApp from './mobile/MobileApp';
 
-// Main App component - routes between Desktop and Mobile
+const DesktopApp = lazy(() => import('./components/DesktopApp'));
+const MobileApp = lazy(() => import('./mobile/MobileApp'));
+
+// 端末判定後に必要な画面だけを読み込む
 const App = () => {
   const isMobile = useIsMobile();
-  return isMobile ? <MobileApp /> : <DesktopApp />;
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-950" />}>
+      {isMobile ? <MobileApp /> : <DesktopApp />}
+    </Suspense>
+  );
 };
 
 export default App;

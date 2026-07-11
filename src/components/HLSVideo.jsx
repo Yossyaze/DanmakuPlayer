@@ -1,4 +1,4 @@
-import Hls from 'hls.js';
+import Hls from 'hls.js/dist/hls.light.mjs';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 /**
