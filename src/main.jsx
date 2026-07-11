@@ -1,9 +1,12 @@
-import './utils/loggerHelper'; // Initialize logger first
 import './index.css';
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import App from './App.jsx';
+
+if (import.meta.env.DEV) {
+  import('./utils/loggerHelper');
+}
 
 createRoot(document.getElementById('root')).render(<App />);

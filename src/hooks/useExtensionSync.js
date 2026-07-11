@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 
 import { checkAbeUnlockCondition } from '../utils/abeMode';
-import { sendExtensionLog } from '../utils/debugLogger';
 
 export const useExtensionSync = ({ player, logSystem, unlockAbeMode }) => {
   // Handle Extension Import (URL Params & Messages)
@@ -69,8 +68,12 @@ export const useExtensionSync = ({ player, logSystem, unlockAbeMode }) => {
       } else if (event.data && event.data.type === 'EXTENSION_LOG' && event.data.message) {
         // Handle log message from extension
         console.log(event.data.message);
-        // Send to extension.log file
-        sendExtensionLog(event.data.message);
+        // 開発時だけ extension.log にも転送する
+        if (import.meta.env.DEV) {
+          import('../utils/debugLogger').then(({ sendExtensionLog }) =>
+            sendExtensionLog(event.data.message)
+          );
+        }
       }
     };
 

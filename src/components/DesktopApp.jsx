@@ -24,12 +24,12 @@ import { useFileImporter } from '../hooks/useFileImporter';
 import { useUrlInputHandler } from '../hooks/useUrlInputHandler';
 import { checkAbeUnlockCondition } from '../utils/abeMode';
 import { formatTime } from '../utils/danmakuUtils';
-import { initDebugLogger } from '../utils/debugLogger';
 import DesktopLayout from './layout/DesktopLayout';
 // import { isHlsUrl } from "./utils/hlsUtils"; // Removed unused
 
-// Initialize debug logger (Ctrl+Shift+D to download logs)
-initDebugLogger();
+if (import.meta.env.DEV) {
+  import('../utils/debugLogger').then(({ initDebugLogger }) => initDebugLogger());
+}
 
 // Desktop version of the app
 const DesktopApp = () => {
