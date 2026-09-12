@@ -12,21 +12,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined;
-          if (id.includes('/react/') || id.includes('/react-dom/')) return 'react-vendor';
           if (id.includes('/hls.js/')) return 'hls-vendor';
-          if (id.includes('/react-player/')) return 'player-vendor';
-          if (id.includes('/react-youtube/') || id.includes('/youtube-player/')) {
-            return 'youtube-vendor';
-          }
-          if (
-            id.includes('/react-virtuoso/') ||
-            id.includes('/@dnd-kit/') ||
-            id.includes('/lucide-react/') ||
-            id.includes('/react-joyride/')
-          ) {
-            return 'ui-vendor';
-          }
-          return 'vendor';
         },
       },
     },
