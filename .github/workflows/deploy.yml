@@ -20,14 +20,14 @@ jobs:
       - name: リポジトリをチェックアウト
         uses: actions/checkout@v4
 
-      - name: Node.js をセットアップ (v20)
+      - name: Node.js をセットアップ (v22)
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: 依存パッケージをインストール
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: プロダクションビルド
         run: npm run build
