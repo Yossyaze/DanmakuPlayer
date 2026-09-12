@@ -46,13 +46,6 @@ const rawSteps = [
     disableBeacon: true,
   },
   {
-    target: '#btn-header-sidebar-toggle',
-    content:
-      'サイドバーの表示/非表示を切り替えます。キーボードショートカット「S」でも操作可能です。',
-    placement: 'bottom',
-    disableBeacon: true,
-  },
-  {
     target: '#header-view-mode-switch',
     content: (
       <div>

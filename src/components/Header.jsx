@@ -6,7 +6,6 @@ import {
   FileVideo,
   Link as LinkIcon,
   MessageSquare,
-  PanelRight,
   RotateCcw, // Import
   Save,
   Tv,
@@ -18,8 +17,6 @@ import pkg from '../../package.json'; // Import package.json
 const Header = ({
   showDanmaku,
   setShowDanmaku,
-  showSidebar,
-  setShowSidebar,
   logOnlyMode,
   setLogOnlyMode,
   onSave,
@@ -58,7 +55,7 @@ const Header = ({
         {/* Danmaku & Sidebar Toggles - shown only in video mode */}
         {!logOnlyMode && (
           <>
-            {/* Toggles */}
+            {/* 弾幕表示切替ボタン */}
             <button
               id="btn-header-danmaku-toggle"
               onClick={() => setShowDanmaku(!showDanmaku)}
@@ -70,18 +67,6 @@ const Header = ({
               title={`弾幕 ${showDanmaku ? 'ON' : 'OFF'} (D)`}
             >
               <MessageSquare size={18} />
-            </button>
-            <button
-              id="btn-header-sidebar-toggle"
-              onClick={() => setShowSidebar(!showSidebar)}
-              className={`flex items-center justify-center w-8 h-8 rounded transition-colors ${
-                showSidebar
-                  ? 'bg-blue-600/50 text-blue-200'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
-              }`}
-              title={`サイドバー ${showSidebar ? 'ON' : 'OFF'} (S)`}
-            >
-              <PanelRight size={18} />
             </button>
 
             <div className="w-px bg-gray-700 mx-1 self-center h-6"></div>

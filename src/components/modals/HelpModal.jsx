@@ -339,7 +339,8 @@ const HelpModal = ({ isOpen, onClose, onStartTutorial }) => {
                 <ShortcutItem k="← / →" desc="5秒戻る / 5秒進む" />
                 <ShortcutItem k="L" desc="ログ読みモードの切り替え (Log Mode)" />
                 <ShortcutItem k="D" desc="弾幕表示のON/OFF (Danmaku)" />
-                <ShortcutItem k="S" desc="サイドバー表示のON/OFF (Sidebar)" />
+                <ShortcutItem k="F" desc="全画面モード切替 (Fullscreen)" />
+                <ShortcutItem k="T" desc="シアターモード切替 (Theater)" />
                 <ShortcutItem k="Ctrl + S" desc="プロジェクトの上書き保存" />
                 <ShortcutItem k="Ctrl + R" desc="アプリの再読み込み" />
               </div>

@@ -35,6 +35,9 @@ const DesktopLayout = ({
   // UI State
   showSidebar,
   setShowSidebar,
+  fullscreenMode = 'none',
+  toggleFullscreen,
+  toggleTheater,
   startResizing,
   sidebarWidth,
   logOnlyMode,
@@ -306,7 +309,8 @@ const DesktopLayout = ({
 
   // DEBUG: Monitor End Card Settings prop
   // DEBUG: Monitor End Card Settings prop
-  // console.log('[EndCard] DesktopLayout Render settings:', endCardSettings);
+  // 全画面モード時はサイドバーを常に非表示。シアターモードおよび通常モード時は表示
+  const isSidebarVisible = !logOnlyMode && fullscreenMode !== 'fullscreen';
 
   return (
     <ContextMenuProvider>
@@ -332,8 +336,6 @@ const DesktopLayout = ({
           logo={logo}
           showDanmaku={showDanmaku}
           setShowDanmaku={setShowDanmaku}
-          showSidebar={showSidebar}
-          setShowSidebar={setShowSidebar}
           logOnlyMode={logOnlyMode}
           setLogOnlyMode={setLogOnlyMode}
           handleFileChange={player.handleFileChange}
@@ -834,8 +836,9 @@ const DesktopLayout = ({
                         logStartTime={cmSystem.logStartTime}
                         showDanmaku={showDanmaku}
                         setShowDanmaku={setShowDanmaku}
-                        showSidebar={showSidebar}
-                        setShowSidebar={setShowSidebar}
+                        fullscreenMode={fullscreenMode}
+                        toggleFullscreen={toggleFullscreen}
+                        toggleTheater={toggleTheater}
                         containerRef={containerRef}
                         abeModeUnlocked={abeModeUnlocked}
                         commentDensity={logSystem.commentDensity} // Was it passed?
@@ -903,7 +906,7 @@ const DesktopLayout = ({
           </div>
 
           {/* --- Resizer --- */}
-          {showSidebar && !logOnlyMode && (
+          {isSidebarVisible && (
             <div
               className="w-1 bg-gray-800 hover:bg-blue-500 cursor-col-resize transition-colors z-50"
               onMouseDown={startResizing}
@@ -1024,10 +1027,8 @@ const DesktopLayout = ({
           )}
 
           {/* --- Sidebar (Right) --- */}
-
-          {/* --- Sidebar (Right) --- */}
-          {/* Show Sidebar when showSidebar is true and not in logOnlyMode */}
-          {showSidebar && !logOnlyMode && (
+          {/* Show Sidebar when isSidebarVisible is true */}
+          {isSidebarVisible && (
             <Sidebar
               sidebarWidth={sidebarWidth}
               showSettingsPanel={showSettingsPanel}

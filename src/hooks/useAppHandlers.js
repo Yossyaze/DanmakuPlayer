@@ -23,7 +23,8 @@ export function useAppHandlers({
   logOnlyMode,
   setLogOnlyMode,
   setShowDanmaku,
-  setShowSidebar,
+  toggleFullscreen,
+  toggleTheater,
   videoStartTimeStr,
   setVideoStartTimeStr,
   dmSettings,
@@ -136,9 +137,13 @@ export function useAppHandlers({
             e.preventDefault();
             if (!logOnlyMode) setShowDanmaku((prev) => !prev);
             break;
-          case 'KeyS':
+          case 'KeyF':
             e.preventDefault();
-            if (!logOnlyMode) setShowSidebar((prev) => !prev);
+            if (!logOnlyMode) toggleFullscreen?.();
+            break;
+          case 'KeyT':
+            e.preventDefault();
+            if (!logOnlyMode) toggleTheater?.();
             break;
           case 'KeyL':
             e.preventDefault();
@@ -157,7 +162,8 @@ export function useAppHandlers({
       cmSystem,
       logOnlyMode,
       setShowDanmaku,
-      setShowSidebar,
+      toggleFullscreen,
+      toggleTheater,
       setLogOnlyMode,
     ]
   );

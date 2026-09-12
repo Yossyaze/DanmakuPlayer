@@ -5,15 +5,15 @@ import {
   MessageSquare,
   Minimize,
   MonitorPlay, // New
-  PanelRight,
   Pause,
   Play,
+  RectangleHorizontal,
   Settings,
   Sliders, // New
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { formatTime } from '../utils/danmakuUtils';
 import DanmakuSettingsPopover from './ui/DanmakuSettingsPopover';
@@ -75,9 +75,9 @@ const VideoControls = ({
   setDmSettings, // New prop
   showDanmaku, // Danmaku visibility toggle
   setShowDanmaku, // Danmaku visibility setter
-  showSidebar, // サイドバー表示状態
-  setShowSidebar, // サイドバー表示の切り替え
-  containerRef, // For fullscreen
+  fullscreenMode = 'none', // 'none' | 'fullscreen' | 'theater'
+  toggleFullscreen, // 全画面モード切り替え
+  toggleTheater, // シアターモード切り替え
   commentDensity = [], // Array of normalized values (0-1)
   onScrub, // New prop for optimized scrubbing (video relative time)
   onToggleSettings, // New prop
@@ -103,33 +103,11 @@ const VideoControls = ({
   const lastSeekTimeRef = useRef(0);
   const isDraggingRef = useRef(false);
   // const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Removed internal state
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showQualityMenu, setShowQualityMenu] = useState(false); // New state for quality menu
   const [showSpeedMenu, setShowSpeedMenu] = useState(false); // 速度選択メニュー
 
   // 再生速度の選択肢
   const SPEED_OPTIONS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
-
-  // Watch for fullscreen changes (e.g. user presses Escape)
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
-
-  const toggleFullscreen = () => {
-    if (!containerRef?.current) return;
-
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch((err) => {
-        console.error('Fullscreen error:', err);
-      });
-    } else {
-      document.exitFullscreen();
-    }
-  };
 
   const updateUI = (percentage) => {
     if (progressBarRef.current) {
@@ -565,20 +543,6 @@ const VideoControls = ({
             </button>
           )}
 
-          {/* Sidebar Toggle */}
-          {setShowSidebar && (
-            <button
-              id="btn-sidebar-toggle"
-              onClick={() => setShowSidebar(!showSidebar)}
-              className={`transition p-1 rounded-full ${
-                showSidebar ? 'text-white bg-blue-500' : 'text-white/50 hover:bg-white/10'
-              }`}
-              title={`サイドバー ${showSidebar ? 'ON' : 'OFF'}`}
-            >
-              <PanelRight size={20} />
-            </button>
-          )}
-
           {/* Settings Button (Danmaku) */}
           {dmSettings && setDmSettings && (
             <div className="relative">
@@ -694,14 +658,39 @@ const VideoControls = ({
             </div>
           )}
 
+          {/* Theater Mode Button */}
+          {toggleTheater && (
+            <button
+              id="btn-theater-toggle"
+              onClick={toggleTheater}
+              className={`transition p-1.5 rounded-full ${
+                fullscreenMode === 'theater'
+                  ? 'text-white bg-blue-500'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+              title={
+                fullscreenMode === 'theater' ? 'シアターモードを終了 (T)' : 'シアターモード (T)'
+              }
+            >
+              <RectangleHorizontal size={20} />
+            </button>
+          )}
+
           {/* Fullscreen Button */}
-          <button
-            onClick={toggleFullscreen}
-            className="transition p-1 rounded-full text-white hover:bg-white/10"
-            title={isFullscreen ? '縮小' : '全画面'}
-          >
-            {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
-          </button>
+          {toggleFullscreen && (
+            <button
+              id="btn-fullscreen-toggle"
+              onClick={toggleFullscreen}
+              className={`transition p-1.5 rounded-full ${
+                fullscreenMode === 'fullscreen'
+                  ? 'text-white bg-blue-500'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+              title={fullscreenMode === 'fullscreen' ? '全画面を終了 (F)' : '全画面 (F)'}
+            >
+              {fullscreenMode === 'fullscreen' ? <Minimize size={20} /> : <Maximize size={20} />}
+            </button>
+          )}
         </div>
       </div>
     </div>

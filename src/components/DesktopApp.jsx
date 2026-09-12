@@ -225,6 +225,58 @@ const DesktopApp = () => {
 
   const containerRef = useRef(null);
 
+  // 全画面・シアターモードの状態管理 ('none' | 'fullscreen' | 'theater')
+  const [fullscreenMode, setFullscreenMode] = useState('none');
+
+  // 全画面モード（動画のみ）の切り替え
+  const toggleFullscreen = useCallback(() => {
+    if (!containerRef.current) return;
+
+    if (fullscreenMode === 'fullscreen') {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch((err) => console.error('Exit fullscreen error:', err));
+      }
+      setFullscreenMode('none');
+    } else {
+      if (!document.fullscreenElement) {
+        containerRef.current
+          .requestFullscreen()
+          .catch((err) => console.error('Fullscreen error:', err));
+      }
+      setFullscreenMode('fullscreen');
+    }
+  }, [fullscreenMode]);
+
+  // シアターモード（全画面＋サイドバー）の切り替え
+  const toggleTheater = useCallback(() => {
+    if (!containerRef.current) return;
+
+    if (fullscreenMode === 'theater') {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch((err) => console.error('Exit fullscreen error:', err));
+      }
+      setFullscreenMode('none');
+    } else {
+      if (!document.fullscreenElement) {
+        containerRef.current
+          .requestFullscreen()
+          .catch((err) => console.error('Fullscreen error:', err));
+      }
+      setFullscreenMode('theater');
+    }
+  }, [fullscreenMode]);
+
+  // ブラウザの全画面解除（Escキー押下等）を監視して通常モードに復帰
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setFullscreenMode('none');
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   // --- Use App Handlers Hook ---
   const {
     autoPlayRequestedRef,
@@ -260,7 +312,8 @@ const DesktopApp = () => {
     logOnlyMode,
     setLogOnlyMode,
     setShowDanmaku,
-    setShowSidebar,
+    toggleFullscreen,
+    toggleTheater,
     videoStartTimeStr,
     setVideoStartTimeStr,
     dmSettings,
@@ -630,6 +683,9 @@ const DesktopApp = () => {
         logScrollPositionsRef={logScrollPositionsRef}
         showSidebar={showSidebar}
         setShowSidebar={setShowSidebar}
+        fullscreenMode={fullscreenMode}
+        toggleFullscreen={toggleFullscreen}
+        toggleTheater={toggleTheater}
         startResizing={startResizing}
         sidebarWidth={sidebarWidth}
         logOnlyMode={logOnlyMode}
