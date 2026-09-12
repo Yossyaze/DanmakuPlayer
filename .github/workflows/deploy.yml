@@ -8,12 +8,22 @@ on:
   # 手動実行（GitHubのActionsタブから手動トリガー）も可能にする
   workflow_dispatch:
 
-# GITHUB_TOKEN に gh-pages ブランチへの書き込み権限を付与
+# GitHub Pages へのデプロイに必要な権限を設定
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時デプロイの制御（進行中のデプロイがある場合はキューイング）
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
 
     steps:
@@ -32,8 +42,11 @@ jobs:
       - name: プロダクションビルド
         run: npm run build
 
-      - name: gh-pages ブランチへデプロイ
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Pages 成果物をアップロード
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          path: ./dist
+
+      - name: GitHub Pages へデプロイ
+        id: deployment
+        uses: actions/deploy-pages@v4
