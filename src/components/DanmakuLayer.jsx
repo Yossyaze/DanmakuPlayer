@@ -18,6 +18,7 @@ const DanmakuLayer = ({
   isPlaying = false,
   isBuffering = false, // バッファリング中かどうか
   abeMode = false, // 安倍晋三モード
+  bounds = null, // 実際の映像領域 { top, height }
 }) => {
   // State for Placeholder Hover
   const [hoveredImage, setHoveredImage] = React.useState(null);
@@ -38,8 +39,12 @@ const DanmakuLayer = ({
   return (
     <div
       ref={containerRef}
-      className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden"
-      style={{ zIndex: Z_INDEX.danmakuLayer }}
+      className="absolute left-0 w-full pointer-events-none overflow-hidden"
+      style={{
+        top: bounds?.top !== undefined ? `${bounds.top}px` : 0,
+        height: bounds?.height !== undefined && bounds.height > 0 ? `${bounds.height}px` : '100%',
+        zIndex: Z_INDEX.danmakuLayer,
+      }}
       // Note: --play-state is now managed within this component
     >
       {activeDanmaku.map((dm) => (

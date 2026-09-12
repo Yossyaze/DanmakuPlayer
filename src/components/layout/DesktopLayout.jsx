@@ -3,6 +3,7 @@ import React from 'react';
 import YouTube from 'react-youtube';
 
 import { ContextMenuProvider } from '../../hooks/useContextMenu';
+import { useVideoBounds } from '../../hooks/useVideoBounds';
 import { isHlsUrl } from '../../utils/hlsUtils';
 import CmWaitOverlay from '../CmWaitOverlay';
 import DanmakuLayer from '../DanmakuLayer';
@@ -226,6 +227,10 @@ const DesktopLayout = ({
     videoRef,
   } = player;
 
+  // 映像の実際の表示領域（上下の黒帯を除外した領域）を監視
+  const videoContainerRef = React.useRef(null);
+  const videoBounds = useVideoBounds(videoContainerRef, playerRef, videoSrc);
+
   // HLS Quality State
   const [qualityLevels, setQualityLevels] = React.useState([]);
   const [currentLevel, setCurrentLevel] = React.useState(-1);
@@ -367,6 +372,7 @@ const DesktopLayout = ({
               >
                 {/* --- Video Layer --- */}
                 <div
+                  ref={videoContainerRef}
                   id="main-video-layer"
                   className="flex-1 relative bg-black flex items-center justify-center overflow-hidden cursor-pointer"
                   onClick={togglePlay}
@@ -699,6 +705,7 @@ const DesktopLayout = ({
 
                   {/* Danmaku Layer - always render, hide with CSS to preserve animation state */}
                   <div
+                    className="absolute inset-0 pointer-events-none"
                     style={{
                       visibility: !logOnlyMode && showDanmaku ? 'visible' : 'hidden',
                       pointerEvents: !logOnlyMode && showDanmaku ? 'auto' : 'none',
@@ -706,6 +713,7 @@ const DesktopLayout = ({
                   >
                     <DanmakuLayer
                       containerRef={danmakuContainerRef}
+                      bounds={videoBounds}
                       activeDanmaku={activeDanmaku}
                       settings={dmSettings}
                       onAnimationEnd={handleAnimationEnd}

@@ -43,6 +43,7 @@ import NgList from '../components/ui/NgList';
 import { Z_INDEX } from '../constants/zIndex';
 import { useAppHandlers } from '../hooks/useAppHandlers';
 import { useDanmakuPlayer } from '../hooks/useDanmakuPlayer';
+import { useVideoBounds } from '../hooks/useVideoBounds';
 import { formatTime } from '../utils/danmakuUtils';
 
 /**
@@ -174,6 +175,7 @@ const MobileApp = () => {
   const overlayTimeoutRef = useRef(null);
 
   const containerRef = useRef(null);
+  const videoBounds = useVideoBounds(containerRef, player.playerRef, player.videoSrc);
 
   // Seekbar state
   const seekContainerRef = useRef(null);
@@ -935,6 +937,7 @@ const MobileApp = () => {
             <div className="absolute inset-0 pointer-events-none">
               <DanmakuLayer
                 containerRef={danmakuContainerRef}
+                bounds={videoBounds}
                 activeDanmaku={activeDanmaku}
                 settings={dmSettings}
                 onAnimationEnd={handleAnimationEnd}

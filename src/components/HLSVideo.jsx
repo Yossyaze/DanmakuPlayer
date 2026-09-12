@@ -231,6 +231,16 @@ const HLSVideo = forwardRef(
       set playbackRate(rate) {
         if (videoRef.current) videoRef.current.playbackRate = rate;
       },
+      // 映像要素とサイズの取得
+      get videoElement() {
+        return videoRef.current;
+      },
+      get videoWidth() {
+        return videoRef.current?.videoWidth || 0;
+      },
+      get videoHeight() {
+        return videoRef.current?.videoHeight || 0;
+      },
     }));
 
     const onReadyRef = useRef(onReady);
