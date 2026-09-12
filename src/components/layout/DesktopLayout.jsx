@@ -234,6 +234,9 @@ const DesktopLayout = ({
   const videoContainerRef = React.useRef(null);
   const videoBounds = useVideoBounds(videoContainerRef, playerRef, videoSrc);
 
+  // カーソル自動非表示の判定（動画読み込み済み & 再生中 & コントロール非表示）
+  const hideCursor = Boolean(videoSrc) && playerIsPlaying && !showControls;
+
   // HLS Quality State
   const [qualityLevels, setQualityLevels] = React.useState([]);
   const [currentLevel, setCurrentLevel] = React.useState(-1);
@@ -361,7 +364,7 @@ const DesktopLayout = ({
             <div className="flex-1 flex overflow-hidden">
               {/* --- Main Content (Video) --- */}
               <div
-                className="flex-1 flex flex-col min-w-0 relative group"
+                className={`flex-1 flex flex-col min-w-0 relative group ${hideCursor ? 'hide-cursor' : ''}`}
                 style={{
                   visibility: logOnlyMode ? 'hidden' : 'visible',
                   position: logOnlyMode ? 'absolute' : 'relative',
@@ -376,7 +379,9 @@ const DesktopLayout = ({
                 <div
                   ref={videoContainerRef}
                   id="main-video-layer"
-                  className="flex-1 relative bg-black flex items-center justify-center overflow-hidden cursor-pointer"
+                  className={`flex-1 relative bg-black flex items-center justify-center overflow-hidden ${
+                    videoSrc ? 'cursor-pointer' : 'cursor-default'
+                  }`}
                   onClick={togglePlay}
                 >
                   {/* Video Area */}

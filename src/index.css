@@ -146,3 +146,9 @@
 .animate-slide-in-left {
   animation: slide-in-from-left 0.3s ease-out forwards;
 }
+
+/* カーソル自動非表示 */
+.hide-cursor,
+.hide-cursor * {
+  cursor: none !important;
+}
